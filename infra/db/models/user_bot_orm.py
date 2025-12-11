@@ -37,9 +37,11 @@ class UserBotCredentialsORM(Base):
     bot_id: Mapped[int | None] = mapped_column(BigInteger)
 
     # MTProto credentials (telegram_api_hash is encrypted) - Now optional
-    telegram_api_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    mtproto_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # Telegram user ID from MTProto
+    mtproto_username: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Telegram username from MTProto
+    mtproto_api_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     telegram_api_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    telegram_phone: Mapped[str | None] = mapped_column(String(20))
+    mtproto_phone: Mapped[str | None] = mapped_column(String(20))
     session_string: Mapped[str | None] = mapped_column(Text)
     mtproto_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
 

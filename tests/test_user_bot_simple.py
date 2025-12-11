@@ -71,7 +71,7 @@ def create_sample_bot(user_id: int = 123, username: str = "test_bot") -> UserBot
         id=0,
         user_id=user_id,
         bot_token=f"encrypted_token_{user_id}",
-        telegram_api_id=12345,
+        mtproto_api_id=12345,
         telegram_api_hash=f"encrypted_hash_{user_id}",
         bot_username=username,
         bot_id=987654321 + user_id,

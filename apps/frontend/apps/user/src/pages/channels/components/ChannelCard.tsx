@@ -166,7 +166,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
 
                 {/* Statistics */}
                 {!statistics ? (
-                    <Box sx={{ mt: 2, p: 1.5, bgcolor: 'grey.100', borderRadius: 1 }}>
+                    <Box sx={{ mt: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                         <Typography variant="caption" color="text.secondary">
                             No statistics available yet
                         </Typography>
@@ -178,7 +178,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
                             <Grid item xs={6}>
                                 <Paper sx={{
                                     p: 1.5,
-                                    bgcolor: isInactive ? 'grey.100' : 'primary.50',
+                                    bgcolor: isInactive ? 'action.disabledBackground' : 'rgba(25, 118, 210, 0.15)',
                                     textAlign: 'center',
                                     opacity: isInactive ? 0.6 : 1
                                 }}>
@@ -204,7 +204,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
                             <Grid item xs={6}>
                                 <Paper sx={{
                                     p: 1.5,
-                                    bgcolor: isInactive ? 'grey.100' : 'info.50',
+                                    bgcolor: isInactive ? 'action.disabledBackground' : 'rgba(2, 136, 209, 0.15)',
                                     textAlign: 'center',
                                     opacity: isInactive ? 0.6 : 1
                                 }}>
@@ -230,7 +230,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
                             <Grid item xs={6}>
                                 <Paper sx={{
                                     p: 1.5,
-                                    bgcolor: isInactive ? 'grey.100' : 'success.50',
+                                    bgcolor: isInactive ? 'action.disabledBackground' : 'rgba(46, 125, 50, 0.15)',
                                     textAlign: 'center',
                                     opacity: isInactive ? 0.6 : 1
                                 }}>
@@ -256,7 +256,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
                             <Grid item xs={6}>
                                 <Paper sx={{
                                     p: 1.5,
-                                    bgcolor: isInactive ? 'grey.100' : 'warning.50',
+                                    bgcolor: isInactive ? 'action.disabledBackground' : 'rgba(237, 108, 2, 0.15)',
                                     textAlign: 'center',
                                     opacity: isInactive ? 0.6 : 1
                                 }}>
@@ -281,7 +281,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
 
                         {/* Latest Post Date */}
                         {statistics.latest_post_date && (
-                            <Box sx={{ mt: 1.5, p: 1, bgcolor: 'grey.50', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Box sx={{ mt: 1.5, p: 1, bgcolor: 'action.hover', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                 <CheckCircleIcon sx={{ fontSize: 16, color: 'success.main' }} />
                                 <Typography variant="caption" color="text.secondary">
                                     Latest post: {new Date(statistics.latest_post_date).toLocaleDateString()}
@@ -295,7 +295,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
             <Divider />
 
             {/* MTProto Toggle Section */}
-            <Box sx={{ p: 2, bgcolor: 'grey.50' }}>
+            <Box sx={{ p: 2, bgcolor: 'action.hover' }}>
                 <ChannelMTProtoToggle
                     channelId={channel.id}
                     channelName={channel.name}

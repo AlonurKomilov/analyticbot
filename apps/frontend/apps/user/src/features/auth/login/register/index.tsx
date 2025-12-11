@@ -13,6 +13,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box,
     Card,
@@ -31,6 +32,7 @@ import { useRegisterForm } from './useRegisterForm';
 import { RegisterFormFields } from './RegisterFormFields';
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode = null }) => {
+    const { t } = useTranslation('auth');
     const {
         formData,
         errors,
@@ -78,10 +80,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode = null 
                             }}
                         />
                         <Typography variant="h4" component="h1" gutterBottom>
-                            Create Account
+                            {t('register.title')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Join AnalyticBot to start analyzing your social media
+                            {t('register.subtitle')}
                         </Typography>
                     </Box>
 
@@ -125,10 +127,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode = null 
                             {isSubmitting ? (
                                 <>
                                     <CircularProgress size={20} sx={{ mr: 1 }} />
-                                    Creating Account...
+                                    {t('register.creatingAccount')}
                                 </>
                             ) : (
-                                'Create Account'
+                                t('register.createAccount')
                             )}
                         </Button>
 
@@ -137,13 +139,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode = null 
                             <>
                                 <Divider sx={{ my: 2 }}>
                                     <Typography variant="body2" color="text.secondary">
-                                        or
+                                        {t('register.or')}
                                     </Typography>
                                 </Divider>
 
                                 <Box sx={{ textAlign: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">
-                                        Already have an account?{' '}
+                                        {t('register.alreadyHaveAccount')}{' '}
                                         <Link
                                             href="#"
                                             onClick={(e) => {
@@ -151,7 +153,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode = null 
                                                 onToggleMode();
                                             }}
                                         >
-                                            Sign in here
+                                            {t('register.signInHere')}
                                         </Link>
                                     </Typography>
                                 </Box>

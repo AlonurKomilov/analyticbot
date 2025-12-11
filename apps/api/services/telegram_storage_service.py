@@ -107,7 +107,7 @@ class TelegramStorageService:
 
         if (
             not credentials
-            or not credentials.telegram_api_id
+            or not credentials.mtproto_api_id
             or not credentials.telegram_api_hash
             or not credentials.session_string
         ):
@@ -135,7 +135,7 @@ class TelegramStorageService:
 
         user_client = TelegramClient(
             StringSession(session_string),
-            api_id=credentials.telegram_api_id,
+            api_id=credentials.mtproto_api_id,
             api_hash=api_hash,
         )
 

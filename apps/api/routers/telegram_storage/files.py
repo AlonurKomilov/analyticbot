@@ -82,7 +82,7 @@ async def upload_file_to_storage(
             )
 
         if not all(
-            [credentials.telegram_api_id, credentials.telegram_api_hash, credentials.session_string]
+            [credentials.mtproto_api_id, credentials.telegram_api_hash, credentials.session_string]
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

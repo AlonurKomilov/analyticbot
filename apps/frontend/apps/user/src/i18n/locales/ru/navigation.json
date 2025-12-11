@@ -10,6 +10,16 @@
     "help": "Помощь",
     "logout": "Выход"
   },
+  "aiServices": "AI Сервисы",
+  "myBot": "Мой бот",
+  "credits": "Кредиты",
+  "rewards": "Награды",
+  "marketplace": "Магазин",
+  "payment": "Оплата",
+  "workers": {
+    "bot": "Бот воркер",
+    "mtproto": "MTProto воркер"
+  },
   "header": {
     "search": "Поиск...",
     "notifications": "Уведомления",
@@ -35,6 +45,7 @@
     "profile": "Мой профиль",
     "settings": "Настройки",
     "billing": "Оплата",
+    "credits": "Кредиты",
     "help": "Помощь и поддержка",
     "logout": "Выход"
   },

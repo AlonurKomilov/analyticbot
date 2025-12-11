@@ -6,3 +6,5 @@ export { SessionHealthCard } from './SessionHealthCard';
 export { CollectionProgressCard } from './CollectionProgressCard';
 export { WorkerStatusCard } from './WorkerStatusCard';
 export { ChannelStatisticsCard } from './ChannelStatisticsCard';
+export { IntervalBoostCard } from './IntervalBoostCard';
+export { AccountInfoCard } from './AccountInfoCard';

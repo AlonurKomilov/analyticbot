@@ -24,12 +24,14 @@ import {
   People as PeopleIcon,
   LiveTv as ChannelsIcon,
   SmartToy as BotsIcon,
+  Telegram as TelegramIcon,
   MonitorHeart as HealthIcon,
   History as AuditIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   Menu as MenuIcon,
   AdminPanelSettings as AdminIcon,
+  Speed as SpeedIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '@config/routes';
@@ -47,6 +49,8 @@ const navItems: NavItem[] = [
   { title: 'Users', path: ROUTES.USERS, icon: <PeopleIcon /> },
   { title: 'Channels', path: ROUTES.CHANNELS, icon: <ChannelsIcon /> },
   { title: 'Bots', path: ROUTES.BOTS, icon: <BotsIcon /> },
+  { title: 'MTProto', path: ROUTES.MTPROTO, icon: <TelegramIcon /> },
+  { title: 'Plans', path: ROUTES.PLANS, icon: <SpeedIcon /> },
   { title: 'System Health', path: ROUTES.SYSTEM_HEALTH, icon: <HealthIcon /> },
   { title: 'Audit Log', path: ROUTES.AUDIT_LOG, icon: <AuditIcon /> },
   { title: 'Settings', path: ROUTES.SETTINGS, icon: <SettingsIcon /> },

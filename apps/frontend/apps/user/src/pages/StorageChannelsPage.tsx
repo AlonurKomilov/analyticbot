@@ -48,7 +48,7 @@ const StorageChannelsPage: React.FC = () => {
       </Paper>
 
       {/* Help Section */}
-      <Paper sx={{ p: 2, mt: 3, bgcolor: 'grey.50' }}>
+      <Paper sx={{ p: 2, mt: 3 }}>
         <Typography variant="body2" color="text.secondary">
           💡 <strong>Need help?</strong> Make sure your bot has admin rights in the channel
           with "Post Messages" permission. The channel can be private or public.

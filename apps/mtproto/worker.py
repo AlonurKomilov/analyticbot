@@ -50,7 +50,12 @@ async def main():
         "--interval",
         type=int,
         default=10,
-        help="Collection interval in minutes (default: 10)",
+        help="Collection interval in minutes (default: 10). Ignored in tiered mode.",
+    )
+    parser.add_argument(
+        "--tiered",
+        action="store_true",
+        help="Use tiered intervals based on user plans (free=60min, pro=20min, business=10min, enterprise=5min)",
     )
     parser.add_argument(
         "--once",
@@ -211,14 +216,22 @@ async def main():
 
         else:
             # Run continuous collection for all users with process manager
-            logger.info(
-                "🚀 Starting continuous collection for all users with lifecycle management..."
-            )
-
-            # Pass process_manager to service for integrated lifecycle management
-            await service.run_continuous_service(
-                interval_minutes=args.interval, process_manager=process_manager
-            )
+            if args.tiered:
+                logger.info(
+                    "🚀 Starting continuous collection with TIERED intervals "
+                    "(per-user plan-based intervals)..."
+                )
+                # Use tiered mode - intervals from user plans
+                await service.run_continuous_service_tiered(process_manager=process_manager)
+            else:
+                logger.info(
+                    f"🚀 Starting continuous collection with FIXED interval "
+                    f"({args.interval} minutes for all users)..."
+                )
+                # Use fixed interval mode (legacy)
+                await service.run_continuous_service(
+                    interval_minutes=args.interval, process_manager=process_manager
+                )
 
     except KeyboardInterrupt:
         logger.info("🛑 Interrupted by user")

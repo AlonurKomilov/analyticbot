@@ -3,12 +3,16 @@
 
 Provides JWT authentication and channel ownership validation
 using the existing SecurityManager from core.security_engine.
+
+Supports both:
+- Bearer token authentication (Authorization header)
+- HttpOnly cookie authentication (for admin panel)
 """
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
 
 from apps.api.auth_utils import AuthError, FastAPIAuthUtils, get_auth_utils, security_scheme
@@ -62,18 +66,23 @@ async def get_channel_repository() -> ChannelRepository:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
     user_repo: UserRepository = Depends(get_user_repository),
     auth_utils: FastAPIAuthUtils = Depends(get_auth_utils),
 ) -> dict[str, Any]:
     """
-    Extract and validate current user from JWT token
+    Extract and validate current user from JWT token.
 
-    SIMPLIFIED: Now uses centralized auth_utils instead of duplicate JWT logic
+    Supports multiple authentication methods:
+    1. Bearer token in Authorization header (preferred for API clients)
+    2. HttpOnly cookie (for admin panel browser sessions)
 
     Args:
-        credentials: HTTP Bearer credentials
+        request: FastAPI request object
+        credentials: HTTP Bearer credentials (optional)
         user_repo: Database user repository
+        auth_utils: Authentication utilities
 
     Returns:
         User dictionary from database
@@ -82,8 +91,30 @@ async def get_current_user(
         HTTPException: If token is invalid or user not found
     """
     try:
+        token = None
+        
+        # First, try Bearer token from Authorization header
+        if credentials and credentials.credentials:
+            token = credentials.credentials
+            logger.debug("Using Bearer token from Authorization header")
+        
+        # If no Bearer token, try httpOnly cookie (for admin panel)
+        if not token:
+            cookie_token = request.cookies.get("access_token")
+            if cookie_token:
+                token = cookie_token
+                logger.debug("Using token from httpOnly cookie")
+        
+        # If still no token, raise error
+        if not token:
+            raise AuthError("No authentication token provided")
+        
+        # Create credentials object for auth_utils
+        from fastapi.security import HTTPAuthorizationCredentials
+        creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+        
         # Use centralized auth utilities - eliminates duplicate JWT verification
-        user = await auth_utils.get_user_from_token(credentials, user_repo)
+        user = await auth_utils.get_user_from_token(creds, user_repo)
         logger.info(f"Authenticated user: {user.get('username', user.get('id'))}")
         return user
 

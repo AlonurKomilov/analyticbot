@@ -34,6 +34,8 @@ const AIServicesPage = React.lazy(() => import('./pages/AIServicesPage'));
 const PredictiveAnalyticsPage = React.lazy(() => import('./pages/PredictiveAnalyticsPage'));
 const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
 const CreditsPage = React.lazy(() => import('./pages/CreditsPage'));
+const RewardsPage = React.lazy(() => import('./pages/RewardsPage'));
+const MarketplacePage = React.lazy(() => import('./pages/MarketplacePage'));
 const SubscriptionPage = React.lazy(() => import('./pages/SubscriptionPage'));
 const PaymentHistoryPage = React.lazy(() => import('./pages/PaymentHistoryPage'));
 const InvoicesPage = React.lazy(() => import('./pages/InvoicesPage'));
@@ -47,14 +49,12 @@ const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 const UnauthorizedPage = React.lazy(() => import('./pages/UnauthorizedPage'));
 const ServerErrorPage = React.lazy(() => import('./pages/ServerErrorPage'));
 
-// Bot Management Pages
-const BotSetupPage = React.lazy(() => import('./pages/BotSetupPage'));
-const BotDashboardPage = React.lazy(() => import('./pages/BotDashboardPage'));
-// AdminBotManagementPage - MOVED to admin.analyticbot.org
+// Workers Pages (Bot & MTProto unified)
+const WorkerBotPage = React.lazy(() => import('./pages/workers/WorkerBotPage'));
+const WorkerMTProtoPage = React.lazy(() => import('./pages/workers/WorkerMTProtoPage'));
 
-// MTProto Setup Page
-const MTProtoSetupPage = React.lazy(() => import('@features/mtproto-setup'));
-const MTProtoMonitoringPage = React.lazy(() => import('./pages/MTProtoMonitoringPage'));
+// Legacy pages removed - using redirects to /workers/* routes
+// AdminBotManagementPage - MOVED to admin.analyticbot.org
 
 // Smart Alerts Settings Page
 const SmartAlertsSettingsPage = React.lazy(() => import('./pages/settings/SmartAlertsSettingsPage'));
@@ -255,27 +255,31 @@ const AppRouter: React.FC = () => {
                                     element={<Navigate to="https://admin.analyticbot.org" replace />}
                                 />
 
-                                {/* Bot Management Routes */}
+                                {/* ========== Workers Routes (Unified Bot & MTProto) ========== */}
                                 <Route
-                                    path="/bot/setup"
-                                    element={
-                                        <ProtectedRoute>
-                                            <OptimizedSuspense skeletonType="form">
-                                                <BotSetupPage />
-                                            </OptimizedSuspense>
-                                        </ProtectedRoute>
-                                    }
-                                />
-                                <Route
-                                    path="/bot/dashboard"
+                                    path="/workers/bot"
                                     element={
                                         <ProtectedRoute>
                                             <OptimizedSuspense skeletonType="dashboard">
-                                                <BotDashboardPage />
+                                                <WorkerBotPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }
                                 />
+                                <Route
+                                    path="/workers/mtproto"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <WorkerMTProtoPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Legacy Bot Routes - Redirect to Workers */}
+                                <Route path="/bot/setup" element={<Navigate to="/workers/bot" replace />} />
+                                <Route path="/bot/dashboard" element={<Navigate to="/workers/bot" replace />} />
                                 {/* AdminBotManagementPage - MOVED to admin.analyticbot.org */}
 
                                 {/* Owner Dashboard - ARCHIVED - Use /admin instead */}
@@ -324,29 +328,9 @@ const AppRouter: React.FC = () => {
                                     }
                                 />
 
-                                {/* MTProto Setup */}
-                                <Route
-                                    path="/settings/mtproto-setup"
-                                    element={
-                                        <ProtectedRoute>
-                                            <OptimizedSuspense skeletonType="form">
-                                                <MTProtoSetupPage />
-                                            </OptimizedSuspense>
-                                        </ProtectedRoute>
-                                    }
-                                />
-
-                                {/* MTProto Monitoring */}
-                                <Route
-                                    path="/settings/mtproto-monitoring"
-                                    element={
-                                        <ProtectedRoute>
-                                            <OptimizedSuspense skeletonType="dashboard">
-                                                <MTProtoMonitoringPage />
-                                            </OptimizedSuspense>
-                                        </ProtectedRoute>
-                                    }
-                                />
+                                {/* Legacy MTProto Routes - Redirect to Workers */}
+                                <Route path="/settings/mtproto-setup" element={<Navigate to="/workers/mtproto" replace />} />
+                                <Route path="/settings/mtproto-monitoring" element={<Navigate to="/workers/mtproto" replace />} />
 
                                 {/* Smart Alerts Settings */}
                                 <Route
@@ -433,6 +417,26 @@ const AppRouter: React.FC = () => {
                                         <ProtectedRoute>
                                             <OptimizedSuspense skeletonType="dashboard">
                                                 <CreditsPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.REWARDS}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <RewardsPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.MARKETPLACE}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <MarketplacePage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }

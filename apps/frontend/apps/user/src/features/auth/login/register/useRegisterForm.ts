@@ -4,11 +4,13 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculatePasswordStrength } from './passwordUtils';
 import type { FormData, FormErrors } from './types';
 
 export function useRegisterForm() {
+    const { t } = useTranslation('auth');
     const { register, isLoading } = useAuth();
 
     const [formData, setFormData] = useState<FormData>({
@@ -34,42 +36,42 @@ export function useRegisterForm() {
 
         // Username validation
         if (!formData.username.trim()) {
-            newErrors.username = 'Username is required';
+            newErrors.username = t('register.validation.usernameRequired');
         } else if (formData.username.length < 3) {
-            newErrors.username = 'Username must be at least 3 characters';
+            newErrors.username = t('register.validation.usernameMinLength');
         } else if (formData.username.length > 50) {
-            newErrors.username = 'Username must be less than 50 characters';
+            newErrors.username = t('register.validation.usernameMaxLength');
         }
 
         // Full name validation
         if (!formData.fullName.trim()) {
-            newErrors.fullName = 'Full name is required';
+            newErrors.fullName = t('register.validation.fullNameRequired');
         }
 
         // Email validation
         if (!formData.email) {
-            newErrors.email = 'Email is required';
+            newErrors.email = t('register.validation.emailRequired');
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Please enter a valid email address';
+            newErrors.email = t('register.validation.emailInvalid');
         }
 
         // Password validation
         if (!formData.password) {
-            newErrors.password = 'Password is required';
+            newErrors.password = t('register.validation.passwordRequired');
         } else if (passwordStrength.score < 60) {
-            newErrors.password = 'Password is too weak. Please follow the requirements below.';
+            newErrors.password = t('register.validation.passwordWeak');
         }
 
         // Confirm password validation
         if (!formData.confirmPassword) {
-            newErrors.confirmPassword = 'Please confirm your password';
+            newErrors.confirmPassword = t('register.validation.confirmPasswordRequired');
         } else if (formData.password !== formData.confirmPassword) {
-            newErrors.confirmPassword = 'Passwords do not match';
+            newErrors.confirmPassword = t('register.validation.passwordsDoNotMatch');
         }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [formData, passwordStrength.score]);
+    }, [formData, passwordStrength.score, t]);
 
     // Handle input changes
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

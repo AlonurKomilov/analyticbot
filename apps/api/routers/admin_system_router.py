@@ -10,8 +10,8 @@ Path: /admin/system/*
 
 import logging
 import os
-from datetime import datetime
-from typing import Any
+from datetime import datetime, timedelta
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
@@ -24,7 +24,7 @@ from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
 from apps.bot.multi_tenant.token_validator import (
     get_token_validator,
 )
-from apps.di.analytics_container import get_analytics_fusion_service
+from apps.di.analytics_container import get_analytics_fusion_service, get_database_pool
 from apps.shared.performance import performance_timer
 
 # Updated import to use new microservices
@@ -53,10 +53,23 @@ class AuditLogEntry(BaseModel):
     id: int
     action: str
     admin_user_id: int
-    target_type: str
-    target_id: int | None = None
+    admin_username: str | None = None
+    target_type: str | None = None
+    target_id: str | None = None
     timestamp: datetime
     details: dict[str, Any] = Field(default_factory=dict)
+    ip_address: str | None = None
+    success: bool = True
+    error_message: str | None = None
+
+
+class AuditLogResponse(BaseModel):
+    """Response model for paginated audit logs"""
+    logs: list[AuditLogEntry]
+    total: int
+    page: int
+    page_size: int
+    has_more: bool
 
 
 # === ADMIN SYSTEM ENDPOINTS ===
@@ -102,6 +115,167 @@ async def get_system_statistics(
         raise HTTPException(status_code=500, detail="Failed to fetch system statistics")
 
 
+@router.get("/audit-logs", response_model=AuditLogResponse)
+async def get_audit_logs(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(50, ge=1, le=100, description="Items per page"),
+    action_filter: Optional[str] = Query(None, description="Filter by action type"),
+    admin_id_filter: Optional[int] = Query(None, description="Filter by admin user ID"),
+    start_date: Optional[datetime] = Query(None, description="Filter from date"),
+    end_date: Optional[datetime] = Query(None, description="Filter to date"),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 📋 Get Audit Logs (Admin)
+
+    Retrieve admin audit logs with filtering and pagination.
+
+    **Admin Only**: Requires admin role
+
+    **Parameters:**
+    - page: Page number (default: 1)
+    - page_size: Items per page (1-100, default: 50)
+    - action_filter: Filter by action type (optional)
+    - admin_id_filter: Filter by admin user ID (optional)
+    - start_date: Filter from date (optional)
+    - end_date: Filter to date (optional)
+
+    **Returns:**
+    - Paginated list of audit log entries
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+
+        async with pool.acquire() as conn:
+            # Build query with filters
+            where_clauses = []
+            params = []
+            param_idx = 1
+
+            if action_filter:
+                where_clauses.append(f"a.action ILIKE ${param_idx}")
+                params.append(f"%{action_filter}%")
+                param_idx += 1
+
+            if admin_id_filter:
+                where_clauses.append(f"a.admin_user_id = ${param_idx}")
+                params.append(admin_id_filter)
+                param_idx += 1
+
+            if start_date:
+                where_clauses.append(f"a.timestamp >= ${param_idx}")
+                params.append(start_date)
+                param_idx += 1
+
+            if end_date:
+                where_clauses.append(f"a.timestamp <= ${param_idx}")
+                params.append(end_date)
+                param_idx += 1
+
+            where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
+
+            # Get total count
+            count_query = f"""
+                SELECT COUNT(*) as total
+                FROM admin_audit_log a
+                WHERE {where_sql}
+            """
+            total_row = await conn.fetchrow(count_query, *params)
+            total = total_row["total"] if total_row else 0
+
+            # Get paginated results
+            offset = (page - 1) * page_size
+            query = f"""
+                SELECT 
+                    a.id,
+                    a.admin_user_id,
+                    u.username as admin_username,
+                    a.action,
+                    a.resource_type as target_type,
+                    a.resource_id as target_id,
+                    a.details,
+                    a.ip_address,
+                    a.timestamp,
+                    a.success,
+                    a.error_message
+                FROM admin_audit_log a
+                LEFT JOIN users u ON a.admin_user_id = u.id
+                WHERE {where_sql}
+                ORDER BY a.timestamp DESC
+                LIMIT ${param_idx} OFFSET ${param_idx + 1}
+            """
+            params.extend([page_size, offset])
+
+            rows = await conn.fetch(query, *params)
+
+            logs = [
+                AuditLogEntry(
+                    id=row["id"],
+                    action=row["action"],
+                    admin_user_id=row["admin_user_id"],
+                    admin_username=row["admin_username"],
+                    target_type=row["target_type"],
+                    target_id=row["target_id"],
+                    timestamp=row["timestamp"],
+                    details=row["details"] or {},
+                    ip_address=row["ip_address"],
+                    success=row["success"],
+                    error_message=row["error_message"],
+                )
+                for row in rows
+            ]
+
+            return AuditLogResponse(
+                logs=logs,
+                total=total,
+                page=page,
+                page_size=page_size,
+                has_more=(page * page_size) < total,
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Admin audit logs fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch admin audit logs")
+
+
+@router.get("/audit-logs/actions")
+async def get_audit_log_actions(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 📋 Get Available Audit Actions
+
+    Get list of unique action types in audit logs for filtering.
+
+    **Admin Only**: Requires admin role
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+
+        async with pool.acquire() as conn:
+            rows = await conn.fetch("""
+                SELECT DISTINCT action, COUNT(*) as count
+                FROM admin_audit_log
+                GROUP BY action
+                ORDER BY count DESC
+            """)
+
+            return {
+                "actions": [{"action": row["action"], "count": row["count"]} for row in rows]
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Audit actions fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch audit actions")
+
+
+# Keep legacy endpoint for backward compatibility
 @router.get("/audit/recent", response_model=list[AuditLogEntry])
 async def get_recent_admin_actions(
     limit: int = Query(50, ge=1, le=500),
@@ -150,7 +324,6 @@ async def get_recent_admin_actions(
 @router.get("/health")
 async def get_system_health(
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
 ):
     """
     ## 🏥 Get System Health (Admin)
@@ -160,30 +333,224 @@ async def get_system_health(
     **Admin Only**: Requires admin role
 
     **Returns:**
-    - Detailed system health information
+    - Detailed system health information including database, redis, api, bot, and system metrics
     """
+    import psutil
+    import platform
+    import time as time_module
+    
     try:
         await require_admin_user(current_user)
-
-        with performance_timer("admin_system_health_check"):
-            health_data = await analytics_service.check_system_health()
-
-            return {
-                "status": "healthy"
-                if health_data.get("all_systems_operational", False)
-                else "degraded",
-                "timestamp": datetime.now().isoformat(),
-                "components": health_data.get("components", {}),
-                "overall_score": health_data.get("health_score", 0),
-                "issues": health_data.get("issues", []),
-                "checked_by": current_user["id"],
-            }
-
     except HTTPException:
         raise
+    
+    # Initialize all values with defaults
+    db_status = "unknown"
+    db_latency = 0
+    db_connections = 0
+    redis_status = "unknown"
+    redis_latency = 0
+    redis_memory = None
+    bot_status = "unknown"
+    bot_connections = 0
+    issues = []
+    
+    # Get detailed system resources first (this should always work)
+    try:
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        cpu_count = psutil.cpu_count() or 1
+        cpu_count_logical = psutil.cpu_count(logical=True) or 1
+        cpu_freq = psutil.cpu_freq()
+        
+        memory = psutil.virtual_memory()
+        swap = psutil.swap_memory()
+        
+        disk = psutil.disk_usage('/')
+        
+        # Get load average (Unix only)
+        try:
+            load_avg = psutil.getloadavg()
+        except (AttributeError, OSError):
+            load_avg = (0, 0, 0)
+        
+        # Get boot time for uptime calculation
+        boot_time = psutil.boot_time()
+        uptime_seconds = (datetime.now().timestamp() - boot_time)
+        
+        system_info = {
+            "cpu": {
+                "percent": round(cpu_percent, 1),
+                "cores_physical": cpu_count,
+                "cores_logical": cpu_count_logical,
+                "frequency_mhz": round(cpu_freq.current, 0) if cpu_freq else None,
+                "load_avg_1m": round(load_avg[0], 2),
+                "load_avg_5m": round(load_avg[1], 2),
+                "load_avg_15m": round(load_avg[2], 2),
+            },
+            "memory": {
+                "percent": round(memory.percent, 1),
+                "total_gb": round(memory.total / 1024 / 1024 / 1024, 1),
+                "used_gb": round(memory.used / 1024 / 1024 / 1024, 1),
+                "available_gb": round(memory.available / 1024 / 1024 / 1024, 1),
+                "swap_percent": round(swap.percent, 1),
+                "swap_total_gb": round(swap.total / 1024 / 1024 / 1024, 1),
+            },
+            "disk": {
+                "percent": round(disk.percent, 1),
+                "total_gb": round(disk.total / 1024 / 1024 / 1024, 1),
+                "used_gb": round(disk.used / 1024 / 1024 / 1024, 1),
+                "free_gb": round(disk.free / 1024 / 1024 / 1024, 1),
+            },
+            "uptime_hours": round(uptime_seconds / 3600, 1),
+            "platform": platform.system(),
+            "hostname": platform.node(),
+        }
     except Exception as e:
-        logger.error(f"System health check failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to check system health")
+        logger.error(f"Failed to get system resources: {e}")
+        issues.append(f"System metrics error: {str(e)}")
+        system_info = {
+            "cpu": {"percent": 0, "cores_physical": 1, "cores_logical": 1, "frequency_mhz": None, "load_avg_1m": 0, "load_avg_5m": 0, "load_avg_15m": 0},
+            "memory": {"percent": 0, "total_gb": 0, "used_gb": 0, "available_gb": 0, "swap_percent": 0, "swap_total_gb": 0},
+            "disk": {"percent": 0, "total_gb": 0, "used_gb": 0, "free_gb": 0},
+            "uptime_hours": 0,
+            "platform": "Unknown",
+            "hostname": "Unknown",
+        }
+    
+    # Check database health
+    try:
+        from apps.di import get_db_connection
+        pool = await get_db_connection()
+        if pool:
+            start = time_module.time()
+            async with pool.acquire() as conn:
+                await conn.fetchval("SELECT 1")
+                # Try to get connection count
+                try:
+                    result = await conn.fetchval("SELECT count(*) FROM pg_stat_activity WHERE datname = current_database()")
+                    db_connections = result or 0
+                except:
+                    pass
+            db_latency = int((time_module.time() - start) * 1000)
+            db_status = "healthy"
+        else:
+            db_status = "unavailable"
+            issues.append("Database pool not initialized")
+    except Exception as e:
+        db_status = "error"
+        issues.append(f"Database: {str(e)[:100]}")
+        logger.warning(f"Database health check failed: {e}")
+    
+    # Check Redis health  
+    try:
+        from apps.di.analytics_container import get_redis_client
+        redis_client = await get_redis_client()
+        if redis_client:
+            start = time_module.time()
+            await redis_client.ping()
+            redis_latency = int((time_module.time() - start) * 1000)
+            redis_status = "healthy"
+            # Try to get Redis memory info
+            try:
+                info = await redis_client.info("memory")
+                redis_memory = {
+                    "used_mb": round(info.get("used_memory", 0) / 1024 / 1024, 1),
+                    "peak_mb": round(info.get("used_memory_peak", 0) / 1024 / 1024, 1),
+                }
+            except:
+                pass
+        else:
+            redis_status = "unavailable"
+    except Exception as e:
+        redis_status = "error"
+        issues.append(f"Redis: {str(e)[:100]}")
+        logger.warning(f"Redis health check failed: {e}")
+    
+    # Check User Bots - count active user bot credentials
+    user_bots_status = "unknown"
+    user_bots_count = 0
+    user_bots_total = 0
+    try:
+        if pool:
+            async with pool.acquire() as conn:
+                # Count total user bots
+                user_bots_total = await conn.fetchval(
+                    "SELECT COUNT(*) FROM user_bot_credentials"
+                ) or 0
+                # Count verified/active user bots (status = 'active' or 'verified')
+                user_bots_count = await conn.fetchval(
+                    "SELECT COUNT(*) FROM user_bot_credentials WHERE status IN ('active', 'verified') OR is_verified = true"
+                ) or 0
+                user_bots_status = "healthy" if user_bots_total > 0 else "idle"
+    except Exception as e:
+        user_bots_status = "error"
+        logger.warning(f"User bots health check failed: {e}")
+    
+    # Check User MTProto Sessions - count users with MTProto enabled
+    user_mtproto_status = "unknown"
+    user_mtproto_count = 0
+    user_mtproto_total = 0
+    try:
+        if pool:
+            async with pool.acquire() as conn:
+                # Count users with MTProto enabled on channels
+                user_mtproto_count = await conn.fetchval(
+                    "SELECT COUNT(DISTINCT user_id) FROM channel_mtproto_settings WHERE mtproto_enabled = true"
+                ) or 0
+                # Count total MTProto settings
+                user_mtproto_total = await conn.fetchval(
+                    "SELECT COUNT(*) FROM channel_mtproto_settings"
+                ) or 0
+                # Also check user_bot_credentials for mtproto_enabled
+                mtproto_bots = await conn.fetchval(
+                    "SELECT COUNT(*) FROM user_bot_credentials WHERE mtproto_enabled = true"
+                ) or 0
+                user_mtproto_count = max(user_mtproto_count, mtproto_bots)
+                user_mtproto_status = "healthy" if user_mtproto_count > 0 else "idle"
+    except Exception as e:
+        user_mtproto_status = "error"
+        logger.warning(f"User MTProto health check failed: {e}")
+    
+    # Determine overall status
+    all_healthy = (
+        db_status == "healthy" and 
+        redis_status in ("healthy", "unavailable") and
+        system_info["cpu"]["percent"] < 90 and 
+        system_info["memory"]["percent"] < 90
+    )
+    
+    return {
+        "status": "healthy" if all_healthy else "degraded",
+        "timestamp": datetime.now().isoformat(),
+        "database": {
+            "status": db_status,
+            "latency_ms": db_latency,
+            "connections": db_connections,
+        },
+        "redis": {
+            "status": redis_status,
+            "latency_ms": redis_latency,
+            "memory": redis_memory,
+        },
+        "api": {
+            "status": "healthy",
+            "uptime_hours": round((datetime.now() - datetime.now().replace(hour=0, minute=0, second=0)).total_seconds() / 3600, 1),
+        },
+        "user_bots": {
+            "status": user_bots_status,
+            "active_count": user_bots_count,
+            "total_count": user_bots_total,
+        },
+        "user_mtproto": {
+            "status": user_mtproto_status,
+            "active_sessions": user_mtproto_count,
+            "total_configured": user_mtproto_total,
+        },
+        "system": system_info,
+        "overall_score": 100 if all_healthy else 75,
+        "issues": issues,
+        "checked_by": current_user["id"],
+    }
 
 
 @router.get("/rate-limiter/stats")
@@ -1047,3 +1414,937 @@ async def get_mtproto_pool_status(
     except Exception as e:
         logger.error(f"Failed to get MTProto pool status: {e}")
         raise HTTPException(status_code=500, detail="Failed to get MTProto pool status")
+
+
+# ==================== Admin MTProto Management Endpoints ====================
+
+
+class MTProtoSessionInfo(BaseModel):
+    """MTProto session information for admin"""
+    id: int
+    user_id: int
+    user_email: Optional[str] = None
+    user_name: Optional[str] = None  # full_name or username
+    mtproto_id: Optional[int] = None  # Telegram user ID from MTProto
+    mtproto_username: Optional[str] = None  # Telegram username from MTProto
+    channel_id: int
+    channel_name: Optional[str] = None
+    channel_username: Optional[str] = None
+    mtproto_enabled: bool  # User toggle - wants to use MTProto
+    session_active: bool = False  # Actually has working session
+    created_at: datetime
+    updated_at: datetime
+
+
+class MTProtoSessionListResponse(BaseModel):
+    """Response for MTProto session list"""
+    total: int
+    page: int
+    page_size: int
+    sessions: list[MTProtoSessionInfo]
+
+
+class MTProtoStatsResponse(BaseModel):
+    """MTProto statistics response"""
+    total_sessions: int
+    active_sessions: int  # Actually working (has session + verified)
+    not_setup_sessions: int  # Enabled but not completed setup
+    disabled_sessions: int  # Turned off
+    users_with_mtproto: int
+
+
+@router.get("/mtproto/sessions", response_model=MTProtoSessionListResponse)
+async def list_mtproto_sessions(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(25, ge=1, le=100, description="Items per page"),
+    user_id: Optional[int] = Query(None, description="Filter by user ID"),
+    status_filter: Optional[str] = Query(None, description="Filter by status: active, not_setup, disabled"),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 📋 List MTProto Sessions (Admin Only)
+
+    Get paginated list of MTProto sessions across all users.
+
+    **Admin Only**: Requires admin role
+
+    **Parameters:**
+    - page: Page number (default: 1)
+    - page_size: Items per page (1-100, default: 25)
+    - user_id: Filter by user ID (optional)
+    - status_filter: Filter by status - active, not_setup, disabled (optional)
+
+    **Returns:**
+    - Paginated list of MTProto sessions with user and channel info
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+        
+        async with pool.acquire() as conn:
+            # Build query with filters
+            where_clauses = []
+            params = []
+            param_idx = 1
+            
+            if user_id is not None:
+                where_clauses.append(f"cms.user_id = ${param_idx}")
+                params.append(user_id)
+                param_idx += 1
+            
+            # Status filter logic
+            if status_filter == "active":
+                # Has session and is verified
+                where_clauses.append("(ubc.session_string IS NOT NULL AND ubc.is_verified = true)")
+            elif status_filter == "not_setup":
+                # Enabled but no session or not verified
+                where_clauses.append("(cms.mtproto_enabled = true AND (ubc.session_string IS NULL OR ubc.is_verified = false))")
+            elif status_filter == "disabled":
+                where_clauses.append("cms.mtproto_enabled = false")
+            
+            where_clause = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+            
+            # Get total count - need to join for status filter
+            count_query = f"""
+                SELECT COUNT(*) FROM channel_mtproto_settings cms
+                LEFT JOIN user_bot_credentials ubc ON cms.user_id = ubc.user_id
+                {where_clause}
+            """
+            total = await conn.fetchval(count_query, *params) or 0
+            
+            # Get paginated results
+            offset = (page - 1) * page_size
+            
+            # Build paginated query with correct parameter indices
+            limit_param = f"${param_idx}"
+            offset_param = f"${param_idx + 1}"
+            
+            query = f"""
+                SELECT 
+                    cms.id,
+                    cms.user_id,
+                    u.email as user_email,
+                    COALESCE(u.full_name, u.username, 'Unknown') as user_name,
+                    ubc.mtproto_id,
+                    ubc.mtproto_username,
+                    cms.channel_id,
+                    c.title as channel_name,
+                    c.username as channel_username,
+                    cms.mtproto_enabled,
+                    (ubc.session_string IS NOT NULL AND ubc.is_verified = true) as session_active,
+                    cms.created_at,
+                    cms.updated_at
+                FROM channel_mtproto_settings cms
+                LEFT JOIN users u ON cms.user_id = u.id
+                LEFT JOIN channels c ON cms.channel_id = c.id
+                LEFT JOIN user_bot_credentials ubc ON cms.user_id = ubc.user_id
+                {where_clause}
+                ORDER BY cms.updated_at DESC
+                LIMIT {limit_param} OFFSET {offset_param}
+            """
+            
+            # Add pagination params
+            query_params = params + [page_size, offset]
+            rows = await conn.fetch(query, *query_params)
+            
+            sessions = [
+                MTProtoSessionInfo(
+                    id=row["id"],
+                    user_id=row["user_id"],
+                    user_email=row["user_email"],
+                    user_name=row["user_name"],
+                    mtproto_id=row["mtproto_id"],
+                    mtproto_username=row["mtproto_username"],
+                    channel_id=row["channel_id"],
+                    channel_name=row["channel_name"],
+                    channel_username=row["channel_username"],
+                    mtproto_enabled=row["mtproto_enabled"],
+                    session_active=row["session_active"] or False,
+                    created_at=row["created_at"],
+                    updated_at=row["updated_at"],
+                )
+                for row in rows
+            ]
+            
+            return MTProtoSessionListResponse(
+                total=total,
+                page=page,
+                page_size=page_size,
+                sessions=sessions,
+            )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to list MTProto sessions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list MTProto sessions")
+
+
+@router.get("/mtproto/stats", response_model=MTProtoStatsResponse)
+async def get_mtproto_stats(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 📊 Get MTProto Statistics (Admin Only)
+
+    Get overall MTProto statistics.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Total sessions, enabled/disabled counts, user/channel counts
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+        
+        async with pool.acquire() as conn:
+            # Get session counts with accurate status
+            stats = await conn.fetchrow("""
+                SELECT 
+                    COUNT(*) as total_sessions,
+                    COUNT(*) FILTER (WHERE cms.mtproto_enabled = true AND ubc.session_string IS NOT NULL AND ubc.is_verified = true) as active_sessions,
+                    COUNT(*) FILTER (WHERE cms.mtproto_enabled = true AND (ubc.session_string IS NULL OR ubc.is_verified = false)) as not_setup_sessions,
+                    COUNT(*) FILTER (WHERE cms.mtproto_enabled = false) as disabled_sessions,
+                    COUNT(DISTINCT cms.user_id) as users_with_mtproto
+                FROM channel_mtproto_settings cms
+                LEFT JOIN user_bot_credentials ubc ON cms.user_id = ubc.user_id
+            """)
+            
+            return MTProtoStatsResponse(
+                total_sessions=stats["total_sessions"] or 0,
+                active_sessions=stats["active_sessions"] or 0,
+                not_setup_sessions=stats["not_setup_sessions"] or 0,
+                disabled_sessions=stats["disabled_sessions"] or 0,
+                users_with_mtproto=stats["users_with_mtproto"] or 0,
+            )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get MTProto stats: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get MTProto statistics")
+
+
+@router.patch("/mtproto/sessions/{session_id}/toggle")
+async def toggle_mtproto_session(
+    session_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🔄 Toggle MTProto Session (Admin Only)
+
+    Enable or disable an MTProto session.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Updated session status
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+        
+        async with pool.acquire() as conn:
+            # Get current status
+            current = await conn.fetchrow(
+                "SELECT mtproto_enabled FROM channel_mtproto_settings WHERE id = $1",
+                session_id
+            )
+            
+            if not current:
+                raise HTTPException(status_code=404, detail="MTProto session not found")
+            
+            # Toggle status
+            new_status = not current["mtproto_enabled"]
+            await conn.execute(
+                "UPDATE channel_mtproto_settings SET mtproto_enabled = $1, updated_at = NOW() WHERE id = $2",
+                new_status, session_id
+            )
+            
+            return {"success": True, "mtproto_enabled": new_status}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to toggle MTProto session: {e}")
+        raise HTTPException(status_code=500, detail="Failed to toggle MTProto session")
+
+
+@router.delete("/mtproto/sessions/{user_id}")
+async def delete_mtproto_session(
+    user_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🗑️ Delete MTProto Session (Admin Only)
+
+    Delete all MTProto configuration for a user including:
+    - All channel_mtproto_settings entries
+    - Clear MTProto credentials from user_bot_credentials
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Success status
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+        
+        async with pool.acquire() as conn:
+            # Check if user has MTProto settings
+            count = await conn.fetchval(
+                "SELECT COUNT(*) FROM channel_mtproto_settings WHERE user_id = $1",
+                user_id
+            )
+            
+            if count == 0:
+                raise HTTPException(status_code=404, detail="No MTProto sessions found for this user")
+            
+            # Delete all channel_mtproto_settings for this user
+            deleted_channels = await conn.execute(
+                "DELETE FROM channel_mtproto_settings WHERE user_id = $1",
+                user_id
+            )
+            
+            # Clear MTProto credentials from user_bot_credentials (but keep bot credentials)
+            await conn.execute("""
+                UPDATE user_bot_credentials 
+                SET 
+                    mtproto_id = NULL,
+                    mtproto_username = NULL,
+                    mtproto_api_id = NULL,
+                    telegram_api_hash = NULL,
+                    mtproto_phone = NULL,
+                    session_string = NULL,
+                    mtproto_enabled = false,
+                    is_verified = false
+                WHERE user_id = $1
+            """, user_id)
+            
+            # Log the deletion in audit log
+            await conn.execute("""
+                INSERT INTO mtproto_audit_log (user_id, channel_id, action, metadata, timestamp)
+                VALUES ($1, 0, 'mtproto_deleted', '{"deleted_by": "admin"}'::jsonb, NOW())
+            """, user_id)
+            
+            logger.info(f"Admin deleted MTProto for user {user_id}")
+            
+            return {"success": True, "message": f"MTProto configuration deleted for user {user_id}"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete MTProto session: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete MTProto session")
+
+
+class MTProtoSessionDetail(BaseModel):
+    """Detailed MTProto session information"""
+    id: int
+    user_id: int
+    user_email: Optional[str] = None
+    channel_id: int
+    channel_name: Optional[str] = None
+    mtproto_enabled: bool
+    created_at: datetime
+    updated_at: datetime
+    # Collection stats
+    total_collection_runs: int = 0
+    last_collection_at: Optional[datetime] = None
+    total_messages_collected: int = 0
+    avg_messages_per_run: float = 0
+    # Recent activity
+    recent_actions: list[dict] = []
+
+
+class MTProtoCollectionRun(BaseModel):
+    """Single collection run info"""
+    started_at: datetime
+    ended_at: Optional[datetime] = None
+    messages_collected: int = 0
+    duration_seconds: Optional[float] = None
+    status: str = "unknown"
+    speed_msg_per_sec: Optional[float] = None
+
+
+@router.get("/mtproto/sessions/{session_id}/details")
+async def get_mtproto_session_details(
+    session_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 📊 Get MTProto Session Details (Admin Only)
+
+    Get detailed information about an MTProto session including collection history.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Session details with collection statistics
+    - Total runs, messages collected, average performance
+    - Recent collection activities
+    - All channels connected to this user's MTProto
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+        
+        async with pool.acquire() as conn:
+            # Get session info with user and bot details
+            session = await conn.fetchrow("""
+                SELECT 
+                    cms.id,
+                    cms.user_id,
+                    u.email as user_email,
+                    COALESCE(u.full_name, u.username, 'Unknown') as user_name,
+                    u.telegram_id as user_telegram_id,
+                    ubc.mtproto_id,
+                    ubc.mtproto_username,
+                    cms.channel_id,
+                    c.title as channel_name,
+                    c.username as channel_username,
+                    cms.mtproto_enabled,
+                    cms.created_at,
+                    cms.updated_at
+                FROM channel_mtproto_settings cms
+                LEFT JOIN users u ON cms.user_id = u.id
+                LEFT JOIN channels c ON cms.channel_id = c.id
+                LEFT JOIN user_bot_credentials ubc ON cms.user_id = ubc.user_id
+                WHERE cms.id = $1
+            """, session_id)
+            
+            if not session:
+                raise HTTPException(status_code=404, detail="MTProto session not found")
+            
+            channel_id = session["channel_id"]
+            user_id = session["user_id"]
+            
+            # Get ALL channels connected to this user's MTProto (up to 5 per user)
+            channels = await conn.fetch("""
+                SELECT 
+                    cms.id as mtproto_id,
+                    cms.channel_id,
+                    c.title as channel_name,
+                    c.username as channel_username,
+                    cms.mtproto_enabled,
+                    cms.created_at
+                FROM channel_mtproto_settings cms
+                LEFT JOIN channels c ON cms.channel_id = c.id
+                WHERE cms.user_id = $1
+                ORDER BY cms.created_at DESC
+            """, user_id)
+            
+            connected_channels = [
+                {
+                    "mtproto_id": ch["mtproto_id"],
+                    "channel_id": ch["channel_id"],
+                    "channel_name": ch["channel_name"] or "Unknown",
+                    "channel_username": ch["channel_username"],
+                    "mtproto_enabled": ch["mtproto_enabled"],
+                    "connected_at": ch["created_at"].isoformat() if ch["created_at"] else None,
+                }
+                for ch in channels
+            ]
+            
+            # Get collection stats from audit log - aggregate for ALL user's channels
+            stats = await conn.fetchrow("""
+                SELECT 
+                    COUNT(*) FILTER (WHERE action = 'collection_progress') as total_runs,
+                    MIN(timestamp) FILTER (WHERE action = 'collection_progress') as first_run,
+                    MAX(timestamp) FILTER (WHERE action = 'collection_progress') as last_run,
+                    SUM((metadata::json->>'errors')::int) FILTER (WHERE action = 'collection_progress') as total_errors
+                FROM mtproto_audit_log
+                WHERE user_id = $1
+            """, user_id)
+            
+            total_runs = stats["total_runs"] or 0
+            first_run = stats["first_run"]
+            last_run = stats["last_run"]
+            total_errors = stats["total_errors"] or 0
+            
+            # Calculate average interval between runs
+            avg_interval_minutes = None
+            if total_runs > 1 and first_run and last_run:
+                total_seconds = (last_run - first_run).total_seconds()
+                avg_interval_minutes = round(total_seconds / (total_runs - 1) / 60, 1)
+            
+            # Get recent activities - only enabled/disabled for status changes
+            recent = await conn.fetch("""
+                SELECT 
+                    action,
+                    timestamp,
+                    channel_id
+                FROM mtproto_audit_log
+                WHERE user_id = $1
+                AND action IN ('enabled', 'disabled')
+                ORDER BY timestamp DESC
+                LIMIT 10
+            """, user_id)
+            
+            recent_actions = []
+            for r in recent:
+                recent_actions.append({
+                    "action": r["action"],
+                    "timestamp": r["timestamp"].isoformat() if r["timestamp"] else None,
+                    "channel_id": r["channel_id"],
+                })
+            
+            return {
+                "id": session["id"],
+                "user_id": session["user_id"],
+                "user_email": session["user_email"],
+                "user_name": session["user_name"],
+                "user_telegram_id": session["user_telegram_id"],
+                "mtproto_id": session["mtproto_id"],
+                "mtproto_username": session["mtproto_username"],
+                "channel_name": session["channel_name"],
+                "channel_username": session["channel_username"],
+                "mtproto_enabled": session["mtproto_enabled"],
+                "created_at": session["created_at"].isoformat() if session["created_at"] else None,
+                "updated_at": session["updated_at"].isoformat() if session["updated_at"] else None,
+                "connected_channels": connected_channels,
+                "stats": {
+                    "total_runs": total_runs,
+                    "first_run_at": first_run.isoformat() if first_run else None,
+                    "last_run_at": last_run.isoformat() if last_run else None,
+                    "avg_interval_minutes": avg_interval_minutes,
+                    "total_errors": total_errors,
+                },
+                "recent_status_changes": recent_actions,
+            }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get MTProto session details: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get MTProto session details")
+
+
+@router.get("/mtproto/sessions/{session_id}/collection-history")
+async def get_mtproto_collection_history(
+    session_id: int,
+    limit: int = Query(50, ge=1, le=500, description="Number of collection runs to return"),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 📜 Get MTProto Collection History (Admin Only)
+
+    Get detailed history of all collection runs for a session.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - List of collection runs with start/end times
+    - Messages collected per run
+    - Duration and speed statistics
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+        
+        async with pool.acquire() as conn:
+            # Get session info for channel_id
+            session = await conn.fetchrow("""
+                SELECT channel_id, user_id FROM channel_mtproto_settings WHERE id = $1
+            """, session_id)
+            
+            if not session:
+                raise HTTPException(status_code=404, detail="MTProto session not found")
+            
+            channel_id = session["channel_id"]
+            user_id = session["user_id"]
+            
+            # Get collection runs (start and end pairs)
+            runs = await conn.fetch("""
+                WITH starts AS (
+                    SELECT 
+                        id,
+                        timestamp as started_at,
+                        metadata,
+                        ROW_NUMBER() OVER (ORDER BY timestamp DESC) as rn
+                    FROM mtproto_audit_log
+                    WHERE channel_id = $1 AND user_id = $2 AND action = 'collection_start'
+                    ORDER BY timestamp DESC
+                    LIMIT $3
+                ),
+                ends AS (
+                    SELECT 
+                        id,
+                        timestamp as ended_at,
+                        metadata,
+                        ROW_NUMBER() OVER (ORDER BY timestamp DESC) as rn
+                    FROM mtproto_audit_log
+                    WHERE channel_id = $1 AND user_id = $2 AND action = 'collection_end'
+                    ORDER BY timestamp DESC
+                    LIMIT $3
+                )
+                SELECT 
+                    s.started_at,
+                    e.ended_at,
+                    s.metadata as start_meta,
+                    e.metadata as end_meta
+                FROM starts s
+                LEFT JOIN ends e ON s.rn = e.rn
+                ORDER BY s.started_at DESC
+            """, channel_id, user_id, limit)
+            
+            collection_runs = []
+            for r in runs:
+                end_meta = r["end_meta"]
+                if isinstance(end_meta, str):
+                    import json
+                    try:
+                        end_meta = json.loads(end_meta)
+                    except:
+                        end_meta = {}
+                
+                started_at = r["started_at"]
+                ended_at = r["ended_at"]
+                duration = None
+                if started_at and ended_at:
+                    duration = (ended_at - started_at).total_seconds()
+                
+                collection_runs.append({
+                    "started_at": started_at.isoformat() if started_at else None,
+                    "ended_at": ended_at.isoformat() if ended_at else None,
+                    "duration_seconds": round(duration, 1) if duration else None,
+                    "messages_collected": end_meta.get("messages_current") if end_meta else None,
+                    "speed_msg_per_sec": end_meta.get("speed_messages_per_second") if end_meta else None,
+                    "status": "completed" if ended_at else "in_progress",
+                })
+            
+            return {
+                "session_id": session_id,
+                "channel_id": channel_id,
+                "total_runs": len(collection_runs),
+                "collection_runs": collection_runs,
+            }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get MTProto collection history: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get MTProto collection history")
+
+
+# ==================== System Settings Endpoints ====================
+
+
+class SystemSetting(BaseModel):
+    """System setting model"""
+    key: str
+    value: Optional[str]
+    description: Optional[str]
+    data_type: str
+    is_system: bool
+    updated_by: Optional[int]
+    updated_at: Optional[datetime]
+
+
+class SettingUpdate(BaseModel):
+    """Request model for updating a setting"""
+    value: str
+
+
+class SettingsResponse(BaseModel):
+    """Response model for settings list"""
+    settings: list[SystemSetting]
+    total: int
+
+
+@router.get("/settings", response_model=SettingsResponse)
+async def get_system_settings(
+    current_user: dict = Depends(get_current_user),
+    include_system: bool = Query(False, description="Include system-level settings"),
+):
+    """
+    ## ⚙️ Get System Settings (Admin Only)
+
+    Retrieve all configurable system settings.
+
+    **Admin Only**: Requires admin role
+
+    **Parameters:**
+    - include_system: Include system-level settings (default: false)
+
+    **Returns:**
+    - List of system settings
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+
+        async with pool.acquire() as conn:
+            if include_system:
+                query = "SELECT * FROM system_settings ORDER BY key"
+                rows = await conn.fetch(query)
+            else:
+                query = "SELECT * FROM system_settings WHERE is_system = FALSE ORDER BY key"
+                rows = await conn.fetch(query)
+
+            settings = [
+                SystemSetting(
+                    key=row["key"],
+                    value=row["value"],
+                    description=row["description"],
+                    data_type=row["data_type"],
+                    is_system=row["is_system"],
+                    updated_by=row["updated_by"],
+                    updated_at=row["updated_at"],
+                )
+                for row in rows
+            ]
+
+            return SettingsResponse(settings=settings, total=len(settings))
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Settings fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch settings")
+
+
+@router.get("/settings/{key}", response_model=SystemSetting)
+async def get_setting(
+    key: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## ⚙️ Get Single Setting (Admin Only)
+
+    Retrieve a specific setting by key.
+
+    **Admin Only**: Requires admin role
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT * FROM system_settings WHERE key = $1",
+                key
+            )
+
+            if not row:
+                raise HTTPException(status_code=404, detail=f"Setting '{key}' not found")
+
+            return SystemSetting(
+                key=row["key"],
+                value=row["value"],
+                description=row["description"],
+                data_type=row["data_type"],
+                is_system=row["is_system"],
+                updated_by=row["updated_by"],
+                updated_at=row["updated_at"],
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Setting fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch setting")
+
+
+@router.put("/settings/{key}")
+async def update_setting(
+    key: str,
+    update: SettingUpdate,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## ⚙️ Update Setting (Admin Only)
+
+    Update a system setting value.
+
+    **Admin Only**: Requires admin role
+
+    **Note**: System-level settings cannot be modified through this endpoint.
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+
+        async with pool.acquire() as conn:
+            # Check if setting exists and is not system-level
+            existing = await conn.fetchrow(
+                "SELECT * FROM system_settings WHERE key = $1",
+                key
+            )
+
+            if not existing:
+                raise HTTPException(status_code=404, detail=f"Setting '{key}' not found")
+
+            if existing["is_system"]:
+                raise HTTPException(
+                    status_code=403,
+                    detail="System-level settings cannot be modified through API"
+                )
+
+            # Update the setting
+            await conn.execute(
+                """
+                UPDATE system_settings
+                SET value = $1, updated_by = $2, updated_at = NOW()
+                WHERE key = $3
+                """,
+                update.value,
+                current_user["id"],
+                key
+            )
+
+            # Log the action
+            from apps.api.utils.audit_logger import log_admin_action, AdminActions, ResourceTypes
+            await log_admin_action(
+                admin_user_id=current_user["id"],
+                action=AdminActions.SETTINGS_UPDATE,
+                resource_type=ResourceTypes.SETTINGS,
+                resource_id=key,
+                details={"old_value": existing["value"], "new_value": update.value},
+                success=True,
+            )
+
+            return {
+                "success": True,
+                "message": f"Setting '{key}' updated successfully",
+                "key": key,
+                "value": update.value,
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Setting update failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update setting")
+
+
+@router.post("/settings")
+async def create_setting(
+    setting: SystemSetting,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## ⚙️ Create Setting (Admin Only)
+
+    Create a new system setting.
+
+    **Admin Only**: Requires admin role
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+
+        async with pool.acquire() as conn:
+            # Check if setting already exists
+            existing = await conn.fetchrow(
+                "SELECT key FROM system_settings WHERE key = $1",
+                setting.key
+            )
+
+            if existing:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Setting '{setting.key}' already exists"
+                )
+
+            # Create the setting
+            await conn.execute(
+                """
+                INSERT INTO system_settings (key, value, description, data_type, is_system, updated_by, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                """,
+                setting.key,
+                setting.value,
+                setting.description,
+                setting.data_type,
+                False,  # User-created settings are not system-level
+                current_user["id"],
+            )
+
+            # Log the action
+            from apps.api.utils.audit_logger import log_admin_action, AdminActions, ResourceTypes
+            await log_admin_action(
+                admin_user_id=current_user["id"],
+                action=AdminActions.SETTINGS_UPDATE,
+                resource_type=ResourceTypes.SETTINGS,
+                resource_id=setting.key,
+                details={"action": "created", "value": setting.value},
+                success=True,
+            )
+
+            return {
+                "success": True,
+                "message": f"Setting '{setting.key}' created successfully",
+                "key": setting.key,
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Setting creation failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create setting")
+
+
+@router.delete("/settings/{key}")
+async def delete_setting(
+    key: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## ⚙️ Delete Setting (Admin Only)
+
+    Delete a system setting.
+
+    **Admin Only**: Requires admin role
+
+    **Note**: System-level settings cannot be deleted.
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+
+        async with pool.acquire() as conn:
+            # Check if setting exists and is not system-level
+            existing = await conn.fetchrow(
+                "SELECT * FROM system_settings WHERE key = $1",
+                key
+            )
+
+            if not existing:
+                raise HTTPException(status_code=404, detail=f"Setting '{key}' not found")
+
+            if existing["is_system"]:
+                raise HTTPException(
+                    status_code=403,
+                    detail="System-level settings cannot be deleted"
+                )
+
+            # Delete the setting
+            await conn.execute(
+                "DELETE FROM system_settings WHERE key = $1",
+                key
+            )
+
+            # Log the action
+            from apps.api.utils.audit_logger import log_admin_action, AdminActions, ResourceTypes
+            await log_admin_action(
+                admin_user_id=current_user["id"],
+                action=AdminActions.SETTINGS_UPDATE,
+                resource_type=ResourceTypes.SETTINGS,
+                resource_id=key,
+                details={"action": "deleted", "old_value": existing["value"]},
+                success=True,
+            )
+
+            return {
+                "success": True,
+                "message": f"Setting '{key}' deleted successfully",
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Setting deletion failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete setting")

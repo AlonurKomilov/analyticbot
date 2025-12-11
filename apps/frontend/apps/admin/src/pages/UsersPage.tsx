@@ -11,7 +11,6 @@ import {
   TableRow,
   IconButton,
   Chip,
-  CircularProgress,
   TextField,
   InputAdornment,
   Tooltip,
@@ -28,6 +27,9 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Checkbox,
+  Toolbar,
+  CircularProgress,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -42,10 +44,14 @@ import {
   MonetizationOn as CreditsIcon,
   Add as AddIcon,
   Remove as RemoveIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material';
 import { apiClient } from '@api/client';
 import { API_ENDPOINTS } from '@config/api';
 import { format } from 'date-fns';
+import { useDebounce } from '../hooks/useDebounce';
+import { PageSkeleton } from '../components/Skeletons';
+import { exportTableData, generateExportFilename } from '../utils/export';
 
 interface User {
   id: number;
@@ -109,6 +115,14 @@ const UsersPage: React.FC = () => {
   const [creditReason, setCreditReason] = useState('');
   const [creditLoading, setCreditLoading] = useState(false);
   const [userCredits, setUserCredits] = useState<{ balance: number; lifetime_earned: number; lifetime_spent: number } | null>(null);
+
+  // Bulk selection state
+  const [selected, setSelected] = useState<number[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_bulkSuspendDialogOpen, setBulkSuspendDialogOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, user: User) => {
     setMenuAnchorEl(event.currentTarget);
@@ -302,11 +316,104 @@ const UsersPage: React.FC = () => {
     }
   };
 
+  // Bulk selection handlers
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      // Only select non-admin users
+      const selectableUsers = filteredUsers.filter(u => u.role !== 'admin' && u.role !== 'owner');
+      setSelected(selectableUsers.map(u => u.id));
+    } else {
+      setSelected([]);
+    }
+  };
+
+  const handleSelectOne = (userId: number) => {
+    setSelected(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleBulkSuspend = async () => {
+    setBulkActionLoading(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const userId of selected) {
+      try {
+        await apiClient.post(API_ENDPOINTS.ADMIN.USER_SUSPEND(userId), {
+          reason: 'Bulk suspension by admin',
+        });
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setBulkActionLoading(false);
+    setBulkSuspendDialogOpen(false);
+    setSelected([]);
+    fetchUsers();
+    
+    if (failCount === 0) {
+      setSnackbar({ open: true, message: `Successfully suspended ${successCount} users`, severity: 'success' });
+    } else {
+      setSnackbar({ open: true, message: `Suspended ${successCount} users, ${failCount} failed`, severity: 'warning' as 'success' });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkActionLoading(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const userId of selected) {
+      try {
+        await apiClient.delete(API_ENDPOINTS.ADMIN.USER_DELETE(userId));
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setBulkActionLoading(false);
+    setBulkDeleteDialogOpen(false);
+    setSelected([]);
+    fetchUsers();
+    
+    if (failCount === 0) {
+      setSnackbar({ open: true, message: `Successfully deleted ${successCount} users`, severity: 'success' });
+    } else {
+      setSnackbar({ open: true, message: `Deleted ${successCount} users, ${failCount} failed`, severity: 'warning' as 'success' });
+    }
+  };
+
+  const handleExportCSV = () => {
+    const exportData = filteredUsers.map(user => ({
+      ID: user.id,
+      Username: user.username,
+      Email: user.email,
+      Role: user.role,
+      Status: user.status,
+      'Auth Provider': user.auth_provider || 'email',
+      'Credit Balance': user.credit_balance || 0,
+      'Created At': user.created_at,
+      'Last Login': user.last_login || 'Never',
+    }));
+    
+    exportTableData(exportData, generateExportFilename('users'), 'csv');
+    setSnackbar({ open: true, message: 'Users exported successfully', severity: 'success' });
+  };
+
+  // Debounce search for better performance
+  const debouncedSearch = useDebounce(search, 300);
+
   const filteredUsers = users.filter(
     (user) =>
-      user.id?.toString().includes(search) ||
-      user.username?.toLowerCase().includes(search.toLowerCase()) ||
-      user.email?.toLowerCase().includes(search.toLowerCase())
+      user.id?.toString().includes(debouncedSearch) ||
+      user.username?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      user.email?.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
   const getStatusColor = (status: string) => {
@@ -328,9 +435,14 @@ const UsersPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <CircularProgress />
-      </Box>
+      <PageSkeleton
+        hasTitle={true}
+        hasStats={false}
+        hasFilters={true}
+        hasTable={true}
+        tableRows={10}
+        tableColumns={11}
+      />
     );
   }
 
@@ -346,29 +458,86 @@ const UsersPage: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Search */}
+      {/* Search and Bulk Actions */}
       <Paper sx={{ p: 2, mb: 3 }}>
-        <TextField
-          placeholder="Search users..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          size="small"
-          sx={{ minWidth: 300 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            ),
-          }}
-        />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <TextField
+            placeholder="Search users..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            size="small"
+            sx={{ minWidth: 300 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<DownloadIcon />}
+              onClick={handleExportCSV}
+            >
+              Export CSV
+            </Button>
+          </Box>
+        </Box>
       </Paper>
+
+      {/* Bulk Actions Toolbar */}
+      {selected.length > 0 && (
+        <Toolbar
+          sx={{
+            mb: 2,
+            pl: { sm: 2 },
+            pr: { xs: 1, sm: 1 },
+            bgcolor: 'primary.light',
+            borderRadius: 1,
+            color: 'primary.contrastText',
+          }}
+        >
+          <Typography sx={{ flex: '1 1 100%' }} color="inherit" variant="subtitle1">
+            {selected.length} user(s) selected
+          </Typography>
+          <Tooltip title="Suspend Selected">
+            <IconButton
+              color="inherit"
+              onClick={handleBulkSuspend}
+              disabled={bulkActionLoading}
+            >
+              <BlockIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete Selected">
+            <IconButton
+              color="inherit"
+              onClick={handleBulkDelete}
+              disabled={bulkActionLoading}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+          {bulkActionLoading && <CircularProgress size={24} sx={{ ml: 2, color: 'inherit' }} />}
+        </Toolbar>
+      )}
 
       {/* Users Table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell padding="checkbox">
+                <Checkbox
+                  indeterminate={selected.length > 0 && selected.length < filteredUsers.length}
+                  checked={filteredUsers.length > 0 && selected.length === filteredUsers.length}
+                  onChange={handleSelectAll}
+                  color="primary"
+                />
+              </TableCell>
               <TableCell>ID</TableCell>
               <TableCell>Username</TableCell>
               <TableCell>Email</TableCell>
@@ -385,7 +554,18 @@ const UsersPage: React.FC = () => {
             {filteredUsers
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((user) => (
-                <TableRow key={user.id} hover>
+                <TableRow 
+                  key={user.id} 
+                  hover
+                  selected={selected.includes(user.id)}
+                >
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={selected.includes(user.id)}
+                      onChange={() => handleSelectOne(user.id)}
+                      color="primary"
+                    />
+                  </TableCell>
                   <TableCell>{user.id}</TableCell>
                   <TableCell sx={{ fontWeight: 500 }}>{user.username || '-'}</TableCell>
                   <TableCell>{user.email || '-'}</TableCell>

@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box,
     Card,
@@ -51,6 +52,9 @@ interface FormErrors {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPassword = null }) => {
+    const { t } = useTranslation('auth');
+    const { t: tErrors } = useTranslation('errors');
+    const { t: tCommon } = useTranslation('common');
     const { login, isLoading } = useAuth();
     const [formData, setFormData] = useState<FormData>({
         email: '',
@@ -68,16 +72,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
 
         // Email validation
         if (!formData.email) {
-            newErrors.email = 'Email is required';
+            newErrors.email = tErrors('validation.required');
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Please enter a valid email address';
+            newErrors.email = tErrors('validation.email');
         }
 
         // Password validation
         if (!formData.password) {
-            newErrors.password = 'Password is required';
+            newErrors.password = tErrors('validation.required');
         } else if (formData.password.length < 8) {
-            newErrors.password = 'Password must be at least 8 characters';
+            newErrors.password = tErrors('validation.minLength', { min: 8 });
         }
 
         setErrors(newErrors);
@@ -126,11 +130,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
             );
 
             if (!result.success) {
-                setLoginError(result.error || 'Login failed. Please try again.');
+                setLoginError(result.error || tErrors('auth.invalidCredentials'));
             }
             // Success is handled by AuthContext (redirects user)
         } catch (error) {
-            setLoginError('Network error. Please check your connection and try again.');
+            setLoginError(tErrors('general.networkError'));
         } finally {
             setIsSubmitting(false);
         }
@@ -170,10 +174,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                             }}
                         />
                         <Typography variant="h4" component="h1" gutterBottom>
-                            Welcome Back
+                            {t('login.title')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Sign in to your AnalyticBot account
+                            {t('login.subtitle')}
                         </Typography>
                     </Box>
 
@@ -191,7 +195,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                             fullWidth
                             name="email"
                             type="email"
-                            label="Email Address"
+                            label={t('login.email')}
                             value={formData.email}
                             onChange={handleChange}
                             error={!!errors.email}
@@ -214,7 +218,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                             fullWidth
                             name="password"
                             type={showPassword ? 'text' : 'password'}
-                            label="Password"
+                            label={t('login.password')}
                             value={formData.password}
                             onChange={handleChange}
                             error={!!errors.password}
@@ -257,7 +261,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                             }
                             label={
                                 <Typography variant="body2" color="text.secondary">
-                                    Keep me signed in for 30 days
+                                    {t('login.rememberMe')}
                                 </Typography>
                             }
                             sx={{ mb: 2 }}
@@ -280,10 +284,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                             {isSubmitting ? (
                                 <>
                                     <CircularProgress size={20} sx={{ mr: 1 }} />
-                                    Signing In...
+                                    {tCommon('loading')}
                                 </>
                             ) : (
-                                'Sign In'
+                                t('login.signIn')
                             )}
                         </Button>
 
@@ -307,11 +311,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                                     if (onForgotPassword) {
                                         onForgotPassword();
                                     } else {
-                                        alert('Forgot password feature coming soon!');
+                                        alert(tCommon('comingSoon'));
                                     }
                                 }}
                             >
-                                Forgot your password?
+                                {t('login.forgotPassword')}
                             </Link>
                         </Box>
 
@@ -320,14 +324,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                             <>
                                 <Divider sx={{ my: 2 }}>
                                     <Typography variant="body2" color="text.secondary">
-                                        Don't have an account?
+                                        {t('login.noAccount')}
                                     </Typography>
                                 </Divider>
 
                                 {/* Register Link */}
                                 <Box sx={{ textAlign: 'center' }}>
                                     <Typography variant="body2" color="text.secondary">
-                                        Don't have an account?{' '}
+                                        {t('login.noAccount')}{' '}
                                         <Link
                                             href="#"
                                             onClick={(e) => {
@@ -335,7 +339,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                                                 onToggleMode();
                                             }}
                                         >
-                                            Sign up here
+                                            {t('login.signUp')}
                                         </Link>
                                     </Typography>
                                 </Box>

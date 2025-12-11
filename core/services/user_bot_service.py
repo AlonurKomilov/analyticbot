@@ -105,6 +105,16 @@ class UserBotService:
                 bot_username = bot_info.get("username")
             bot_id = bot_info.get("id")
 
+        # Check if this bot is already assigned to another user
+        if bot_id:
+            existing_bot = await self.repository.get_by_bot_id(bot_id)
+            if existing_bot and existing_bot.user_id != user_id:
+                raise ValueError(
+                    f"This bot (@{bot_username or bot_id}) is already connected to another user. "
+                    f"Each bot can only be linked to one AnalyticBot account. "
+                    f"Please use a different bot."
+                )
+
         # Encrypt sensitive credentials
         encrypted_token = self.encryption_service.encrypt(bot_token)
         encrypted_api_hash = self.encryption_service.encrypt(api_hash) if api_hash else None
@@ -114,7 +124,7 @@ class UserBotService:
             id=0,  # Will be set by database
             user_id=user_id,
             bot_token=encrypted_token,
-            telegram_api_id=api_id or 0,
+            mtproto_api_id=api_id or 0,
             telegram_api_hash=encrypted_api_hash or "",
             bot_username=bot_username,
             bot_id=bot_id,
@@ -243,9 +253,7 @@ class UserBotService:
             logger.warning(f"Error shutting down bot for user {user_id}: {e}")
 
         # Delete from database
-        if credentials.id is None:
-            raise ValueError("Credentials ID is None")
-        success = await self.repository.delete(credentials.id)
+        success = await self.repository.delete(user_id)
 
         if success:
             logger.info(f"Removed bot for user {user_id}: {credentials.id}")

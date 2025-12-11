@@ -307,6 +307,13 @@ async def activate_bot(
 
     except HTTPException:
         raise
+    except ValueError as e:
+        # Handle incomplete bot validation error
+        logger.warning(f"Cannot activate bot for user {user_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
         logger.error(f"Error activating bot for user {user_id} by admin {admin_id}: {e}")
         raise HTTPException(
@@ -433,4 +440,71 @@ async def get_user_bot_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get bot status",
+        )
+
+
+@router.delete(
+    "/{user_id}/delete",
+    responses={
+        200: {"description": "Bot deleted successfully"},
+        403: {"model": ErrorResponse, "description": "Admin access required"},
+        404: {"model": ErrorResponse, "description": "Bot not found"},
+    },
+)
+async def delete_user_bot(
+    user_id: int,
+    admin_id: Annotated[int, Depends(get_admin_user_id)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
+):
+    """
+    Delete a user's bot from the system (admin only).
+
+    This will completely remove the bot credentials, allowing the user
+    to set up a new bot from scratch.
+
+    - **user_id**: Target user ID whose bot to delete
+    """
+    try:
+        # First check if bot exists
+        credentials = await repository.get_by_user_id(user_id)
+        if not credentials:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No bot found for user {user_id}",
+            )
+
+        # Delete the bot
+        success = await repository.delete(user_id)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete bot from database",
+            )
+
+        # Log admin action
+        from datetime import datetime
+        from core.models.user_bot_domain import AdminBotAction
+        await repository.log_admin_action(
+            AdminBotAction(
+                id=0,
+                admin_user_id=admin_id,
+                target_user_id=user_id,
+                action="delete_bot",
+                details={"bot_username": credentials.bot_username, "bot_id": credentials.bot_id},
+                timestamp=datetime.utcnow(),
+            )
+        )
+
+        logger.info(f"Admin {admin_id} deleted bot for user {user_id}")
+
+        return {"message": f"Bot for user {user_id} deleted successfully", "deleted": True}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting bot for user {user_id} by admin {admin_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete bot",
         )

@@ -13,6 +13,7 @@ class BotStatus(str, Enum):
 
     PENDING = "pending"  # Credentials added, not verified
     ACTIVE = "active"  # Bot is active and working
+    INACTIVE = "inactive"  # Bot is inactive/not setup
     SUSPENDED = "suspended"  # Admin suspended
     RATE_LIMITED = "rate_limited"  # Hit rate limits
     ERROR = "error"  # Configuration error
@@ -32,9 +33,11 @@ class UserBotCredentials:
     bot_id: int | None = None
 
     # MTProto credentials (optional - for reading channel history)
-    telegram_api_id: int | None = None
+    mtproto_id: int | None = None  # Telegram user ID from MTProto authentication
+    mtproto_username: str | None = None  # Telegram username from MTProto authentication
+    mtproto_api_id: int | None = None
     telegram_api_hash: str | None = None
-    telegram_phone: str | None = None
+    mtproto_phone: str | None = None
     session_string: str | None = None
     mtproto_enabled: bool = True  # Allow user to enable/disable MTProto functionality
 

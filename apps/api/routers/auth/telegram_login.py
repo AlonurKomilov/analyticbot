@@ -315,6 +315,7 @@ async def telegram_login(
                 "status": user.status.value,
                 "telegram_id": telegram_data.id,
                 "telegram_username": telegram_data.username,
+                "credit_balance": float(user_data.get("credit_balance", 0)),
             },
         )
 
@@ -475,6 +476,7 @@ async def telegram_webapp_login(
                 "telegram_id": telegram_id,
                 "telegram_username": user_data.get("username"),
                 "has_password": user.hashed_password is not None,
+                "credit_balance": float(user_data.get("credit_balance", 0)),
             },
         )
 

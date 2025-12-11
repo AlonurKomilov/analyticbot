@@ -19,8 +19,8 @@ from core.security_engine import LegacyUserRole as UserRole
 
 # Import new role system with backwards compatibility
 
-# HTTP Bearer security scheme
-security_scheme = HTTPBearer()
+# HTTP Bearer security scheme - auto_error=False allows cookie auth fallback
+security_scheme = HTTPBearer(auto_error=False)
 
 
 class AuthError(HTTPException):

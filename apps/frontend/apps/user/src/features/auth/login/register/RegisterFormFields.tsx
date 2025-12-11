@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     TextField,
     InputAdornment,
@@ -46,13 +47,15 @@ export const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
     onToggleConfirmPassword,
     onTogglePasswordRequirements
 }) => {
+    const { t } = useTranslation('auth');
+
     return (
         <>
             {/* Username Field */}
             <TextField
                 fullWidth
                 name="username"
-                label="Username"
+                label={t('register.username')}
                 value={formData.username}
                 onChange={onChange}
                 error={!!errors.username}
@@ -74,7 +77,7 @@ export const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
             <TextField
                 fullWidth
                 name="fullName"
-                label="Full Name"
+                label={t('register.fullName')}
                 value={formData.fullName}
                 onChange={onChange}
                 error={!!errors.fullName}
@@ -89,7 +92,7 @@ export const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                 fullWidth
                 name="email"
                 type="email"
-                label="Email Address"
+                label={t('register.email')}
                 value={formData.email}
                 onChange={onChange}
                 error={!!errors.email}
@@ -111,7 +114,7 @@ export const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                 fullWidth
                 name="password"
                 type={showPassword ? 'text' : 'password'}
-                label="Password"
+                label={t('register.password')}
                 value={formData.password}
                 onChange={onChange}
                 error={!!errors.password}
@@ -152,7 +155,7 @@ export const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                 fullWidth
                 name="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
-                label="Confirm Password"
+                label={t('register.confirmPassword')}
                 value={formData.confirmPassword}
                 onChange={onChange}
                 error={!!errors.confirmPassword}

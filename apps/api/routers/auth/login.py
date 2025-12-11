@@ -13,6 +13,7 @@ from pydantic import EmailStr
 
 from apps.api.auth_utils import FastAPIAuthUtils, get_auth_utils
 from apps.api.middleware.auth import get_current_user, get_user_repository
+from apps.api.middleware.csrf import get_csrf_token_for_response
 from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
 from apps.api.routers.auth.models import AuthResponse, LoginRequest
 from core.ports.security_ports import AuthRequest
@@ -44,8 +45,12 @@ async def login(
     Authenticate user with email and password
 
     Returns JWT access token and refresh token for successful authentication.
+    For admin panel requests (X-Admin-Request header), tokens are also set as httpOnly cookies.
     """
     try:
+        # Check if this is an admin panel request
+        is_admin_request = request.headers.get("X-Admin-Request") == "true"
+        
         # Find user by email
         user_data = await user_repo.get_user_by_email(login_data.email)
         if not user_data:
@@ -121,6 +126,33 @@ async def login(
             f"Successful login for user: {user.username} " f"(remember_me={login_data.remember_me})"
         )
 
+        # 🔒 SECURITY: Set httpOnly cookies for admin panel requests
+        if is_admin_request:
+            # Access token cookie - short lived (30 minutes)
+            response.set_cookie(
+                key="access_token",
+                value=access_token,
+                max_age=30 * 60,  # 30 minutes
+                httponly=True,  # Not accessible via JavaScript
+                secure=True,    # Only send over HTTPS
+                samesite="strict",  # Strict same-site policy
+                path="/",
+            )
+            
+            # Refresh token cookie - longer lived
+            refresh_max_age = 30 * 24 * 3600 if login_data.remember_me else 24 * 3600
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
+                max_age=refresh_max_age,
+                httponly=True,
+                secure=True,
+                samesite="strict",
+                path="/auth",  # Only sent to auth endpoints
+            )
+            
+            logger.info(f"Set httpOnly cookies for admin user: {user.username}")
+
         return AuthResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -132,6 +164,7 @@ async def login(
                 "full_name": user.full_name,
                 "role": user.role,  # role is now a string, no .value needed
                 "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
+                "credit_balance": float(user_data.get("credit_balance", 0)),  # Include credit balance
             },
         )
 
@@ -176,11 +209,14 @@ async def refresh_token(
 
 @router.post("/logout")
 async def logout(
+    request: Request,
+    response: Response,
     current_user: dict[str, Any] = Depends(get_current_user),
     security_manager: SecurityManager = Depends(get_security_manager),
 ):
     """
-    Logout user and invalidate tokens
+    Logout user and invalidate tokens.
+    Also clears httpOnly cookies for admin panel.
     """
     try:
         user_id = current_user["id"]
@@ -188,6 +224,28 @@ async def logout(
         auth_utils.revoke_user_sessions(str(user_id))
 
         logger.info(f"User logged out: {current_user.get('username', user_id)}")
+
+        # 🔒 SECURITY: Clear httpOnly cookies
+        response.delete_cookie(
+            key="access_token",
+            path="/",
+            secure=True,
+            httponly=True,
+            samesite="strict",
+        )
+        response.delete_cookie(
+            key="refresh_token",
+            path="/auth",
+            secure=True,
+            httponly=True,
+            samesite="strict",
+        )
+        response.delete_cookie(
+            key="csrf_token",
+            path="/",
+            secure=True,
+            samesite="strict",
+        )
 
         return {"message": "Successfully logged out"}
 
@@ -236,3 +294,34 @@ async def verify_telegram(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to verify account"
         )
+
+
+@router.get("/csrf-token")
+async def get_csrf_token(request: Request, response: Response):
+    """
+    Get a CSRF token for the current session.
+    
+    This endpoint should be called when the admin panel loads to get
+    a valid CSRF token for subsequent state-changing requests.
+    
+    The token is also set as a cookie for the double-submit pattern.
+    """
+    token = get_csrf_token_for_response()
+    
+    # Set the token as a cookie
+    response.set_cookie(
+        key="csrf_token",
+        value=token,
+        max_age=24 * 3600,  # 24 hours
+        httponly=False,  # Must be readable by JavaScript
+        secure=True,
+        samesite="strict",
+        path="/",
+    )
+    
+    return {
+        "csrf_token": token,
+        "expires_in": 24 * 3600,
+        "header_name": "X-CSRF-Token"
+    }
+

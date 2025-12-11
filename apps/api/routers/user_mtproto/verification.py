@@ -58,7 +58,7 @@ async def verify_mtproto(
         # Get pending credentials
         credentials = await repository.get_by_user_id(user_id)
 
-        if not credentials or not credentials.telegram_api_id:
+        if not credentials or not credentials.mtproto_api_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No pending MTProto setup found. Call /setup first.",
@@ -86,7 +86,7 @@ async def verify_mtproto(
         session = StringSession(pending_session_str)
         client = TelegramClient(
             session,
-            api_id=credentials.telegram_api_id,
+            api_id=credentials.mtproto_api_id,
             api_hash=api_hash,
         )
 
@@ -94,7 +94,7 @@ async def verify_mtproto(
 
         try:
             # Sign in with verification code
-            phone = credentials.telegram_phone
+            phone = credentials.mtproto_phone
             if not phone:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST, detail="No phone number configured"
@@ -141,8 +141,14 @@ async def verify_mtproto(
                 detail="Verification code expired. Please click 'Resend code' to get a new one.",
             )
 
-        # Get session string
+        # Get session string and MTProto user info
         session_string = session.save()
+        
+        # Get the MTProto user info (Telegram ID and username of the authenticated account)
+        me = await client.get_me()
+        mtproto_id = me.id if me else None
+        mtproto_username = me.username if me else None
+        logger.info(f"MTProto user ID for user {user_id}: {mtproto_id}, username: {mtproto_username}")
 
         await safe_disconnect(client)
 
@@ -152,6 +158,8 @@ async def verify_mtproto(
         # Encrypt and store session in database
         encrypted_session = encryption.encrypt(session_string)
         credentials.session_string = encrypted_session
+        credentials.mtproto_id = mtproto_id  # Store the MTProto user ID
+        credentials.mtproto_username = mtproto_username  # Store the MTProto username
         credentials.is_verified = True
         await repository.update(credentials)
 

@@ -165,9 +165,9 @@ async def remove_mtproto(
         # Remove all MTProto data from database
         credentials = await repository.get_by_user_id(user_id)
         if credentials:
-            credentials.telegram_api_id = None
+            credentials.mtproto_api_id = None
             credentials.telegram_api_hash = None
-            credentials.telegram_phone = None
+            credentials.mtproto_phone = None
             credentials.session_string = None
             credentials.is_verified = False
             await repository.update(credentials)

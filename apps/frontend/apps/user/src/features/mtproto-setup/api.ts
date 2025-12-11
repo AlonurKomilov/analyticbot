@@ -11,6 +11,8 @@ import type {
   MTProtoStatusResponse,
   MTProtoSetupResponse,
   MTProtoActionResponse,
+  MTProtoQRLoginResponse,
+  MTProtoQRStatusResponse,
 } from './types';
 
 /**
@@ -26,6 +28,17 @@ export async function getMTProtoStatus(): Promise<MTProtoStatusResponse> {
  */
 export async function setupMTProto(data: MTProtoSetupRequest): Promise<MTProtoSetupResponse> {
   const response = await apiClient.post<MTProtoSetupResponse>('/user-mtproto/setup', data);
+  return response;
+}
+
+/**
+ * Simplified MTProto setup - only requires phone number
+ * Uses system-provided API credentials
+ */
+export async function setupMTProtoSimple(phone: string): Promise<MTProtoSetupResponse> {
+  const response = await apiClient.post<MTProtoSetupResponse>('/user-mtproto/setup-simple', {
+    mtproto_phone: phone,
+  });
   return response;
 }
 
@@ -121,6 +134,35 @@ export async function toggleChannelMTProto(
     updated_at: string
   }>(`/user-mtproto/channels/${channelId}/toggle`, {
     enabled
+  });
+  return response;
+}
+
+/**
+ * Request QR code for login
+ * Returns a QR code URL and optional base64 image
+ */
+export async function requestQRLogin(): Promise<MTProtoQRLoginResponse> {
+  const response = await apiClient.post<MTProtoQRLoginResponse>('/user-mtproto/qr-login/request', {});
+  return response;
+}
+
+/**
+ * Check QR login status
+ * Should be polled every 2-3 seconds after displaying QR code
+ */
+export async function checkQRLoginStatus(): Promise<MTProtoQRStatusResponse> {
+  const response = await apiClient.get<MTProtoQRStatusResponse>('/user-mtproto/qr-login/status');
+  return response;
+}
+
+/**
+ * Submit 2FA password for QR login
+ * Called when QR status returns '2fa_required'
+ */
+export async function submitQR2FA(password: string): Promise<MTProtoQRStatusResponse> {
+  const response = await apiClient.post<MTProtoQRStatusResponse>('/user-mtproto/qr-login/2fa', {
+    password,
   });
   return response;
 }

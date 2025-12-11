@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Box, Container, CircularProgress, Typography } from '@mui/material';
 import { LoginForm, RegisterForm, ForgotPasswordForm } from '@features/auth';
@@ -17,6 +18,7 @@ import { isTelegramWebApp, autoLoginFromTelegram } from '@/utils/telegramAuth';
 type AuthMode = 'login' | 'register' | 'forgot-password';
 
 const AuthPage: React.FC = () => {
+    const { t } = useTranslation('auth');
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -108,7 +110,7 @@ const AuthPage: React.FC = () => {
                     >
                         <CircularProgress size={40} />
                         <Typography variant="body1" color="text.secondary">
-                            Authenticating via Telegram...
+                            {t('telegram.connecting')}
                         </Typography>
                     </Box>
                 ) : authMode === 'login' ? (

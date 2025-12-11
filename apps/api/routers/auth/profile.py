@@ -80,15 +80,17 @@ async def get_current_user_profile(request: Request):
                 row = await conn.fetchrow(
                     """
                     SELECT
-                        full_name,
-                        hashed_password IS NOT NULL as has_password,
-                        telegram_id,
-                        COALESCE(credit_balance, 0) as credit_balance,
+                        u.full_name,
+                        u.hashed_password IS NOT NULL as has_password,
+                        u.telegram_id,
+                        COALESCE(uc.balance, u.credit_balance, 0) as credit_balance,
                         CASE
-                            WHEN telegram_id IS NOT NULL THEN username
+                            WHEN u.telegram_id IS NOT NULL THEN u.username
                             ELSE NULL
                         END as telegram_username
-                    FROM users WHERE id = $1
+                    FROM users u
+                    LEFT JOIN user_credits uc ON u.id = uc.user_id
+                    WHERE u.id = $1
                 """,
                     int(user_id),
                 )

@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Container,
@@ -58,6 +59,9 @@ interface DashboardData {
 }
 
 const HomeDashboard: React.FC = () => {
+  const { t } = useTranslation('dashboard');
+  const { t: tCommon } = useTranslation('common');
+  const { t: tErrors } = useTranslation('errors');
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -136,7 +140,7 @@ const HomeDashboard: React.FC = () => {
             {error}
           </Alert>
           <Typography variant="body2" color="text.secondary">
-            Please try refreshing the page or contact support if the issue persists.
+            {tErrors('general.tryAgain')}
           </Typography>
         </Container>
       </TouchTargetProvider>
@@ -173,7 +177,7 @@ const HomeDashboard: React.FC = () => {
             {data.has_channels ? (
               <>
                 <Typography variant="h6" fontWeight="600" sx={{ mb: 2 }}>
-                  📊 Your Channels ({data.channels.length})
+                  📊 {t('topChannels.title')} ({data.channels.length})
                 </Typography>
                 <Grid container spacing={2.5}>
                   {data.channels.map((channel) => (
@@ -227,8 +231,7 @@ const HomeDashboard: React.FC = () => {
         {/* Last updated indicator */}
         <Box sx={{ mt: 4, textAlign: 'center' }}>
           <Typography variant="caption" color="text.disabled">
-            Last updated: {new Date(data.last_updated).toLocaleTimeString()}
-            {' · '}Auto-refreshes every 2 minutes
+            {tCommon('updated')}: {new Date(data.last_updated).toLocaleTimeString()}
           </Typography>
         </Box>
       </Container>

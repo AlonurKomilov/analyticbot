@@ -8,6 +8,34 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { apiClient } from '../api/client';
 import { authLogger } from '@/utils/logger';
+import { getMTProtoStatus, connectMTProto } from '@/features/mtproto-setup/api';
+
+/**
+ * Auto-connect MTProto if user has it configured and enabled
+ * Called after successful login to restore connection after server restart
+ */
+async function autoConnectMTProtoIfNeeded(): Promise<void> {
+    try {
+        authLogger.debug('Checking MTProto status for auto-connect...');
+        const status = await getMTProtoStatus();
+        
+        // Check if MTProto is configured, enabled, but not actively connected
+        if (status.verified && status.mtproto_enabled && !status.actively_connected) {
+            authLogger.info('MTProto configured but not connected - auto-connecting...');
+            await connectMTProto();
+            authLogger.info('MTProto auto-connect successful');
+        } else if (status.verified && status.actively_connected) {
+            authLogger.debug('MTProto already connected');
+        } else if (!status.verified) {
+            authLogger.debug('MTProto not configured - skipping auto-connect');
+        } else if (!status.mtproto_enabled) {
+            authLogger.debug('MTProto disabled by user - skipping auto-connect');
+        }
+    } catch (error: any) {
+        // Don't fail login if MTProto auto-connect fails
+        authLogger.warn('MTProto auto-connect failed (non-blocking)', { error: error.message });
+    }
+}
 
 // Type definitions
 interface User {
@@ -144,15 +172,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     }
 
                     // For recent logins (within last 5 minutes), trust stored data without verification
+                    // but fetch fresh user data in background to update credit_balance etc.
                     const timeSinceLogin = lastLoginTime ? Date.now() - parseInt(lastLoginTime) : Infinity;
                     if (timeSinceLogin < 5 * 60 * 1000) { // 5 minutes
-                        authLogger.info('Recent login - using stored credentials without verification');
+                        authLogger.info('Recent login - using stored credentials, fetching fresh data in background');
                         authLogger.debug('Setting user', { user: storedUser });
                         authLogger.debug('Setting token', { hasToken: !!storedToken });
                         // Batch state updates to prevent intermediate renders
                         setToken(storedToken);
                         setUser(storedUser);
                         setIsLoading(false);
+                        
+                        // Background refresh to get fresh credit_balance etc.
+                        apiClient.get('/auth/me', { timeout: 5000 })
+                            .then((userData) => {
+                                authLogger.info('Background refresh: updated user data');
+                                setUser(userData as User);
+                                localStorage.setItem(USER_KEY, JSON.stringify(userData));
+                            })
+                            .catch((err) => {
+                                authLogger.debug('Background refresh failed, using cached data', { error: err.message });
+                            });
+                        
+                        // Auto-connect MTProto in background for returning users
+                        autoConnectMTProtoIfNeeded().catch(() => {});
                         return;
                     }
 
@@ -163,6 +206,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         setToken(storedToken);
                         setUser(userData as User);
                         authLogger.info('Token verified successfully');
+                        
+                        // Auto-connect MTProto after token verification
+                        autoConnectMTProtoIfNeeded().catch(() => {});
                     } catch (error: any) {
                         authLogger.warn('Token verification failed', { error: error.message });
 
@@ -220,6 +266,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setToken(storedToken);
                 setUser(storedUser);
                 setIsLoading(false);
+                
+                // Auto-connect MTProto for TWA users too
+                autoConnectMTProtoIfNeeded().catch(() => {
+                    // Silently ignore - already logged in the function
+                });
             }
         };
 
@@ -304,6 +355,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Update state
             setToken(access_token);
             setUser(userData);
+
+            // Auto-connect MTProto in background (non-blocking)
+            // This restores MTProto connection after server restart without user visiting setup page
+            autoConnectMTProtoIfNeeded().catch(() => {
+                // Silently ignore - already logged in the function
+            });
 
             authLogger.debug('Login successful', { user: userData?.username || userData?.email || 'user' });
             return { success: true };

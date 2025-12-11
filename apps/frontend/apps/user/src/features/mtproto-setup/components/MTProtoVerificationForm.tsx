@@ -13,8 +13,9 @@ import {
   Typography,
   InputAdornment,
   IconButton,
+  Paper,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Lock } from '@mui/icons-material';
 import { useMTProtoStore } from '../hooks';
 import type { MTProtoVerifyRequest } from '../types';
 import { logger } from '@/utils/logger';
@@ -76,11 +77,27 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
       });
       onSuccess();
     } catch (error: any) {
-      // Check if 2FA is needed
-      if (error.message?.includes('2FA') || error.message?.includes('password')) {
+      // Check if 2FA is needed - look for various indicators
+      const errorMsg = error.message?.toLowerCase() || '';
+      const errorDetail = error.response?.data?.detail?.toLowerCase() || '';
+      const is2FAError = 
+        errorMsg.includes('2fa') || 
+        errorMsg.includes('password') ||
+        errorMsg.includes('two-factor') ||
+        errorDetail.includes('2fa') ||
+        errorDetail.includes('password') ||
+        errorDetail.includes('two-factor');
+      
+      if (is2FAError && !needs2FA) {
+        // Show 2FA input instead of error
         setNeeds2FA(true);
+        // Clear any previous errors - this is not an error, just needs more info
+        setErrors({});
+        logger.info('2FA required, showing password input');
+      } else {
+        // Real error - show it
+        logger.error('Verification failed:', error);
       }
-      logger.error('Verification failed:', error);
     }
   };
 
@@ -111,13 +128,29 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
       />
 
       {needs2FA && (
-        <>
-          <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-            <Typography variant="body2">
-              Your account has Two-Factor Authentication (2FA) enabled. Please enter your
-              password below.
-            </Typography>
-          </Alert>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            mt: 3, 
+            p: 3, 
+            bgcolor: 'action.hover',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'warning.main',
+          }}
+        >
+          {/* Lock Icon */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            <Lock sx={{ fontSize: 48, color: 'warning.main' }} />
+          </Box>
+          
+          <Typography variant="h6" align="center" gutterBottom>
+            Two-Factor Authentication Required
+          </Typography>
+          
+          <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
+            Your Telegram account has 2FA enabled. Please enter your password to complete login.
+          </Typography>
 
           <TextField
             fullWidth
@@ -127,9 +160,14 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
             onChange={handleChange('password')}
             error={!!errors.password}
             helperText={errors.password || 'Your Telegram 2FA password'}
-            margin="normal"
             required
+            autoFocus
             InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Lock color="action" />
+                </InputAdornment>
+              ),
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
@@ -142,7 +180,7 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
               ),
             }}
           />
-        </>
+        </Paper>
       )}
 
 

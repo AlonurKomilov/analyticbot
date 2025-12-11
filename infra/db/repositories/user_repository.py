@@ -32,6 +32,7 @@ class AsyncpgUserRepository(IUserRepository):
             SELECT u.id, u.username, u.email, u.full_name, u.hashed_password,
                    u.role, u.status, u.created_at, u.telegram_id, u.auth_provider,
                    u.suspension_reason, u.suspended_at, u.suspended_by,
+                   COALESCE(u.credit_balance, 0) as credit_balance,
                    p.name as subscription_tier
             FROM users u
             LEFT JOIN plans p ON u.plan_id = p.id
@@ -41,23 +42,52 @@ class AsyncpgUserRepository(IUserRepository):
         return dict(row) if row else None
 
     async def _get_next_available_id(self) -> int:
-        """Get next available user ID, skipping reserved and existing IDs.
+        """Get next available user ID with smart gap-filling and validation.
 
-        This method ensures NO DUPLICATE IDs by checking:
-        1. Reserved premium IDs table (beautiful numbers for sale)
-        2. Existing users table (prevent collision with legacy IDs like 844338517)
+        This method ensures proper ID allocation by:
+        1. FIRST: Looking for gaps in the 100 million range (100000001-199999999)
+        2. SECOND: Using the sequence if no gaps found
+        3. ALWAYS: Validating the ID is not reserved (premium IDs) or already used
+
+        ID Validation Rules:
+        - Must be in valid range (100000001-999999999)
+        - Must NOT be a reserved premium ID (e.g., 111111111, 123456789)
+        - Must NOT already exist in users table
+        - Rejects IDs outside 100-199 million range for normal users
 
         Premium IDs (like 111111111, 123456789) are reserved for sale.
-        Regular users get normal sequential IDs.
+        Regular users get IDs in the 100 million range (100000001+).
         """
         import logging
 
         log = logging.getLogger(__name__)
 
+        # Define valid ID range for normal users
+        MIN_USER_ID = 100000001
+        MAX_USER_ID = 199999999
+
+        # Step 1: Try to find a gap in the existing IDs
+        gap_id = await self._find_gap_in_user_ids(MIN_USER_ID, MAX_USER_ID)
+        if gap_id:
+            log.info(f"Found gap in user IDs, using: {gap_id}")
+            return gap_id
+
+        # Step 2: No gaps found, use the sequence
         max_attempts = 100  # Safety limit
-        for _ in range(max_attempts):
+        for attempt in range(max_attempts):
             # Get next ID from sequence
             user_id = await self._pool.fetchval("SELECT nextval('users_id_seq')")
+
+            # Validate ID is in correct range
+            if user_id < MIN_USER_ID or user_id > MAX_USER_ID:
+                log.warning(
+                    f"Sequence returned invalid ID {user_id}, resetting to {MIN_USER_ID}"
+                )
+                # Reset sequence to valid range
+                await self._pool.execute(
+                    f"SELECT setval('users_id_seq', $1, false)", MIN_USER_ID
+                )
+                user_id = await self._pool.fetchval("SELECT nextval('users_id_seq')")
 
             # Check 1: Is this ID reserved for premium sale?
             is_reserved = await self._pool.fetchval(
@@ -79,10 +109,96 @@ class AsyncpgUserRepository(IUserRepository):
                 continue
 
             # ID is available!
+            log.debug(f"Allocated new user ID: {user_id}")
             return user_id
 
         # Fallback - should never reach here
         raise Exception("Could not find available user ID after 100 attempts")
+
+    async def _find_gap_in_user_ids(self, min_id: int, max_id: int) -> int | None:
+        """Find the first available gap in user IDs within the valid range.
+
+        This efficiently finds "holes" in the ID sequence where users were deleted
+        or IDs were skipped. This ensures no ID waste.
+
+        Checks:
+        1. First checks if min_id itself is available (e.g., 100000001)
+        2. Then finds gaps between existing IDs
+        3. Validates each candidate is not a reserved premium ID
+
+        Returns the first available gap ID, or None if no gaps exist.
+        """
+        import logging
+
+        log = logging.getLogger(__name__)
+
+        # First, check if the minimum ID is available
+        # This handles the case where the first ID (100000001) was never used
+        first_user = await self._pool.fetchval(
+            "SELECT MIN(id) FROM users WHERE id >= $1 AND id <= $2", min_id, max_id
+        )
+
+        if first_user is None:
+            # No users in range at all, start from min_id
+            is_reserved = await self._pool.fetchval(
+                "SELECT EXISTS(SELECT 1 FROM reserved_premium_ids WHERE id = $1 AND is_sold = FALSE)",
+                min_id,
+            )
+            if not is_reserved:
+                return min_id
+
+        elif first_user > min_id:
+            # There's a gap at the beginning (e.g., 100000001 is free but first user is 100000002)
+            for candidate_id in range(min_id, min(first_user, min_id + 100)):
+                is_reserved = await self._pool.fetchval(
+                    "SELECT EXISTS(SELECT 1 FROM reserved_premium_ids WHERE id = $1 AND is_sold = FALSE)",
+                    candidate_id,
+                )
+                if not is_reserved:
+                    log.info(f"Found available gap ID at beginning: {candidate_id}")
+                    return candidate_id
+
+        # Find gaps between existing user IDs using a window function
+        query = """
+            WITH existing_ids AS (
+                SELECT id FROM users 
+                WHERE id >= $1 AND id <= $2
+                ORDER BY id
+            ),
+            gaps AS (
+                SELECT 
+                    id + 1 as gap_start,
+                    LEAD(id) OVER (ORDER BY id) - 1 as gap_end
+                FROM existing_ids
+            )
+            SELECT gap_start
+            FROM gaps
+            WHERE gap_end IS NOT NULL 
+              AND gap_start <= gap_end
+              AND gap_start >= $1
+              AND gap_start <= $2
+            ORDER BY gap_start
+            LIMIT 10
+        """
+
+        gap_candidates = await self._pool.fetch(query, min_id, max_id)
+
+        for row in gap_candidates:
+            candidate_id = row["gap_start"]
+
+            # Verify this ID is not reserved for premium sale
+            is_reserved = await self._pool.fetchval(
+                "SELECT EXISTS(SELECT 1 FROM reserved_premium_ids WHERE id = $1 AND is_sold = FALSE)",
+                candidate_id,
+            )
+
+            if not is_reserved:
+                log.info(f"Found available gap ID: {candidate_id}")
+                return candidate_id
+            else:
+                log.debug(f"Gap ID {candidate_id} is reserved, skipping")
+
+        return None
 
     async def create_user(self, user_data: dict) -> dict:
         """Create new user (handles both Telegram and regular users)
@@ -376,7 +492,8 @@ class AsyncpgUserRepository(IUserRepository):
         """Get user by email address"""
         query = """
             SELECT u.id, u.username, u.created_at, u.hashed_password,
-                   p.name as subscription_tier, u.email, u.full_name, u.role, u.status, u.last_login
+                   p.name as subscription_tier, u.email, u.full_name, u.role, u.status, u.last_login,
+                   COALESCE(u.credit_balance, 0) as credit_balance
             FROM users u
             LEFT JOIN plans p ON u.plan_id = p.id
             WHERE u.email = $1

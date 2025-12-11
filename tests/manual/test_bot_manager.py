@@ -76,7 +76,7 @@ def create_test_credentials(user_id: int) -> UserBotCredentials:
         id=user_id,
         user_id=user_id,
         bot_token=encryption.encrypt(fake_token),
-        telegram_api_id=12345,
+        mtproto_api_id=12345,
         telegram_api_hash=encryption.encrypt(fake_api_hash),
         bot_username=f"test_bot_{user_id}",
         bot_id=user_id * 100,

@@ -294,14 +294,14 @@ async def _get_user_alerts(pool, user_id: int) -> list[ActionAlert]:
         # This blocks: data collection, analytics
         # ==============================================
         mtproto_config = await conn.fetchrow("""
-            SELECT mtproto_enabled, session_string, telegram_api_id, telegram_api_hash
+            SELECT mtproto_enabled, session_string, mtproto_api_id, telegram_api_hash
             FROM user_bot_credentials 
             WHERE user_id = $1 AND status = 'active'
         """, user_id)
         
         if mtproto_config:
             has_mtproto_credentials = (
-                mtproto_config['telegram_api_id'] is not None and
+                mtproto_config['mtproto_api_id'] is not None and
                 mtproto_config['telegram_api_hash'] is not None
             )
             has_session = mtproto_config['session_string'] is not None

@@ -30,7 +30,7 @@ async def test_mtproto():
         conn = await asyncpg.connect('postgresql://analytic:change_me@localhost:10100/analytic_bot')
 
         creds = await conn.fetchrow(
-            'SELECT telegram_api_id, telegram_api_hash, session_string FROM user_bot_credentials WHERE user_id = $1',
+            'SELECT mtproto_api_id, telegram_api_hash, session_string FROM user_bot_credentials WHERE user_id = $1',
             844338517
         )
 
@@ -38,7 +38,7 @@ async def test_mtproto():
             print("   ❌ No credentials found")
             return
 
-        api_id = creds['telegram_api_id']
+        api_id = creds['mtproto_api_id']
         encrypted_hash = creds['telegram_api_hash']
         session_string = creds['session_string']
 

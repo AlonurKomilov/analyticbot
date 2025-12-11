@@ -5,6 +5,7 @@ Provides real-time monitoring endpoints for users to track their MTProto
 data collection progress, session status, and worker activity.
 """
 
+import json
 import logging
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
@@ -16,6 +17,21 @@ from apps.api.middleware.auth import get_current_user_id
 from apps.di import get_container, get_user_mtproto_service
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_metadata(metadata) -> dict:
+    """Safely parse metadata which can be dict, str (JSON), or None."""
+    if metadata is None:
+        return {}
+    if isinstance(metadata, dict):
+        return metadata
+    if isinstance(metadata, str):
+        try:
+            return json.loads(metadata)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+    return {}
+
 
 # Create router
 router = APIRouter(
@@ -60,6 +76,8 @@ class WorkerStatus(BaseModel):
 
     worker_running: bool
     worker_interval_minutes: int
+    min_interval_minutes: int = 30  # Minimum allowed interval for user's plan
+    plan_name: str = "free"  # User's plan name
     last_run: datetime | None
     next_run: datetime | None
     runs_today: int
@@ -134,7 +152,7 @@ async def get_monitoring_overview(
         async with pool.acquire() as conn:
             creds = await conn.fetchrow(
                 (
-                    "SELECT mtproto_enabled, telegram_phone, session_string "
+                    "SELECT mtproto_enabled, mtproto_phone, session_string "
                     "FROM user_bot_credentials WHERE user_id = $1"
                 ),
                 user_id,
@@ -292,6 +310,21 @@ async def _get_session_health(conn, user_id: int, has_session: bool) -> SessionH
         except Exception as e:
             logger.warning(f"Error checking session connection: {e}")
 
+    # Get last collection time from database (more reliable than client state)
+    try:
+        last_collection = await conn.fetchval(
+            """
+            SELECT MAX(last_mtproto_collection) 
+            FROM user_channels 
+            WHERE user_id = $1 AND mtproto_enabled = true
+            """,
+            user_id,
+        )
+        if last_collection and (session_last_used is None or last_collection > session_last_used):
+            session_last_used = last_collection
+    except Exception as e:
+        logger.debug(f"Could not get last collection time: {e}")
+
     # Get today's activity from audit log (if exists)
     api_calls_today = 0
     rate_limit_hits_today = 0
@@ -322,25 +355,35 @@ async def _get_session_health(conn, user_id: int, has_session: bool) -> SessionH
         logger.debug(f"Could not get audit stats (table might not exist): {e}")
 
     # Calculate health score (0-100)
+    # NOTE: Being "not connected" between collections is NORMAL behavior
+    # The client disconnects to save resources and reconnects when needed
     health_score = 100.0
 
     if not has_session:
         health_score = 0.0
     else:
-        # Deduct points for issues
-        if not session_connected:
-            health_score -= 20
+        # Only deduct points for actual problems, NOT for being disconnected
+        # (disconnected state is normal between collection runs)
+        
         if rate_limit_hits_today > 0:
             health_score -= min(30, rate_limit_hits_today * 5)
         if connection_errors_today > 0:
             health_score -= min(20, connection_errors_today * 10)
+        
+        # Check if session was used recently
         if session_last_used:
             # Make session_last_used timezone-aware if it isn't
             if session_last_used.tzinfo is None:
                 session_last_used = session_last_used.replace(tzinfo=UTC)
-            seconds_since = (datetime.now(UTC) - session_last_used).total_seconds()
-            if seconds_since > 86400:
-                health_score -= 10  # Not used in last 24 hours
+            hours_since = (datetime.now(UTC) - session_last_used).total_seconds() / 3600
+            
+            if hours_since > 24:
+                health_score -= 15  # Not used in last 24 hours
+            elif hours_since > 6:
+                health_score -= 5   # Not used in last 6 hours (might be expected for low-tier plans)
+        else:
+            # No last_used info - might be a new session that hasn't collected yet
+            health_score -= 5
 
     health_score = max(0.0, min(100.0, health_score))
 
@@ -353,8 +396,6 @@ async def _get_session_health(conn, user_id: int, has_session: bool) -> SessionH
         connection_errors_today=connection_errors_today,
         health_score=health_score,
     )
-
-
 async def _get_collection_progress(conn, user_id: int) -> CollectionProgress:
     """Calculate collection progress metrics"""
 
@@ -465,14 +506,35 @@ async def _get_worker_status(user_id: int) -> WorkerStatus:
     except Exception:
         worker_running = False
 
-    # Default worker interval is 10 minutes
-    worker_interval = 10
-
-    # Get status from audit logs
+    # Get user's plan interval from database
     container = get_container()
     pool = await container.database.asyncpg_pool()
 
     async with pool.acquire() as conn:
+        # Get user's effective interval from their plan
+        interval_row = await conn.fetchrow(
+            """
+            SELECT 
+                COALESCE(u.mtproto_interval_override, p.mtproto_interval_minutes, 60) as interval_minutes,
+                COALESCE(p.min_mtproto_interval_minutes, 30) as min_interval_minutes,
+                COALESCE(p.name, 'free') as plan_name
+            FROM users u
+            LEFT JOIN plans p ON u.plan_id = p.id
+            WHERE u.id = $1
+            """,
+            user_id,
+        )
+        
+        if interval_row:
+            worker_interval = interval_row["interval_minutes"]
+            min_interval = interval_row["min_interval_minutes"]
+            plan_name = interval_row["plan_name"]
+        else:
+            # Default for users without plan
+            worker_interval = 60
+            min_interval = 30
+            plan_name = "free"
+
         # Get last collection_start event
         last_start = await conn.fetchrow(
             """
@@ -564,50 +626,47 @@ async def _get_worker_status(user_id: int) -> WorkerStatus:
 
     if currently_collecting and last_start:
         collection_start_time = last_start["timestamp"]
-        start_metadata = last_start["metadata"] if last_start["metadata"] else {}
-        channels_total = (
-            start_metadata.get("total_channels", 0) if isinstance(start_metadata, dict) else 0
-        )
+        start_metadata = _parse_metadata(last_start["metadata"])
+        channels_total = start_metadata.get("total_channels", 0)
 
         # Get progress from most recent detailed progress event
         if last_progress and last_progress["timestamp"] > last_start["timestamp"]:
-            progress_metadata = last_progress["metadata"] if last_progress["metadata"] else {}
+            progress_metadata = _parse_metadata(last_progress["metadata"])
 
-            if isinstance(progress_metadata, dict):
-                # Use new detailed progress format
-                current_channel = progress_metadata.get("channel_name")
+            # Use new detailed progress format (progress_metadata is always a dict from _parse_metadata)
+            current_channel = progress_metadata.get("channel_name")
 
-                # If no channel name in metadata, get it from channel_id
-                if not current_channel and last_progress.get("channel_id"):
-                    channel_row = await conn.fetchrow(
-                        "SELECT title FROM channels WHERE id = $1", abs(last_progress["channel_id"])
-                    )
-                    if channel_row:
-                        current_channel = channel_row["title"]
-
-                # Calculate channels processed from progress (we have 1 channel in this case)
-                channels_processed = (
-                    1
-                    if progress_metadata.get("phase") in ["fetching", "processing", "complete"]
-                    else 0
+            # If no channel name in metadata, get it from channel_id
+            if not current_channel and last_progress.get("channel_id"):
+                channel_row = await conn.fetchrow(
+                    "SELECT title FROM channels WHERE id = $1", abs(last_progress["channel_id"])
                 )
+                if channel_row:
+                    current_channel = channel_row["title"]
 
-                # Get messages from detailed progress
-                messages_collected_current_run = progress_metadata.get("messages_current", 0)
+            # Calculate channels processed from progress (we have 1 channel in this case)
+            channels_processed = (
+                1
+                if progress_metadata.get("phase") in ["fetching", "processing", "complete"]
+                else 0
+            )
 
-                # Get errors if available
-                errors_current_run = progress_metadata.get("errors", 0)
+            # Get messages from detailed progress
+            messages_collected_current_run = progress_metadata.get("messages_current", 0)
 
-                # Calculate ETA from progress
-                eta_seconds = progress_metadata.get("eta_seconds")
-                if eta_seconds:
-                    estimated_time_remaining = int(eta_seconds)
-                elif channels_total > 0 and channels_processed > 0:
-                    # Fallback to old calculation
-                    elapsed_seconds = (now - collection_start_time).total_seconds()
-                    avg_seconds_per_channel = elapsed_seconds / channels_processed
-                    remaining_channels = channels_total - channels_processed
-                    estimated_time_remaining = int(avg_seconds_per_channel * remaining_channels)
+            # Get errors if available
+            errors_current_run = progress_metadata.get("errors", 0)
+
+            # Calculate ETA from progress
+            eta_seconds = progress_metadata.get("eta_seconds")
+            if eta_seconds:
+                estimated_time_remaining = int(eta_seconds)
+            elif channels_total > 0 and channels_processed > 0:
+                # Fallback to old calculation
+                elapsed_seconds = (now - collection_start_time).total_seconds()
+                avg_seconds_per_channel = elapsed_seconds / channels_processed
+                remaining_channels = channels_total - channels_processed
+                estimated_time_remaining = int(avg_seconds_per_channel * remaining_channels)
 
     # Calculate last_run and next_run
     if last_end:
@@ -633,6 +692,8 @@ async def _get_worker_status(user_id: int) -> WorkerStatus:
     return WorkerStatus(
         worker_running=worker_running,
         worker_interval_minutes=worker_interval,
+        min_interval_minutes=min_interval,
+        plan_name=plan_name,
         last_run=last_run,
         next_run=next_run,
         runs_today=runs_today,

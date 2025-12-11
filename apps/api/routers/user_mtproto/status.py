@@ -47,7 +47,7 @@ async def get_mtproto_status(
                 can_read_history=False,
             )
 
-        has_api_id = credentials.telegram_api_id is not None
+        has_api_id = credentials.mtproto_api_id is not None
         has_api_hash = credentials.telegram_api_hash is not None
         has_session = credentials.session_string is not None
 
@@ -81,7 +81,7 @@ async def get_mtproto_status(
                 logger.warning(f"Error checking MTProto connection for user {user_id}: {e}")
 
         # Mask phone number
-        phone = credentials.telegram_phone
+        phone = credentials.mtproto_phone
         if phone and len(phone) > 6:
             phone = phone[:4] + "****" + phone[-3:]
 
@@ -92,7 +92,7 @@ async def get_mtproto_status(
             configured=configured,
             verified=verified,
             phone=phone,
-            api_id=credentials.telegram_api_id if configured else None,
+            api_id=credentials.mtproto_api_id if configured else None,
             connected=connected and mtproto_enabled,  # True if session ready
             actively_connected=actively_connected and mtproto_enabled,  # True if in active pool
             last_used=last_used,

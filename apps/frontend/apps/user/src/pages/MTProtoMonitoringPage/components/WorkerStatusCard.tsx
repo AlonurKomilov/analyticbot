@@ -13,6 +13,7 @@ import {
   Alert,
   AlertTitle,
   Divider,
+  Chip,
 } from '@mui/material';
 import { Schedule, CheckCircle, Cancel } from '@mui/icons-material';
 import type { WorkerStatus } from '../types';
@@ -105,7 +106,19 @@ export const WorkerStatusCard: React.FC<WorkerStatusCardProps> = ({ workerStatus
           <Grid item xs={12} sm={6} md={3}>
             <Box>
               <Typography variant="body2" color="text.secondary">Collection Interval</Typography>
-              <Typography variant="h4" mt={1}>{workerStatus.worker_interval_minutes}min</Typography>
+              <Box display="flex" alignItems="baseline" gap={1} mt={1}>
+                <Typography variant="h4">{workerStatus.worker_interval_minutes}min</Typography>
+                <Chip 
+                  label={workerStatus.plan_name || 'free'} 
+                  size="small" 
+                  color={
+                    workerStatus.plan_name === 'enterprise' ? 'secondary' :
+                    workerStatus.plan_name === 'business' ? 'primary' :
+                    workerStatus.plan_name === 'pro' ? 'info' : 'default'
+                  }
+                  sx={{ textTransform: 'capitalize' }}
+                />
+              </Box>
               <Typography variant="caption" color="text.secondary">Between runs</Typography>
             </Box>
           </Grid>

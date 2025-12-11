@@ -19,6 +19,10 @@ export const ROUTES = {
   ANALYTICS: '/analytics',
   ADVANCED_ANALYTICS: '/analytics/advanced',
 
+  // Workers Routes (Bot & MTProto)
+  WORKERS_BOT: '/workers/bot',
+  WORKERS_MTPROTO: '/workers/mtproto',
+
   // Admin Routes
   ADMIN: '/admin',
   ADMIN_USERS: '/admin/users',
@@ -50,6 +54,8 @@ export const ROUTES = {
   // Payment Routes
   PAYMENT: '/payment',
   CREDITS: '/credits',
+  REWARDS: '/rewards',
+  MARKETPLACE: '/marketplace',
   SUBSCRIPTION: '/payment/subscription',
   PAYMENT_HISTORY: '/payment/history',
   INVOICES: '/payment/invoices',

@@ -54,3 +54,13 @@ class IUserBotRepository(ABC):
     async def log_admin_action(self, action: AdminBotAction) -> None:
         """Log admin action"""
         pass
+
+    @abstractmethod
+    async def get_by_mtproto_phone(self, phone: str) -> UserBotCredentials | None:
+        """Get credentials by MTProto phone number (to check for duplicates)"""
+        pass
+
+    @abstractmethod
+    async def get_by_bot_id(self, bot_id: int) -> UserBotCredentials | None:
+        """Get credentials by bot ID (to check for duplicates)"""
+        pass

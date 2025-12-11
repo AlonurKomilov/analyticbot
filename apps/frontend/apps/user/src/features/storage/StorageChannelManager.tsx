@@ -150,7 +150,7 @@ export const StorageChannelManager: React.FC = () => {
 
       {/* Storage Stats */}
       {channels.length > 0 && (
-        <Card sx={{ mb: 3, bgcolor: 'primary.50' }}>
+        <Card sx={{ mb: 3 }}>
           <CardContent>
             <Stack direction="row" spacing={4} alignItems="center">
               <Box>

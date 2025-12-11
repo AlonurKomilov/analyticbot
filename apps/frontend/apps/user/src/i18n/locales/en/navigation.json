@@ -10,6 +10,16 @@
     "help": "Help",
     "logout": "Logout"
   },
+  "aiServices": "AI Services",
+  "myBot": "My Bot",
+  "credits": "Credits",
+  "rewards": "Rewards",
+  "marketplace": "Marketplace",
+  "payment": "Payment",
+  "workers": {
+    "bot": "Bot Worker",
+    "mtproto": "MTProto Worker"
+  },
   "header": {
     "search": "Search...",
     "notifications": "Notifications",
@@ -35,6 +45,7 @@
     "profile": "My Profile",
     "settings": "Settings",
     "billing": "Billing",
+    "credits": "Credits",
     "help": "Help & Support",
     "logout": "Logout"
   },

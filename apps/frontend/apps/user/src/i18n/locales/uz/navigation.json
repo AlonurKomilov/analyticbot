@@ -10,6 +10,16 @@
     "help": "Yordam",
     "logout": "Chiqish"
   },
+  "aiServices": "AI Xizmatlari",
+  "myBot": "Mening botim",
+  "credits": "Kreditlar",
+  "rewards": "Mukofotlar",
+  "marketplace": "Do'kon",
+  "payment": "To'lov",
+  "workers": {
+    "bot": "Bot Worker",
+    "mtproto": "MTProto Worker"
+  },
   "header": {
     "search": "Qidirish...",
     "notifications": "Bildirishnomalar",
@@ -35,6 +45,7 @@
     "profile": "Mening profilim",
     "settings": "Sozlamalar",
     "billing": "To'lov",
+    "credits": "Kreditlar",
     "help": "Yordam va qo'llab-quvvatlash",
     "logout": "Chiqish"
   },

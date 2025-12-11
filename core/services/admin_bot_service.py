@@ -178,10 +178,17 @@ class AdminBotService:
 
         Returns:
             Updated UserBotCredentials if successful, None otherwise
+            
+        Raises:
+            ValueError: If bot is incomplete (no bot_token or bot_id)
         """
         credentials = await self.repository.get_by_user_id(target_user_id)
         if not credentials:
             return None
+
+        # Validate bot is complete before activating
+        if not credentials.bot_token or not credentials.bot_id:
+            raise ValueError("Cannot activate incomplete bot (missing bot_token or bot_id)")
 
         # Activate the bot
         credentials.activate()

@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from apps.api.routers.admin_channels_router import router as admin_channels_router
+from apps.api.routers.admin_plans_router import router as admin_plans_router
 from apps.api.routers.admin_system_router import router as admin_system_router
 from apps.api.routers.admin_users_router import router as admin_users_router
 from apps.api.routers.auth import router as auth_router
@@ -20,6 +21,7 @@ from apps.api.routers.auth import router as auth_router
 from apps.api.routers.channels import router as channels_router  # ✅ Microservice
 from apps.api.routers.content_protection_router import router as content_protection_router
 from apps.api.routers.credits_router import router as credits_router  # 💰 Credit System
+from apps.api.routers.marketplace_router import router as marketplace_router  # 🏪 Marketplace
 
 # Legacy routers (keeping for compatibility during transition)
 # DEPRECATED ROUTERS REMOVED - cleanup
@@ -437,6 +439,18 @@ from apps.demo.middleware import DemoMiddleware
 
 app.add_middleware(DemoMiddleware)
 
+# ✅ SECURITY: Add security headers middleware
+from apps.api.middleware.security_headers import SecurityHeadersMiddleware
+
+app.add_middleware(SecurityHeadersMiddleware)
+logger.info("✅ Security headers middleware initialized")
+
+# ✅ SECURITY: Add CSRF protection middleware for admin panel
+from apps.api.middleware.csrf import CSRFMiddleware
+
+app.add_middleware(CSRFMiddleware)
+logger.info("✅ CSRF protection middleware initialized")
+
 # ✅ SECURITY: Add rate limiting middleware
 from slowapi.errors import RateLimitExceeded
 
@@ -445,6 +459,7 @@ from apps.api.middleware.rate_limiter import custom_rate_limit_exceeded_handler,
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
 logger.info("✅ Rate limiting middleware initialized")
+
 
 
 # Add root /health endpoint for frontend compatibility (redirects to /health/)
@@ -475,8 +490,10 @@ app.include_router(media_router)  # Media upload and management
 app.include_router(telegram_storage_router)  # Telegram storage (user-owned channels)
 app.include_router(admin_channels_router)  # Admin - Channel Management
 app.include_router(admin_users_router)  # Admin - User Management
+app.include_router(admin_plans_router)  # Admin - Plans Management
 app.include_router(admin_system_router)  # Admin - System Management
 app.include_router(credits_router)  # 💰 Credit System - balance, transactions, packages
+app.include_router(marketplace_router)  # 🏪 Marketplace - items, purchases, gifts, bundles
 
 # ✅ PHASE 4: ANALYTICS DOMAIN REORGANIZATION (October 22, 2025)
 # Consolidated analytics domain architecture - all analytics under /analytics/*

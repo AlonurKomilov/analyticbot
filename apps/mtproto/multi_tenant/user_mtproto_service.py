@@ -165,7 +165,7 @@ class UserMTProtoService:
         # Check if MTProto is configured
         if not all(
             [
-                credentials.telegram_api_id,
+                credentials.mtproto_api_id,
                 credentials.telegram_api_hash,
                 credentials.session_string,
             ]
@@ -178,7 +178,7 @@ class UserMTProtoService:
 
         encryption = get_encryption_service()
 
-        if not credentials.telegram_api_hash or not credentials.telegram_api_id:
+        if not credentials.telegram_api_hash or not credentials.mtproto_api_id:
             logger.error(f"User {user_id} missing MTProto credentials")
             return None
 
@@ -191,7 +191,7 @@ class UserMTProtoService:
         try:
             client = UserMTProtoClient(
                 user_id=user_id,
-                api_id=credentials.telegram_api_id,
+                api_id=credentials.mtproto_api_id,
                 api_hash=api_hash,
                 session_string=session_string,
             )

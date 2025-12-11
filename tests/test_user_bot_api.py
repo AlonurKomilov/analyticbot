@@ -77,7 +77,7 @@ def create_sample_bot_credentials():
         id=1,
         user_id=123,
         bot_token="encrypted_token_123",
-        telegram_api_id=12345,
+        mtproto_api_id=12345,
         telegram_api_hash="encrypted_hash_123",
         bot_username="test_bot",
         bot_id=987654321,
@@ -116,7 +116,7 @@ class TestUserBotEndpoints:
         # Simulate API call
         request_data = {
             "bot_token": "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
-            "telegram_api_id": 12345,
+            "mtproto_api_id": 12345,
             "telegram_api_hash": "abc123hash",
             "max_requests_per_second": 30,
             "max_concurrent_requests": 10,
@@ -136,7 +136,7 @@ class TestUserBotEndpoints:
         result = await mock_service.create_user_bot(
             user_id=123,
             bot_token=request_data["bot_token"],
-            api_id=request_data["telegram_api_id"],
+            api_id=request_data["mtproto_api_id"],
             api_hash=request_data["telegram_api_hash"],
             max_requests_per_second=request_data["max_requests_per_second"],
             max_concurrent_requests=request_data["max_concurrent_requests"],
@@ -191,7 +191,7 @@ class TestAdminBotEndpoints:
                 id=i + 1,
                 user_id=100 + i,
                 bot_token=f"encrypted_token_{i}",
-                telegram_api_id=12345,
+                mtproto_api_id=12345,
                 telegram_api_hash=f"encrypted_hash_{i}",
                 bot_username=f"bot_{i}",
                 status=BotStatus.ACTIVE,

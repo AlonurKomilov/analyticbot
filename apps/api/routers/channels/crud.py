@@ -156,7 +156,7 @@ async def _check_user_admin_access(
         async with pool.acquire() as conn:
             creds = await conn.fetchrow(
                 """
-                SELECT bot_token, bot_username, telegram_api_id, telegram_api_hash, 
+                SELECT bot_token, bot_username, mtproto_api_id, telegram_api_hash, 
                        session_string, mtproto_enabled, is_verified
                 FROM user_bot_credentials
                 WHERE user_id = $1 AND is_verified = true
@@ -201,7 +201,7 @@ async def _check_user_admin_access(
                     decrypted_session = creds['session_string']
                 
                 is_admin = await _check_mtproto_admin(
-                    api_id=creds['telegram_api_id'],
+                    api_id=creds['mtproto_api_id'],
                     api_hash=decrypted_api_hash,
                     session_string=decrypted_session,
                     channel_username=channel_username,

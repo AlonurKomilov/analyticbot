@@ -92,3 +92,28 @@ class UserBotRepositoryFactory(IUserBotRepository):
         async with self.session_factory() as session:
             repo = UserBotRepository(session)
             return await repo.get_all_mtproto_enabled_users()
+
+    async def get_all_mtproto_enabled_users_with_intervals(self, pool) -> list[dict]:
+        """Get all users with MTProto enabled, including their collection interval.
+        
+        Args:
+            pool: asyncpg pool for raw SQL query
+            
+        Returns:
+            List of user dicts with interval info from their plan
+        """
+        async with self.session_factory() as session:
+            repo = UserBotRepository(session)
+            return await repo.get_all_mtproto_enabled_users_with_intervals(pool)
+
+    async def get_by_mtproto_phone(self, phone: str) -> UserBotCredentials | None:
+        """Get credentials by MTProto phone number (to check for duplicates)"""
+        async with self.session_factory() as session:
+            repo = UserBotRepository(session)
+            return await repo.get_by_mtproto_phone(phone)
+
+    async def get_by_bot_id(self, bot_id: int) -> UserBotCredentials | None:
+        """Get credentials by bot ID (to check for duplicates)"""
+        async with self.session_factory() as session:
+            repo = UserBotRepository(session)
+            return await repo.get_by_bot_id(bot_id)

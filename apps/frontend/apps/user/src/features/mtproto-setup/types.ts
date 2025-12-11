@@ -3,9 +3,13 @@
  */
 
 export interface MTProtoSetupRequest {
-  telegram_api_id: number;
+  mtproto_api_id: number;
   telegram_api_hash: string;
-  telegram_phone: string;
+  mtproto_phone: string;
+}
+
+export interface MTProtoSimpleSetupRequest {
+  mtproto_phone: string;
 }
 
 export interface MTProtoVerifyRequest {
@@ -35,4 +39,24 @@ export interface MTProtoSetupResponse {
 export interface MTProtoActionResponse {
   success: boolean;
   message: string;
+}
+
+export interface MTProtoQRLoginResponse {
+  success: boolean;
+  qr_code_url: string;
+  qr_code_base64: string | null;
+  expires_in: number;
+  message: string;
+}
+
+export interface MTProtoQRStatusResponse {
+  status: 'pending' | 'success' | 'expired' | '2fa_required' | 'error';
+  success: boolean;
+  message: string;
+  user_id?: number;
+  needs_2fa?: boolean;
+}
+
+export interface MTProtoQR2FARequest {
+  password: string;
 }

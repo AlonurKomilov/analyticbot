@@ -1,14 +1,16 @@
 /**
  * MTProto Monitoring Page
- * Refactored version with extracted card components
+ * Comprehensive MTProto status and management dashboard
  *
- * Displays real-time MTProto collection status including:
+ * Displays:
+ * - Account info with management actions (disconnect, remove, toggle)
  * - Session health metrics
  * - Collection progress
  * - Worker status
+ * - Interval boost purchase
  * - Per-channel statistics
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -25,10 +27,12 @@ import { apiClient } from '@/api/client';
 import type { MonitoringData } from './types';
 import { formatDate } from './utils';
 import {
+  AccountInfoCard,
   SessionHealthCard,
   CollectionProgressCard,
   WorkerStatusCard,
   ChannelStatisticsCard,
+  IntervalBoostCard,
 } from './components';
 
 export const MTProtoMonitoringPage: React.FC = () => {
@@ -39,7 +43,7 @@ export const MTProtoMonitoringPage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  const fetchMonitoringData = async (isBackgroundRefresh = false) => {
+  const fetchMonitoringData = useCallback(async (isBackgroundRefresh = false) => {
     if (!isBackgroundRefresh) {
       setLoading(true);
     } else {
@@ -85,7 +89,7 @@ export const MTProtoMonitoringPage: React.FC = () => {
       setLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [data, error]);
 
   useEffect(() => {
     fetchMonitoringData(false);
@@ -99,7 +103,12 @@ export const MTProtoMonitoringPage: React.FC = () => {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, error]);
+  }, [autoRefresh, fetchMonitoringData]);
+
+  // Callback when account status changes (toggle, disconnect, remove)
+  const handleAccountStatusChange = useCallback(() => {
+    fetchMonitoringData(false);
+  }, [fetchMonitoringData]);
 
   if (loading) {
     return (
@@ -208,14 +217,30 @@ export const MTProtoMonitoringPage: React.FC = () => {
       {!data.mtproto_enabled && (
         <Alert severity="error" sx={{ mb: 3 }}>
           <AlertTitle>MTProto Disabled</AlertTitle>
-          MTProto is currently disabled. Enable it in settings to start collecting data.
+          MTProto is currently disabled. Enable it in the Account section below to start collecting data.
         </Alert>
       )}
 
-      {/* Card Components */}
+      {/* Account Info Card - TOP PRIORITY: Shows configuration and management */}
+      <AccountInfoCard onStatusChange={handleAccountStatusChange} />
+
+      {/* Session Health Card */}
       <SessionHealthCard sessionHealth={data.session_health} />
+      
+      {/* Collection Progress Card */}
       <CollectionProgressCard collectionProgress={data.collection_progress} />
+      
+      {/* Worker Status Card */}
       <WorkerStatusCard workerStatus={data.worker_status} />
+      
+      {/* Interval Boost Card - Purchase faster collection */}
+      <IntervalBoostCard
+        currentInterval={data.worker_status.worker_interval_minutes}
+        planName={data.worker_status.plan_name || 'free'}
+        onBoostPurchased={() => fetchMonitoringData(false)}
+      />
+      
+      {/* Channel Statistics Card */}
       <ChannelStatisticsCard channels={data.channels} />
 
       {/* Footer Info */}

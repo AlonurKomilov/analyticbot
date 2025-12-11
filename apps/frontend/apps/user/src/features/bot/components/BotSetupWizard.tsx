@@ -43,7 +43,7 @@ interface BotWizardFormData {
 
 export const BotSetupWizard: React.FC = () => {
   const navigate = useNavigate();
-  const { createBot, verifyBot, isCreating, isVerifying, error, clearError, bot, fetchBotStatus } = useUserBotStore();
+  const { createBot, verifyBot, isCreating, isVerifying, error, clearError, bot } = useUserBotStore();
 
   const [activeStep, setActiveStep] = useState(0);
   const [showBotToken, setShowBotToken] = useState(false);
@@ -55,42 +55,20 @@ export const BotSetupWizard: React.FC = () => {
   });
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof BotWizardFormData, string>>>({});
 
-  // Check if user already has a bot on mount
+  // If bot already exists (parent page already checked), redirect to dashboard
+  // This handles the case where BotSetupWizard is rendered directly or via BotSetupPage
   useEffect(() => {
-    const checkExistingBot = async () => {
-      // Skip if already loading or already have bot data
-      if (isLoading || bot) {
-        if (bot) {
-          toast.success('✅ You already have a bot configured! Redirecting to dashboard...', {
-            duration: 3000,
-          });
-          setTimeout(() => {
-            navigate('/bot/dashboard');
-          }, 2000);
-        }
-        return;
-      }
-
-      try {
-        await fetchBotStatus();
-        // If we get here and bot exists, redirect to dashboard
-        if (bot) {
-          toast.success('✅ You already have a bot configured! Redirecting to dashboard...', {
-            duration: 3000,
-          });
-          setTimeout(() => {
-            navigate('/bot/dashboard');
-          }, 2000);
-        }
-      } catch (err) {
-        // No bot exists, continue with wizard
-        console.log('No existing bot found, proceeding with setup');
-      }
-    };
-
-    checkExistingBot();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
+    if (bot) {
+      toast.success('✅ You already have a bot configured! Redirecting to dashboard...', {
+        duration: 3000,
+      });
+      const timer = setTimeout(() => {
+        navigate('/bot/dashboard');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [bot, navigate]);
 
   const handleNext = async () => {
     // Validate current step

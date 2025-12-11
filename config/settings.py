@@ -13,13 +13,31 @@ from pathlib import Path
 try:
     from dotenv import load_dotenv
 
-    # Find .env file in project root
-    env_file = Path(__file__).parent.parent / ".env"
-    if env_file.exists():
-        load_dotenv(env_file)
-        print(f"✅ Loaded environment from: {env_file}")
+    project_root = Path(__file__).parent.parent
+    
+    # Check ENVIRONMENT variable to determine which .env file to load
+    # Priority: .env.development (if ENVIRONMENT=development) > .env
+    environment = os.getenv("ENVIRONMENT", "production")
+    
+    if environment == "development":
+        env_file = project_root / ".env.development"
+        if env_file.exists():
+            # override=False means existing env vars take precedence
+            load_dotenv(env_file, override=False)
+            print(f"✅ Loaded environment from: {env_file}")
+        else:
+            # Fallback to .env
+            env_file = project_root / ".env"
+            if env_file.exists():
+                load_dotenv(env_file, override=False)
+                print(f"✅ Loaded environment from: {env_file} (dev file not found)")
     else:
-        print(f"⚠️  No .env file found at: {env_file}")
+        env_file = project_root / ".env"
+        if env_file.exists():
+            load_dotenv(env_file, override=False)
+            print(f"✅ Loaded environment from: {env_file}")
+        else:
+            print(f"⚠️  No .env file found at: {env_file}")
 except ImportError:
     print("⚠️  python-dotenv not installed, using system environment variables only")
 except Exception as e:

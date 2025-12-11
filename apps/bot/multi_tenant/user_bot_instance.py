@@ -118,7 +118,7 @@ class UserBotInstance:
 
             # Initialize Pyrogram MTProto client (optional, lazy load)
             # Only initialize if user has MTProto credentials
-            if self.credentials.telegram_phone or self.credentials.session_string:
+            if self.credentials.mtproto_phone or self.credentials.session_string:
                 await self._initialize_mtproto()
 
             self.is_initialized = True
@@ -205,9 +205,9 @@ class UserBotInstance:
 
             self.mtproto_client = Client(
                 name=f"user_{self.user_id}_mtproto",
-                api_id=self.credentials.telegram_api_id,
+                api_id=self.credentials.mtproto_api_id,
                 api_hash=self.api_hash,
-                phone_number=self.credentials.telegram_phone,
+                phone_number=self.credentials.mtproto_phone,
                 session_string=self.credentials.session_string,
                 workdir=f"./sessions/user_{self.user_id}/",
             )

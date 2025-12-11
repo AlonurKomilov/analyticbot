@@ -3,7 +3,7 @@
  * Form for entering API ID, API Hash, and Phone Number
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -23,43 +23,50 @@ import { logger } from '@/utils/logger';
 interface MTProtoCredentialsFormProps {
   onSuccess: () => void;
   onBack?: () => void;
+  phone: string; // Phone number from simple form
 }
 
 export const MTProtoCredentialsForm: React.FC<MTProtoCredentialsFormProps> = ({
   onSuccess,
   onBack,
+  phone,
 }) => {
   const { setup, isSettingUp } = useMTProtoStore();
   const [showApiHash, setShowApiHash] = useState(false);
   const [formData, setFormData] = useState<MTProtoSetupRequest>({
-    telegram_api_id: 0,
+    mtproto_api_id: 0,
     telegram_api_hash: '',
-    telegram_phone: '',
+    mtproto_phone: phone, // Use phone from prop
   });
   const [errors, setErrors] = useState<Partial<Record<keyof MTProtoSetupRequest, string>>>({});
 
   const handleChange = (field: keyof MTProtoSetupRequest) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = field === 'telegram_api_id' ? parseInt(e.target.value) || 0 : e.target.value;
+    const value = field === 'mtproto_api_id' ? parseInt(e.target.value) || 0 : e.target.value;
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error for this field
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
+  // Sync phone from prop
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, mtproto_phone: phone }));
+  }, [phone]);
+
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof MTProtoSetupRequest, string>> = {};
 
-    if (!formData.telegram_api_id || formData.telegram_api_id <= 0) {
-      newErrors.telegram_api_id = 'API ID is required and must be positive';
+    if (!formData.mtproto_api_id || formData.mtproto_api_id <= 0) {
+      newErrors.mtproto_api_id = 'API ID is required and must be positive';
     }
 
     if (!formData.telegram_api_hash || formData.telegram_api_hash.length < 32) {
       newErrors.telegram_api_hash = 'API Hash must be at least 32 characters';
     }
 
-    if (!formData.telegram_phone || !formData.telegram_phone.match(/^\+\d{10,15}$/)) {
-      newErrors.telegram_phone = 'Phone must start with + and contain 10-15 digits';
+    if (!phone || !phone.match(/^\+?\d{10,15}$/)) {
+      newErrors.mtproto_phone = 'Please enter phone number in the field above first';
     }
 
     setErrors(newErrors);
@@ -112,12 +119,12 @@ export const MTProtoCredentialsForm: React.FC<MTProtoCredentialsFormProps> = ({
 
       <TextField
         fullWidth
-        label="Telegram API ID"
+        label="MTProto API ID"
         type="number"
-        value={formData.telegram_api_id || ''}
-        onChange={handleChange('telegram_api_id')}
-        error={!!errors.telegram_api_id}
-        helperText={errors.telegram_api_id || 'Numeric ID from my.telegram.org'}
+        value={formData.mtproto_api_id || ''}
+        onChange={handleChange('mtproto_api_id')}
+        error={!!errors.mtproto_api_id}
+        helperText={errors.mtproto_api_id || 'Numeric ID from my.telegram.org'}
         margin="normal"
         required
       />
@@ -146,19 +153,22 @@ export const MTProtoCredentialsForm: React.FC<MTProtoCredentialsFormProps> = ({
         }}
       />
 
-      <TextField
-        fullWidth
-        label="Phone Number"
-        placeholder="+1234567890"
-        value={formData.telegram_phone}
-        onChange={handleChange('telegram_phone')}
-        error={!!errors.telegram_phone}
-        helperText={
-          errors.telegram_phone || 'Your Telegram phone number with country code'
-        }
-        margin="normal"
-        required
-      />
+      {/* Phone number info - using phone from simple form above */}
+      {phone ? (
+        <Alert severity="success" sx={{ mt: 2 }}>
+          Using phone number: <strong>{phone}</strong>
+        </Alert>
+      ) : (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          Please enter your phone number in the "Quick Setup" form above first
+        </Alert>
+      )}
+
+      {errors.mtproto_phone && (
+        <Alert severity="error" sx={{ mt: 1 }}>
+          {errors.mtproto_phone}
+        </Alert>
+      )}
 
       <Box display="flex" justifyContent="space-between" mt={3}>
         {onBack && (

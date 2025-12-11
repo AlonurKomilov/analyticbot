@@ -12,12 +12,14 @@ import {
   LinearProgress,
   Chip,
   Divider,
+  Tooltip,
 } from '@mui/material';
 import {
   CheckCircle,
   Cancel,
   Wifi,
   WifiOff,
+  SyncAlt,
 } from '@mui/icons-material';
 import type { SessionHealth } from '../types';
 import { formatTimeAgo, getHealthColor } from '../utils';
@@ -27,18 +29,24 @@ interface SessionHealthCardProps {
 }
 
 const getHealthChip = (score: number) => {
-  if (score >= 80) return <Chip label="Excellent" color="success" size="small" />;
-  if (score >= 50) return <Chip label="Good" color="warning" size="small" />;
+  if (score >= 90) return <Chip label="Excellent" color="success" size="small" />;
+  if (score >= 70) return <Chip label="Good" color="success" size="small" />;
+  if (score >= 50) return <Chip label="Fair" color="warning" size="small" />;
   return <Chip label="Poor" color="error" size="small" />;
 };
 
 export const SessionHealthCard: React.FC<SessionHealthCardProps> = ({ sessionHealth }) => {
+  // Session is valid and ready to work
+  const sessionReady = sessionHealth.session_valid && sessionHealth.health_score >= 70;
+  
   return (
     <Card sx={{ mb: 3 }}>
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} mb={2}>
-          {sessionHealth.session_connected ? (
+          {sessionReady ? (
             <Wifi color="success" />
+          ) : sessionHealth.session_valid ? (
+            <Wifi color="warning" />
           ) : (
             <WifiOff color="error" />
           )}
@@ -74,13 +82,27 @@ export const SessionHealthCard: React.FC<SessionHealthCardProps> = ({ sessionHea
               <Box display="flex" alignItems="center" gap={1} mt={1}>
                 {sessionHealth.session_connected ? (
                   <>
+                    <SyncAlt color="primary" />
+                    <Tooltip title="Actively collecting data right now">
+                      <Typography variant="h6">Collecting</Typography>
+                    </Tooltip>
+                  </>
+                ) : sessionReady ? (
+                  <>
                     <CheckCircle color="success" />
-                    <Typography variant="h6">Connected</Typography>
+                    <Tooltip title="Session is valid and ready. Connects automatically when collection starts.">
+                      <Typography variant="h6">Ready</Typography>
+                    </Tooltip>
+                  </>
+                ) : sessionHealth.session_valid ? (
+                  <>
+                    <CheckCircle color="warning" />
+                    <Typography variant="h6">Session Valid</Typography>
                   </>
                 ) : (
                   <>
                     <Cancel color="error" />
-                    <Typography variant="h6">Disconnected</Typography>
+                    <Typography variant="h6">Not Configured</Typography>
                   </>
                 )}
               </Box>
@@ -103,7 +125,7 @@ export const SessionHealthCard: React.FC<SessionHealthCardProps> = ({ sessionHea
           <Grid item xs={12} sm={6} md={3}>
             <Box>
               <Typography variant="body2" color="text.secondary">Connection Errors</Typography>
-              <Typography variant="h4" color="error" mt={1}>
+              <Typography variant="h4" color={sessionHealth.connection_errors_today > 0 ? "error" : "text.primary"} mt={1}>
                 {sessionHealth.connection_errors_today}
               </Typography>
               <Typography variant="caption" color="text.secondary">Today</Typography>

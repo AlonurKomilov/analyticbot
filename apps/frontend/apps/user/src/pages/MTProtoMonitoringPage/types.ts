@@ -26,6 +26,8 @@ export interface CollectionProgress {
 export interface WorkerStatus {
   worker_running: boolean;
   worker_interval_minutes: number;
+  min_interval_minutes: number;  // Minimum allowed interval for user's plan
+  plan_name: string;  // User's plan name (free, pro, business, enterprise)
   last_run: string | null;
   next_run: string | null;
   runs_today: number;

@@ -8,6 +8,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     AppBar,
     Avatar,
@@ -42,33 +43,47 @@ import {
     SmartToy as BotIcon,
     Logout as LogoutIcon,
     MonetizationOn as CreditsIcon,
+    EmojiEvents as TrophyIcon,
+    Store as StoreIcon,
+    Memory as MTProtoIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@config/routes';
 import { useAuth } from '@/contexts/AuthContext';
+import { LanguageSwitcher } from '@shared/components/LanguageSwitcher';
 
 const DRAWER_WIDTH = 260;
 
 interface NavItem {
-    label: string;
+    labelKey: string;
     path: string;
     icon: React.ReactElement;
+    dividerBefore?: boolean;  // Show divider before this item
+    sectionLabel?: string;    // Section header label
 }
 
-// Removed Profile from sidebar - it's now in top bar
+// Navigation items with translation keys
 const NAV_ITEMS: NavItem[] = [
-    { label: 'Dashboard', path: ROUTES.DASHBOARD, icon: <DashboardIcon /> },
-    { label: 'Analytics', path: ROUTES.ANALYTICS, icon: <AnalyticsIcon /> },
-    { label: 'Channels', path: ROUTES.CHANNELS, icon: <ChannelIcon /> },
-    { label: 'Posts', path: ROUTES.POSTS, icon: <ArticleIcon /> },
-    { label: 'AI Services', path: ROUTES.AI_SERVICES, icon: <AIIcon /> },
-    { label: 'My Bot', path: '/bot/dashboard', icon: <BotIcon /> },
-    { label: 'Credits', path: ROUTES.CREDITS, icon: <CreditsIcon /> },
-    { label: 'Payment', path: ROUTES.PAYMENT, icon: <PaymentIcon /> },
-    { label: 'Settings', path: ROUTES.SETTINGS, icon: <SettingsIcon /> },
+    { labelKey: 'sidebar.dashboard', path: ROUTES.DASHBOARD, icon: <DashboardIcon /> },
+    { labelKey: 'sidebar.analytics', path: ROUTES.ANALYTICS, icon: <AnalyticsIcon /> },
+    { labelKey: 'sidebar.channels', path: ROUTES.CHANNELS, icon: <ChannelIcon /> },
+    { labelKey: 'sidebar.posts', path: ROUTES.POSTS, icon: <ArticleIcon /> },
+    { labelKey: 'aiServices', path: ROUTES.AI_SERVICES, icon: <AIIcon /> },
+    // Workers Section
+    { labelKey: 'workers.bot', path: ROUTES.WORKERS_BOT, icon: <BotIcon />, dividerBefore: true, sectionLabel: 'Workers' },
+    { labelKey: 'workers.mtproto', path: ROUTES.WORKERS_MTPROTO, icon: <MTProtoIcon /> },
+    // Credits & Payments Section
+    { labelKey: 'credits', path: ROUTES.CREDITS, icon: <CreditsIcon />, dividerBefore: true },
+    { labelKey: 'rewards', path: ROUTES.REWARDS, icon: <TrophyIcon /> },
+    { labelKey: 'marketplace', path: ROUTES.MARKETPLACE, icon: <StoreIcon /> },
+    { labelKey: 'payment', path: ROUTES.PAYMENT, icon: <PaymentIcon /> },
+    // Settings
+    { labelKey: 'sidebar.settings', path: ROUTES.SETTINGS, icon: <SettingsIcon />, dividerBefore: true },
 ];
 
 const NavigationBar: React.FC = () => {
+    const { t } = useTranslation('navigation');
+    const { t: tCommon } = useTranslation('common');
     const theme = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
@@ -164,20 +179,41 @@ const NavigationBar: React.FC = () => {
         <Box>
             <Toolbar>
                 <Typography variant="h6" noWrap component="div">
-                    AnalyticBot
+                    {tCommon('appName')}
                 </Typography>
             </Toolbar>
             <List>
-                {NAV_ITEMS.map((item) => (
-                    <ListItem key={item.path} disablePadding>
-                        <ListItemButton
-                            selected={location.pathname === item.path}
-                            onClick={() => handleNavigation(item.path)}
-                        >
-                            <ListItemIcon>{item.icon}</ListItemIcon>
-                            <ListItemText primary={item.label} />
-                        </ListItemButton>
-                    </ListItem>
+                {NAV_ITEMS.map((item, index) => (
+                    <React.Fragment key={item.path}>
+                        {/* Show divider before this item if specified */}
+                        {item.dividerBefore && index > 0 && <Divider sx={{ my: 1 }} />}
+                        
+                        {/* Show section label if specified */}
+                        {item.sectionLabel && (
+                            <Typography
+                                variant="overline"
+                                sx={{
+                                    px: 2,
+                                    py: 0.5,
+                                    color: 'text.secondary',
+                                    fontWeight: 600,
+                                    fontSize: '0.7rem',
+                                }}
+                            >
+                                {item.sectionLabel}
+                            </Typography>
+                        )}
+                        
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                selected={location.pathname === item.path || location.pathname.startsWith(item.path + '/')}
+                                onClick={() => handleNavigation(item.path)}
+                            >
+                                <ListItemIcon>{item.icon}</ListItemIcon>
+                                <ListItemText primary={t(item.labelKey as any)} />
+                            </ListItemButton>
+                        </ListItem>
+                    </React.Fragment>
                 ))}
             </List>
         </Box>
@@ -204,15 +240,18 @@ const NavigationBar: React.FC = () => {
                         </IconButton>
                     )}
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                        AnalyticBot
+                        {tCommon('appName')}
                     </Typography>
+
+                    {/* Language Switcher */}
+                    <LanguageSwitcher size="small" color="inherit" />
 
                     {/* Credit Balance Display */}
                     {user && (
-                        <Tooltip title="Your credit balance" arrow>
+                        <Tooltip title={t('userMenu.credits', 'Your credit balance')} arrow>
                             <Chip
                                 icon={<CreditsIcon sx={{ fontSize: '1rem' }} />}
-                                label={`${(user.credit_balance ?? 0).toLocaleString()} credits`}
+                                label={`${(user.credit_balance ?? 0).toLocaleString()} ${tCommon('credits', 'credits')}`}
                                 size="small"
                                 onClick={() => navigate(ROUTES.CREDITS)}
                                 sx={{
@@ -296,14 +335,14 @@ const NavigationBar: React.FC = () => {
                             <ListItemIcon>
                                 <PersonIcon fontSize="small" />
                             </ListItemIcon>
-                            Profile
+                            {t('userMenu.profile')}
                         </MenuItem>
                         <MenuItem onClick={() => handleProfileNavigate(ROUTES.CREDITS)}>
                             <ListItemIcon>
                                 <CreditsIcon fontSize="small" sx={{ color: '#FFD700' }} />
                             </ListItemIcon>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                                <span>Credits</span>
+                                <span>{t('userMenu.credits', 'Credits')}</span>
                                 <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
                                     {(user?.credit_balance ?? 0).toLocaleString()}
                                 </Typography>
@@ -313,14 +352,14 @@ const NavigationBar: React.FC = () => {
                             <ListItemIcon>
                                 <SettingsIcon fontSize="small" />
                             </ListItemIcon>
-                            Settings
+                            {t('userMenu.settings')}
                         </MenuItem>
                         <Divider />
                         <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
                             <ListItemIcon>
                                 <LogoutIcon fontSize="small" sx={{ color: 'error.main' }} />
                             </ListItemIcon>
-                            Logout
+                            {t('userMenu.logout')}
                         </MenuItem>
                     </Menu>
                 </Toolbar>

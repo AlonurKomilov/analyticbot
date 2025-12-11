@@ -408,3 +408,313 @@ async def get_service(
         category=service["category"],
         icon=None,
     )
+
+
+# ============================================
+# REFERRAL ENDPOINTS
+# ============================================
+
+
+class ReferralStatsResponse(BaseModel):
+    """User's referral statistics"""
+    referral_code: str | None
+    total_referrals: int
+    total_credits_earned: float
+    referral_link: str  # Web registration link
+    bot_referral_link: str  # Telegram bot deep link
+    recent_referrals: list[dict]
+
+
+class ApplyReferralRequest(BaseModel):
+    """Apply a referral code"""
+    referral_code: str = Field(..., min_length=6, max_length=20)
+
+
+class ApplyReferralResponse(BaseModel):
+    """Response after applying referral"""
+    success: bool
+    message: str
+    referrer_username: str | None
+    bonus_received: float
+
+
+@router.get("/referral", response_model=ReferralStatsResponse)
+async def get_referral_stats(
+    current_user: dict = Depends(get_current_user),
+    credit_repo: CreditRepository = Depends(get_credit_repository),
+):
+    """Get user's referral code and statistics"""
+    user_id = int(current_user["id"])
+    stats = await credit_repo.get_referral_stats(user_id)
+    
+    # Build referral links
+    import os
+    base_url = os.getenv("FRONTEND_URL", "https://analyticbot.org")
+    bot_username = os.getenv("TELEGRAM_BOT_USERNAME", "abccontrol_bot")
+    
+    referral_link = f"{base_url}/register?ref={stats['referral_code']}" if stats['referral_code'] else ""
+    bot_referral_link = f"https://t.me/{bot_username}?start=ref_{stats['referral_code']}" if stats['referral_code'] else ""
+    
+    return ReferralStatsResponse(
+        referral_code=stats["referral_code"],
+        total_referrals=stats["total_referrals"],
+        total_credits_earned=stats["total_credits_earned"],
+        referral_link=referral_link,
+        bot_referral_link=bot_referral_link,
+        recent_referrals=stats["recent_referrals"],
+    )
+
+
+@router.post("/referral/apply", response_model=ApplyReferralResponse)
+async def apply_referral_code(
+    request: ApplyReferralRequest,
+    current_user: dict = Depends(get_current_user),
+    credit_repo: CreditRepository = Depends(get_credit_repository),
+):
+    """Apply a referral code (for new users who didn't use one during signup)"""
+    user_id = int(current_user["id"])
+    
+    try:
+        result = await credit_repo.apply_referral(
+            referred_user_id=user_id,
+            referral_code=request.referral_code,
+        )
+        
+        return ApplyReferralResponse(
+            success=True,
+            message=f"Referral code applied! You received {result['referred_bonus']} bonus credits!",
+            referrer_username=result["referrer_username"],
+            bonus_received=result["referred_bonus"],
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
+# ============================================
+# ACHIEVEMENTS ENDPOINTS
+# ============================================
+
+
+class AchievementResponse(BaseModel):
+    """Achievement definition"""
+    achievement_key: str
+    name: str
+    description: str | None
+    credit_reward: float
+    icon: str | None
+    category: str
+    is_earned: bool
+    is_claimable: bool = False  # Can be claimed (requirements met but not yet earned)
+    current_value: int
+    required_value: int | None
+    progress_percent: int
+
+
+class AchievementProgressResponse(BaseModel):
+    """User's achievement progress"""
+    total_achievements: int
+    earned_count: int
+    claimable_count: int = 0  # Number of achievements ready to claim
+    completion_percent: int
+    achievements: list[AchievementResponse]
+
+
+class EarnedAchievementResponse(BaseModel):
+    """Achievement that was just earned"""
+    achievement_key: str
+    name: str
+    description: str | None
+    credits_awarded: float
+    icon: str | None
+    category: str
+
+
+@router.get("/achievements", response_model=AchievementProgressResponse)
+async def get_achievements(
+    current_user: dict = Depends(get_current_user),
+    credit_repo: CreditRepository = Depends(get_credit_repository),
+):
+    """Get user's achievement progress with claimable status"""
+    user_id = int(current_user["id"])
+    progress = await credit_repo.get_achievement_progress(user_id)
+    
+    # Get claimable achievements to mark them
+    claimable = await credit_repo.get_claimable_achievements(user_id)
+    claimable_keys = {a["achievement_key"] for a in claimable}
+    
+    completion_percent = int(progress["earned_count"] / progress["total_achievements"] * 100) if progress["total_achievements"] > 0 else 0
+    
+    return AchievementProgressResponse(
+        total_achievements=progress["total_achievements"],
+        earned_count=progress["earned_count"],
+        claimable_count=len(claimable_keys),
+        completion_percent=completion_percent,
+        achievements=[
+            AchievementResponse(
+                achievement_key=a["achievement_key"],
+                name=a["name"],
+                description=a["description"],
+                credit_reward=a["credit_reward"],
+                icon=a["icon"],
+                category=a["category"],
+                is_earned=a["is_earned"],
+                is_claimable=a["achievement_key"] in claimable_keys,
+                current_value=a["current_value"],
+                required_value=a["required_value"],
+                progress_percent=a["progress_percent"],
+            )
+            for a in progress["achievements"]
+        ],
+    )
+
+
+@router.get("/achievements/earned", response_model=list[EarnedAchievementResponse])
+async def get_earned_achievements(
+    current_user: dict = Depends(get_current_user),
+    credit_repo: CreditRepository = Depends(get_credit_repository),
+):
+    """Get list of achievements user has earned"""
+    user_id = int(current_user["id"])
+    achievements = await credit_repo.get_user_achievements(user_id)
+    
+    return [
+        EarnedAchievementResponse(
+            achievement_key=a["achievement_key"],
+            name=a["achievement_name"],
+            description=a["description"],
+            credits_awarded=float(a["credits_awarded"]),
+            icon=a["icon"],
+            category=a["category"],
+        )
+        for a in achievements
+    ]
+
+
+class ClaimAchievementRequest(BaseModel):
+    """Request to claim an achievement"""
+    achievement_key: str
+
+
+class ClaimAchievementResponse(BaseModel):
+    """Response after claiming an achievement"""
+    success: bool
+    message: str
+    achievement: EarnedAchievementResponse | None = None
+    new_balance: float | None = None
+
+
+@router.post("/achievements/claim", response_model=ClaimAchievementResponse)
+async def claim_achievement(
+    request: ClaimAchievementRequest,
+    current_user: dict = Depends(get_current_user),
+    credit_repo: CreditRepository = Depends(get_credit_repository),
+):
+    """
+    Claim an achievement that user has reached but not yet collected.
+    User must meet the achievement requirements to claim.
+    """
+    user_id = int(current_user["id"])
+    
+    # Check if user can claim this achievement
+    result = await credit_repo.claim_achievement(user_id, request.achievement_key)
+    
+    if result is None:
+        return ClaimAchievementResponse(
+            success=False,
+            message="Achievement not found or already claimed",
+        )
+    
+    if result.get("error"):
+        return ClaimAchievementResponse(
+            success=False,
+            message=result["error"],
+        )
+    
+    return ClaimAchievementResponse(
+        success=True,
+        message=f"🎉 Achievement unlocked: {result['name']}! +{result['credits_awarded']} credits",
+        achievement=EarnedAchievementResponse(
+            achievement_key=result["achievement_key"],
+            name=result["name"],
+            description=result["description"],
+            credits_awarded=result["credits_awarded"],
+            icon=result["icon"],
+            category=result["category"],
+        ),
+        new_balance=result.get("new_balance"),
+    )
+
+
+class ClaimableAchievementResponse(BaseModel):
+    """Achievement that can be claimed"""
+    achievement_key: str
+    name: str
+    description: str | None
+    credit_reward: float
+    icon: str | None
+    category: str
+    current_value: int
+    required_value: int
+
+
+@router.get("/achievements/claimable", response_model=list[ClaimableAchievementResponse])
+async def get_claimable_achievements(
+    current_user: dict = Depends(get_current_user),
+    credit_repo: CreditRepository = Depends(get_credit_repository),
+):
+    """Get list of achievements that user can claim (requirements met but not yet claimed)"""
+    user_id = int(current_user["id"])
+    claimable = await credit_repo.get_claimable_achievements(user_id)
+    
+    return [
+        ClaimableAchievementResponse(
+            achievement_key=a["achievement_key"],
+            name=a["name"],
+            description=a["description"],
+            credit_reward=float(a["credit_reward"]),
+            icon=a["icon"],
+            category=a["category"],
+            current_value=a["current_value"],
+            required_value=a["required_value"],
+        )
+        for a in claimable
+    ]
+
+
+# ============================================
+# LEADERBOARD ENDPOINT
+# ============================================
+
+
+class LeaderboardEntryResponse(BaseModel):
+    """Leaderboard entry - privacy-friendly, shows achievements not credits"""
+    rank: int
+    user_id: int
+    username: str | None
+    achievements_earned: int
+    total_channels: int
+    current_streak: int
+
+
+@router.get("/leaderboard", response_model=list[LeaderboardEntryResponse])
+async def get_leaderboard(
+    limit: int = Query(10, ge=1, le=100),
+    credit_repo: CreditRepository = Depends(get_credit_repository),
+):
+    """Get achievements leaderboard (privacy-friendly - no credit amounts shown)"""
+    entries = await credit_repo.get_leaderboard(limit=limit)
+    
+    return [
+        LeaderboardEntryResponse(
+            rank=i + 1,
+            user_id=e["id"],
+            username=e["username"],
+            achievements_earned=int(e.get("achievements_earned") or 0),
+            total_channels=int(e.get("total_channels") or 0),
+            current_streak=int(e.get("current_streak") or 0),
+        )
+        for i, e in enumerate(entries)
+    ]

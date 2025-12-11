@@ -12,13 +12,19 @@ from pydantic import BaseModel, Field, validator
 class MTProtoSetupRequest(BaseModel):
     """Initial MTProto setup with API credentials"""
 
-    telegram_api_id: int = Field(..., description="Telegram API ID from my.telegram.org", gt=0)
+    mtproto_api_id: int = Field(..., description="MTProto API ID from my.telegram.org", gt=0)
     telegram_api_hash: str = Field(
         ..., description="Telegram API Hash from my.telegram.org", min_length=32
     )
-    telegram_phone: str = Field(..., description="Phone number with country code")
+    mtproto_phone: str = Field(..., description="Phone number with country code")
 
-    @validator("telegram_phone")
+
+class MTProtoSimpleSetupRequest(BaseModel):
+    """Simplified MTProto setup - only requires phone number"""
+
+    mtproto_phone: str = Field(..., description="Phone number with country code (e.g., +1234567890)")
+
+    @validator("mtproto_phone")
     def validate_phone(cls, v):
         # Basic validation
         if not v.startswith("+"):
@@ -30,6 +36,32 @@ class MTProtoSetupRequest(BaseModel):
         if len(digits) < 10:
             raise ValueError("Phone must contain at least 10 digits")
         return v
+
+
+class MTProtoQRLoginResponse(BaseModel):
+    """Response containing QR code data for login"""
+
+    success: bool
+    qr_code_url: str = Field(..., description="URL to encode in QR code (tg://login?token=...)")
+    qr_code_base64: str | None = Field(None, description="Base64 encoded QR code image")
+    expires_in: int = Field(..., description="Seconds until QR code expires")
+    message: str
+
+
+class MTProtoQRStatusResponse(BaseModel):
+    """Status of QR login attempt"""
+
+    status: str = Field(..., description="pending, success, expired, 2fa_required, or error")
+    success: bool = False
+    message: str
+    user_id: int | None = None  # Telegram user ID if successful
+    needs_2fa: bool = False  # True if 2FA password is needed
+
+
+class MTProtoQR2FARequest(BaseModel):
+    """2FA password for QR login"""
+
+    password: str = Field(..., description="2FA password")
 
 
 class MTProtoVerifyRequest(BaseModel):

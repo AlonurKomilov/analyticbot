@@ -176,34 +176,17 @@ async def get_redis_client():
         return None
 
     try:
-        # ✅ FIXED: Create Redis client directly instead of using DI container
+        # ✅ FIXED: Create Redis client using REDIS_URL from environment
         import redis.asyncio as redis
 
-        from config.settings import settings
-
-        # Create Redis client using settings
-        redis_client = redis.Redis(
-            host=getattr(settings, "REDIS_HOST", "localhost"),
-            port=getattr(settings, "REDIS_PORT", 6379),
-            db=getattr(settings, "REDIS_DB", 0),
-            decode_responses=True,
-        )
-        logger.info("Successfully created Redis client directly")
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        redis_client = redis.from_url(redis_url, decode_responses=True)
+        logger.info(f"Successfully created Redis client from URL: {redis_url}")
         return redis_client
 
     except Exception as e:
-        logger.warning(f"Redis client not available from DI container: {e}")
-        # Fallback: create Redis client directly
-        try:
-            import redis.asyncio as redis
-
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-            fallback_client = redis.from_url(redis_url, decode_responses=True)
-            logger.info("Created fallback Redis client directly")
-            return fallback_client
-        except Exception as fallback_e:
-            logger.error(f"Fallback Redis client creation failed: {fallback_e}")
-            return None
+        logger.warning(f"Redis client creation failed: {e}")
+        return None
 
 
 async def init_analytics_fusion_service() -> AnalyticsOrchestratorService:

@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
     ME: '/auth/me',  // Use /auth/me to verify token and get user info
+    CSRF_TOKEN: '/auth/csrf-token',  // Get CSRF token for state-changing requests
   },
   // Admin
   ADMIN: {
@@ -26,6 +27,9 @@ export const API_ENDPOINTS = {
     CHANNELS: '/admin/channels',
     AUDIT_LOG: '/admin/system/audit-logs',
     HEALTH: '/admin/system/health',
+    // Settings
+    SETTINGS: '/admin/system/settings',
+    SETTING_DETAIL: (key: string) => `/admin/system/settings/${key}`,
   },
   // Bot Management
   BOTS: {

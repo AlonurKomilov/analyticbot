@@ -51,25 +51,28 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/api/client';
 
-// Types
+// Types - matching API response format
 interface CreditPackage {
     id: number;
     name: string;
+    slug: string;
     credits: number;
-    price_usd: number;
-    bonus_percent: number;
+    bonus_credits: number;
+    total_credits: number;
+    price: number;
+    currency: string;
+    description: string;
     is_popular: boolean;
-    is_active: boolean;
 }
 
 interface CreditService {
     id: number;
-    key: string;
+    service_key: string;
     name: string;
     description: string;
     credit_cost: number;
     category: string;
-    is_active: boolean;
+    icon: string;
 }
 
 interface CreditTransaction {
@@ -126,6 +129,9 @@ const CreditsPage: React.FC = () => {
     const [services, setServices] = useState<CreditService[]>([]);
     const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
     const [rewardMessage, setRewardMessage] = useState<{ type: 'success' | 'info' | 'error'; text: string } | null>(null);
+    
+    // Track if initial fetch is done to prevent infinite loop
+    const [initialFetchDone, setInitialFetchDone] = useState(false);
 
     // Fetch all credit data
     const fetchCreditData = useCallback(async (showRefreshing = false) => {
@@ -140,27 +146,34 @@ const CreditsPage: React.FC = () => {
                 apiClient.get('/credits/transactions?limit=20'),
             ]);
 
-            setBalance((balanceRes as any).balance ?? 0);
-            setPackages((packagesRes as any).packages ?? []);
-            setServices((servicesRes as any).services ?? []);
-            setTransactions((transactionsRes as any).transactions ?? []);
+            // API returns: { balance: number } for balance
+            // API returns: array directly for packages, services, transactions
+            const newBalance = (balanceRes as any).balance ?? 0;
+            setBalance(newBalance);
+            setPackages(Array.isArray(packagesRes) ? packagesRes : []);
+            setServices(Array.isArray(servicesRes) ? servicesRes : []);
+            setTransactions(Array.isArray(transactionsRes) ? transactionsRes : []);
 
-            // Update user context with new balance
-            if (user) {
-                updateUser({ ...user, credit_balance: (balanceRes as any).balance ?? 0 });
+            // Sync user context with actual balance (fixes header showing stale data)
+            if (user && user.credit_balance !== newBalance) {
+                updateUser({ ...user, credit_balance: newBalance });
             }
+
         } catch (error) {
             console.error('Failed to fetch credit data:', error);
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [user, updateUser]);
+    }, [user, updateUser]); // Added user and updateUser dependencies
 
-    // Initial load
+    // Initial load - run only once
     useEffect(() => {
-        fetchCreditData();
-    }, [fetchCreditData]);
+        if (!initialFetchDone) {
+            setInitialFetchDone(true);
+            fetchCreditData();
+        }
+    }, [initialFetchDone, fetchCreditData]);
 
     // Claim daily reward
     const handleClaimDailyReward = async () => {
@@ -184,7 +197,7 @@ const CreditsPage: React.FC = () => {
 
                 // Refresh transactions
                 const transactionsRes = await apiClient.get('/credits/transactions?limit=20');
-                setTransactions((transactionsRes as any).transactions ?? []);
+                setTransactions(Array.isArray(transactionsRes) ? transactionsRes : []);
             } else {
                 setRewardMessage({
                     type: 'info',
@@ -366,14 +379,14 @@ const CreditsPage: React.FC = () => {
                                         {pkg.name}
                                     </Typography>
                                     <Typography variant="h3" color="primary" fontWeight="bold">
-                                        {pkg.credits.toLocaleString()}
+                                        {pkg.total_credits.toLocaleString()}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary" gutterBottom>
                                         credits
                                     </Typography>
-                                    {pkg.bonus_percent > 0 && (
+                                    {pkg.bonus_credits > 0 && (
                                         <Chip
-                                            label={`+${pkg.bonus_percent}% bonus!`}
+                                            label={`+${pkg.bonus_credits} bonus!`}
                                             color="success"
                                             size="small"
                                             sx={{ mt: 1 }}
@@ -381,10 +394,10 @@ const CreditsPage: React.FC = () => {
                                     )}
                                     <Divider sx={{ my: 2 }} />
                                     <Typography variant="h4">
-                                        ${pkg.price_usd.toFixed(2)}
+                                        ${pkg.price.toFixed(2)}
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary">
-                                        ${(pkg.price_usd / pkg.credits * 100).toFixed(1)}¢ per credit
+                                        ${(pkg.price / pkg.total_credits * 100).toFixed(1)}¢ per credit
                                     </Typography>
                                 </CardContent>
                                 <CardActions sx={{ p: 2, pt: 0 }}>

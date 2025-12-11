@@ -18,6 +18,12 @@ export const ROUTES = {
   BOTS: '/bots',
   BOT_DETAILS: '/bots/:id',
 
+  // MTProto Management
+  MTPROTO: '/mtproto',
+
+  // Plans Management
+  PLANS: '/plans',
+
   // System
   SYSTEM_HEALTH: '/system/health',
   AUDIT_LOG: '/system/audit',

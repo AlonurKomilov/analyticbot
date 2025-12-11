@@ -14,8 +14,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "0038_add_user_suspension_fields"
-down_revision = "0037_remove_unused_indexes"
+revision = "0039_add_user_suspension_fields"
+down_revision = "0038"
 branch_labels = None
 depends_on = None
 

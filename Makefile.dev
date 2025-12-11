@@ -178,28 +178,24 @@ dev-admin-build:
 	@echo "   Deploy to: /var/www/analyticbot/admin"
 
 # ============================================================================
-# User Frontend Commands (Monorepo Structure: apps/frontend/apps/user)
+# API Watchdog - Auto-restart API if it crashes
 # ============================================================================
 
-dev-user-start:
-	@echo "🌐 Starting user frontend on port 11300..."
-	@cd apps/frontend/apps/user && npm run dev &
-	@echo "✅ User frontend starting at http://localhost:11300"
-	@echo "   Production URL: https://dev.analyticbot.org"
+dev-watchdog-start:
+	@echo "🐕 Starting API watchdog..."
+	@pkill -f "api-watchdog.sh" 2>/dev/null || true
+	@nohup ./scripts/api-watchdog.sh > /dev/null 2>&1 &
+	@sleep 1
+	@pgrep -f "api-watchdog.sh" > /dev/null && echo "✅ API watchdog started" || echo "❌ Failed to start watchdog"
 
-dev-user-stop:
-	@echo "🛑 Stopping user frontend..."
-	@pkill -f "vite.*11300" 2>/dev/null || true
-	@echo "✅ User frontend stopped"
+dev-watchdog-stop:
+	@echo "🛑 Stopping API watchdog..."
+	@pkill -f "api-watchdog.sh" 2>/dev/null || true
+	@echo "✅ API watchdog stopped"
 
-dev-user-build:
-	@echo "🏗️  Building user frontend for production..."
-	cd apps/frontend/apps/user && npm run build
-	@echo "✅ User frontend built to apps/frontend/apps/user/dist"
-	@echo "   Deploy to: /var/www/analyticbot/frontend"
+dev-watchdog-status:
+	@pgrep -f "api-watchdog.sh" > /dev/null && echo "🐕 API Watchdog: ✅ Running" || echo "�� API Watchdog: ❌ Stopped"
+	@tail -3 logs/watchdog.log 2>/dev/null || true
 
-dev-frontend-install:
-	@echo "📦 Installing all frontend dependencies..."
-	cd apps/frontend/apps/user && npm install
-	cd apps/frontend/apps/admin && npm install
-	@echo "✅ All frontend dependencies installed"
+dev-watchdog-logs:
+	@tail -50 logs/watchdog.log 2>/dev/null || echo "No watchdog logs found"

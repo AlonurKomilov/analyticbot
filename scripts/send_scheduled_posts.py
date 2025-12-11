@@ -107,7 +107,7 @@ async def process_scheduled_posts():
             post_id = post["id"]
             channel_id = post["channel_id"]
             text = post["post_text"]
-            schedule_time = post["schedule_time"]
+            post["schedule_time"]
 
             try:
                 logger.info(f"📤 Sending post {post_id} to channel {channel_id}")

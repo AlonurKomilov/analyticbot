@@ -328,8 +328,8 @@ const UsersPage: React.FC = () => {
   };
 
   const handleSelectOne = (userId: number) => {
-    setSelected(prev => 
-      prev.includes(userId) 
+    setSelected(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
@@ -355,7 +355,7 @@ const UsersPage: React.FC = () => {
     setBulkSuspendDialogOpen(false);
     setSelected([]);
     fetchUsers();
-    
+
     if (failCount === 0) {
       setSnackbar({ open: true, message: `Successfully suspended ${successCount} users`, severity: 'success' });
     } else {
@@ -381,7 +381,7 @@ const UsersPage: React.FC = () => {
     setBulkDeleteDialogOpen(false);
     setSelected([]);
     fetchUsers();
-    
+
     if (failCount === 0) {
       setSnackbar({ open: true, message: `Successfully deleted ${successCount} users`, severity: 'success' });
     } else {
@@ -401,7 +401,7 @@ const UsersPage: React.FC = () => {
       'Created At': user.created_at,
       'Last Login': user.last_login || 'Never',
     }));
-    
+
     exportTableData(exportData, generateExportFilename('users'), 'csv');
     setSnackbar({ open: true, message: 'Users exported successfully', severity: 'success' });
   };
@@ -554,8 +554,8 @@ const UsersPage: React.FC = () => {
             {filteredUsers
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((user) => (
-                <TableRow 
-                  key={user.id} 
+                <TableRow
+                  key={user.id}
                   hover
                   selected={selected.includes(user.id)}
                 >

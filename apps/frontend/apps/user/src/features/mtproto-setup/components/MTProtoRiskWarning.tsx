@@ -42,15 +42,15 @@ export const MTProtoRiskWarning: React.FC<MTProtoRiskWarningProps> = ({
   return (
     <Box>
       {/* Info Header */}
-      <Alert 
-        severity="error" 
+      <Alert
+        severity="error"
         sx={{ mb: 3 }}
       >
         <AlertTitle sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
           Attention: MTProto Telegram Account Setup
         </AlertTitle>
         <Typography variant="body1">
-          MTProto provides powerful analytics by accessing your channel history directly. 
+          MTProto provides powerful analytics by accessing your channel history directly.
           For your Telegram account's security and best results, please read the recommendations below before proceeding.
         </Typography>
       </Alert>
@@ -60,37 +60,37 @@ export const MTProtoRiskWarning: React.FC<MTProtoRiskWarningProps> = ({
         <Typography variant="h6" color="warning.main" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Lightbulb color="warning" /> Recommended: Use a Secondary Telegram Account
         </Typography>
-        
+
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
           For the best experience, we recommend using a dedicated Telegram account for analytics:
         </Typography>
-        
+
         <List dense>
           <ListItem>
             <ListItemIcon>
               <CheckCircle color="success" fontSize="small" />
             </ListItemIcon>
-            <ListItemText 
+            <ListItemText
               primary="Create a secondary Telegram account for analytics"
               secondary="This keeps your personal account separate"
             />
           </ListItem>
-          
+
           <ListItem>
             <ListItemIcon>
               <CheckCircle color="success" fontSize="small" />
             </ListItemIcon>
-            <ListItemText 
+            <ListItemText
               primary="Add this account as admin to your channels"
               secondary="So it can access channel history"
             />
           </ListItem>
-          
+
           <ListItem>
             <ListItemIcon>
               <CheckCircle color="success" fontSize="small" />
             </ListItemIcon>
-            <ListItemText 
+            <ListItemText
               primary="Use any spare phone number"
               secondary="You can get a virtual number if needed"
             />
@@ -103,54 +103,54 @@ export const MTProtoRiskWarning: React.FC<MTProtoRiskWarningProps> = ({
         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <TipsAndUpdates color="primary" /> Why We Recommend Using a Secondary Telegram Account
         </Typography>
-        
+
         <Typography variant="body2" paragraph>
           Telegram has rate limits on API requests. Using a dedicated account means:
         </Typography>
-        
+
         <List dense>
           <ListItem>
             <ListItemIcon>
               <Security color="primary" fontSize="small" />
             </ListItemIcon>
-            <ListItemText 
+            <ListItemText
               primary="Your personal chats stay completely private"
             />
           </ListItem>
-          
+
           <ListItem>
             <ListItemIcon>
               <Security color="primary" fontSize="small" />
             </ListItemIcon>
-            <ListItemText 
+            <ListItemText
               primary="If Telegram applies any rate limits, only the analytics account is affected"
             />
           </ListItem>
-          
+
           <ListItem>
             <ListItemIcon>
               <Security color="primary" fontSize="small" />
             </ListItemIcon>
-            <ListItemText 
+            <ListItemText
               primary="You can easily manage permissions for different channels"
             />
           </ListItem>
-          
+
           <ListItem>
             <ListItemIcon>
               <Security color="warning" fontSize="small" />
             </ListItemIcon>
-            <ListItemText 
+            <ListItemText
               primary="In rare cases, Telegram may temporarily restrict accounts with high API usage"
               secondary="Using a secondary account keeps your main account safe from any restrictions"
             />
           </ListItem>
         </List>
-        
+
         <Alert severity="warning" sx={{ mt: 2 }}>
           <Typography variant="body2">
-            <strong>Note:</strong> If you choose to use your main Telegram account instead of a secondary one, 
-            you accept full responsibility for any potential restrictions. We strongly recommend using 
+            <strong>Note:</strong> If you choose to use your main Telegram account instead of a secondary one,
+            you accept full responsibility for any potential restrictions. We strongly recommend using
             a dedicated Telegram account for analytics purposes.
           </Typography>
         </Alert>
@@ -186,7 +186,7 @@ export const MTProtoRiskWarning: React.FC<MTProtoRiskWarningProps> = ({
         >
           Maybe Later
         </Button>
-        
+
         <Button
           variant="contained"
           color="primary"

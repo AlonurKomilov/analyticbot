@@ -80,13 +80,9 @@ class AsyncpgUserRepository(IUserRepository):
 
             # Validate ID is in correct range
             if user_id < MIN_USER_ID or user_id > MAX_USER_ID:
-                log.warning(
-                    f"Sequence returned invalid ID {user_id}, resetting to {MIN_USER_ID}"
-                )
+                log.warning(f"Sequence returned invalid ID {user_id}, resetting to {MIN_USER_ID}")
                 # Reset sequence to valid range
-                await self._pool.execute(
-                    f"SELECT setval('users_id_seq', $1, false)", MIN_USER_ID
-                )
+                await self._pool.execute("SELECT setval('users_id_seq', $1, false)", MIN_USER_ID)
                 user_id = await self._pool.fetchval("SELECT nextval('users_id_seq')")
 
             # Check 1: Is this ID reserved for premium sale?
@@ -161,19 +157,19 @@ class AsyncpgUserRepository(IUserRepository):
         # Find gaps between existing user IDs using a window function
         query = """
             WITH existing_ids AS (
-                SELECT id FROM users 
+                SELECT id FROM users
                 WHERE id >= $1 AND id <= $2
                 ORDER BY id
             ),
             gaps AS (
-                SELECT 
+                SELECT
                     id + 1 as gap_start,
                     LEAD(id) OVER (ORDER BY id) - 1 as gap_end
                 FROM existing_ids
             )
             SELECT gap_start
             FROM gaps
-            WHERE gap_end IS NOT NULL 
+            WHERE gap_end IS NOT NULL
               AND gap_start <= gap_end
               AND gap_start >= $1
               AND gap_start <= $2

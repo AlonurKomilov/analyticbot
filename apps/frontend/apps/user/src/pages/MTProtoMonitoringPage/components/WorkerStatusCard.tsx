@@ -108,9 +108,9 @@ export const WorkerStatusCard: React.FC<WorkerStatusCardProps> = ({ workerStatus
               <Typography variant="body2" color="text.secondary">Collection Interval</Typography>
               <Box display="flex" alignItems="baseline" gap={1} mt={1}>
                 <Typography variant="h4">{workerStatus.worker_interval_minutes}min</Typography>
-                <Chip 
-                  label={workerStatus.plan_name || 'free'} 
-                  size="small" 
+                <Chip
+                  label={workerStatus.plan_name || 'free'}
+                  size="small"
                   color={
                     workerStatus.plan_name === 'enterprise' ? 'secondary' :
                     workerStatus.plan_name === 'business' ? 'primary' :

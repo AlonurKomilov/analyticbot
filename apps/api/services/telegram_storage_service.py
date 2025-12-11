@@ -217,14 +217,14 @@ class TelegramStorageService:
             # Try channel_id with multiple formats as fallback
             if not channel:
                 errors = []
-                
+
                 # Method 1: Try with provided ID directly
                 try:
                     logger.info(f"Attempting to fetch channel by ID: {channel_id}")
                     channel = await self.client.get_entity(channel_id)
                 except Exception as e1:
                     errors.append(f"direct({channel_id}): {e1}")
-                    
+
                     # Method 2: Try with negative format
                     try:
                         negative_id = -abs(channel_id)
@@ -232,7 +232,7 @@ class TelegramStorageService:
                         logger.info(f"Fetched channel using negative ID: {negative_id}")
                     except Exception as e2:
                         errors.append(f"negative: {e2}")
-                        
+
                         # Method 3: If ID has 100 prefix, try without it
                         id_str = str(abs(channel_id))
                         if len(id_str) > 10 and id_str.startswith("100"):
@@ -242,7 +242,7 @@ class TelegramStorageService:
                                 logger.info(f"Fetched channel using raw ID: {raw_id}")
                             except Exception as e3:
                                 errors.append(f"raw({raw_id}): {e3}")
-                
+
                 if not channel:
                     error_details = "; ".join(errors) if errors else "Unknown error"
                     logger.error(f"All methods failed for channel_id {channel_id}: {error_details}")

@@ -143,12 +143,14 @@ async def verify_mtproto(
 
         # Get session string and MTProto user info
         session_string = session.save()
-        
+
         # Get the MTProto user info (Telegram ID and username of the authenticated account)
         me = await client.get_me()
         mtproto_id = me.id if me else None
         mtproto_username = me.username if me else None
-        logger.info(f"MTProto user ID for user {user_id}: {mtproto_id}, username: {mtproto_username}")
+        logger.info(
+            f"MTProto user ID for user {user_id}: {mtproto_id}, username: {mtproto_username}"
+        )
 
         await safe_disconnect(client)
 

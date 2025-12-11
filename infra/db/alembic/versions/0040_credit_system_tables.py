@@ -67,8 +67,18 @@ def upgrade() -> None:
         sa.Column("lifetime_spent", sa.Numeric(12, 2), server_default="0", nullable=False),
         sa.Column("daily_streak", sa.Integer(), server_default="0", nullable=False),
         sa.Column("last_daily_reward_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("user_id", name="uq_user_credits_user_id"),
@@ -84,19 +94,32 @@ def upgrade() -> None:
         sa.Column("user_id", sa.BigInteger(), nullable=False),
         sa.Column("amount", sa.Numeric(12, 2), nullable=False),
         sa.Column("balance_after", sa.Numeric(12, 2), nullable=False),
-        sa.Column("type", sa.String(50), nullable=False),  # purchase, reward, spend, bonus, referral, adjustment
-        sa.Column("category", sa.String(50), nullable=True),  # signup, daily, referral, purchase, admin, achievement
+        sa.Column(
+            "type", sa.String(50), nullable=False
+        ),  # purchase, reward, spend, bonus, referral, adjustment
+        sa.Column(
+            "category", sa.String(50), nullable=True
+        ),  # signup, daily, referral, purchase, admin, achievement
         sa.Column("description", sa.String(500), nullable=True),
-        sa.Column("reference_id", sa.String(100), nullable=True),  # External reference (payment ID, etc.)
+        sa.Column(
+            "reference_id", sa.String(100), nullable=True
+        ),  # External reference (payment ID, etc.)
         sa.Column("metadata", sa.JSON(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
     )
     op.create_index("ix_credit_transactions_user_id", "credit_transactions", ["user_id"])
     op.create_index("ix_credit_transactions_type", "credit_transactions", ["type"])
     op.create_index("ix_credit_transactions_created_at", "credit_transactions", ["created_at"])
-    op.create_index("ix_credit_transactions_user_created", "credit_transactions", ["user_id", "created_at"])
+    op.create_index(
+        "ix_credit_transactions_user_created", "credit_transactions", ["user_id", "created_at"]
+    )
 
     # ============================================
     # Credit Packages Table - Purchasable bundles
@@ -115,7 +138,12 @@ def upgrade() -> None:
         sa.Column("is_active", sa.Boolean(), server_default="true", nullable=False),
         sa.Column("sort_order", sa.Integer(), server_default="0", nullable=False),
         sa.Column("stripe_price_id", sa.String(100), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_credit_packages_slug", "credit_packages", ["slug"], unique=True)
@@ -136,10 +164,17 @@ def upgrade() -> None:
         sa.Column("usage_limit_per_day", sa.Integer(), nullable=True),  # NULL = unlimited
         sa.Column("is_active", sa.Boolean(), server_default="true", nullable=False),
         sa.Column("sort_order", sa.Integer(), server_default="0", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("ix_credit_services_service_key", "credit_services", ["service_key"], unique=True)
+    op.create_index(
+        "ix_credit_services_service_key", "credit_services", ["service_key"], unique=True
+    )
     op.create_index("ix_credit_services_category", "credit_services", ["category"])
     op.create_index("ix_credit_services_active", "credit_services", ["is_active"])
 
@@ -154,12 +189,19 @@ def upgrade() -> None:
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("credit_reward", sa.Numeric(10, 2), server_default="0", nullable=False),
         sa.Column("icon", sa.String(50), nullable=True),
-        sa.Column("category", sa.String(50), nullable=False),  # account, channels, engagement, streaks, credits, referrals
+        sa.Column(
+            "category", sa.String(50), nullable=False
+        ),  # account, channels, engagement, streaks, credits, referrals
         sa.Column("requirement_type", sa.String(50), nullable=True),  # streak, count, value
         sa.Column("requirement_value", sa.Integer(), nullable=True),  # e.g., 7 for 7-day streak
         sa.Column("is_active", sa.Boolean(), server_default="true", nullable=False),
         sa.Column("sort_order", sa.Integer(), server_default="0", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_achievements_key", "achievements", ["achievement_key"], unique=True)
@@ -177,7 +219,12 @@ def upgrade() -> None:
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("credits_awarded", sa.Numeric(10, 2), server_default="0", nullable=False),
         sa.Column("icon", sa.String(50), nullable=True),
-        sa.Column("achieved_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "achieved_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("user_id", "achievement_key", name="uq_user_achievement"),
@@ -195,9 +242,16 @@ def upgrade() -> None:
         sa.Column("referred_user_id", sa.BigInteger(), nullable=False),
         sa.Column("referral_code", sa.String(20), nullable=False),
         sa.Column("credits_awarded", sa.Numeric(10, 2), server_default="0", nullable=False),
-        sa.Column("status", sa.String(20), server_default="pending", nullable=False),  # pending, completed, expired
+        sa.Column(
+            "status", sa.String(20), server_default="pending", nullable=False
+        ),  # pending, completed, expired
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["referrer_user_id"], ["users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["referred_user_id"], ["users.id"], ondelete="CASCADE"),
@@ -229,8 +283,18 @@ def upgrade() -> None:
         sa.Column("rating", sa.Numeric(3, 2), server_default="0", nullable=False),
         sa.Column("rating_count", sa.Integer(), server_default="0", nullable=False),
         sa.Column("is_active", sa.Boolean(), server_default="true", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_marketplace_items_slug", "marketplace_items", ["slug"], unique=True)
@@ -247,7 +311,12 @@ def upgrade() -> None:
         sa.Column("user_id", sa.BigInteger(), nullable=False),
         sa.Column("item_id", sa.Integer(), nullable=False),
         sa.Column("price_paid", sa.Integer(), nullable=False),
-        sa.Column("purchased_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "purchased_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),  # NULL = permanent
         sa.Column("is_active", sa.Boolean(), server_default="true", nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -268,12 +337,21 @@ def upgrade() -> None:
         sa.Column("slug", sa.String(100), nullable=False, unique=True),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("price_credits", sa.Integer(), nullable=False),
-        sa.Column("original_price", sa.Integer(), nullable=False),  # Sum of items if bought separately
+        sa.Column(
+            "original_price", sa.Integer(), nullable=False
+        ),  # Sum of items if bought separately
         sa.Column("discount_percent", sa.Integer(), server_default="0", nullable=False),
         sa.Column("is_featured", sa.Boolean(), server_default="false", nullable=False),
-        sa.Column("valid_days", sa.Integer(), server_default="365", nullable=False),  # How long items last
+        sa.Column(
+            "valid_days", sa.Integer(), server_default="365", nullable=False
+        ),  # How long items last
         sa.Column("is_active", sa.Boolean(), server_default="true", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_marketplace_bundles_slug", "marketplace_bundles", ["slug"], unique=True)
@@ -304,8 +382,18 @@ def upgrade() -> None:
         sa.Column("rating", sa.Integer(), nullable=False),  # 1-5
         sa.Column("review_text", sa.Text(), nullable=True),
         sa.Column("is_verified_purchase", sa.Boolean(), server_default="false", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("NOW()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["item_id"], ["marketplace_items.id"], ondelete="CASCADE"),
@@ -330,7 +418,7 @@ def downgrade() -> None:
     op.drop_table("credit_packages")
     op.drop_table("credit_transactions")
     op.drop_table("user_credits")
-    
+
     # Drop indexes and columns from users table
     op.drop_index("ix_users_referral_code", table_name="users")
     op.drop_column("users", "referred_by_user_id")

@@ -18,7 +18,7 @@ async function autoConnectMTProtoIfNeeded(): Promise<void> {
     try {
         authLogger.debug('Checking MTProto status for auto-connect...');
         const status = await getMTProtoStatus();
-        
+
         // Check if MTProto is configured, enabled, but not actively connected
         if (status.verified && status.mtproto_enabled && !status.actively_connected) {
             authLogger.info('MTProto configured but not connected - auto-connecting...');
@@ -182,7 +182,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         setToken(storedToken);
                         setUser(storedUser);
                         setIsLoading(false);
-                        
+
                         // Background refresh to get fresh credit_balance etc.
                         apiClient.get('/auth/me', { timeout: 5000 })
                             .then((userData) => {
@@ -193,7 +193,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                             .catch((err) => {
                                 authLogger.debug('Background refresh failed, using cached data', { error: err.message });
                             });
-                        
+
                         // Auto-connect MTProto in background for returning users
                         autoConnectMTProtoIfNeeded().catch(() => {});
                         return;
@@ -206,7 +206,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         setToken(storedToken);
                         setUser(userData as User);
                         authLogger.info('Token verified successfully');
-                        
+
                         // Auto-connect MTProto after token verification
                         autoConnectMTProtoIfNeeded().catch(() => {});
                     } catch (error: any) {
@@ -266,7 +266,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setToken(storedToken);
                 setUser(storedUser);
                 setIsLoading(false);
-                
+
                 // Auto-connect MTProto for TWA users too
                 autoConnectMTProtoIfNeeded().catch(() => {
                     // Silently ignore - already logged in the function

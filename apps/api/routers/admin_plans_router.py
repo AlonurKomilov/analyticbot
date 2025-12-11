@@ -62,7 +62,7 @@ async def get_all_plans(
     """Get all subscription plans with MTProto configuration."""
     async with pool.acquire() as conn:
         rows = await conn.fetch("""
-            SELECT 
+            SELECT
                 id, name, slug, description, price, duration_days,
                 is_active, features,
                 COALESCE(mtproto_interval_minutes, 60) as mtproto_interval_minutes,
@@ -133,14 +133,14 @@ async def update_plan_mtproto_config(
         row = await conn.fetchrow(
             """
             UPDATE plans
-            SET 
+            SET
                 mtproto_interval_minutes = $1,
                 min_mtproto_interval_minutes = $2,
                 credits_per_interval_boost = $3,
                 interval_boost_minutes = $4,
                 can_purchase_boost = $5
             WHERE id = $6
-            RETURNING 
+            RETURNING
                 id, name, slug, description, price, duration_days,
                 is_active, features,
                 mtproto_interval_minutes,

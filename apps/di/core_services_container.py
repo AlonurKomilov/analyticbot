@@ -57,14 +57,14 @@ async def _create_dashboard_service(port: int = 8050, **kwargs):
 
 async def _create_analytics_fusion_service(**kwargs):
     """Create analytics fusion orchestrator (API service)
-    
+
     Delegates to analytics_container which has proper db_pool access.
     """
     logger.info("🏭 Creating analytics fusion service via analytics_container...")
     try:
         # Delegate to the properly-configured analytics container
         from apps.di.analytics_container import get_analytics_fusion_service as get_fusion_svc
-        
+
         service = await get_fusion_svc()
         if service:
             logger.info("✅ Analytics fusion service obtained from analytics_container")

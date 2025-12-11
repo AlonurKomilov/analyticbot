@@ -129,7 +129,7 @@ const CreditsPage: React.FC = () => {
     const [services, setServices] = useState<CreditService[]>([]);
     const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
     const [rewardMessage, setRewardMessage] = useState<{ type: 'success' | 'info' | 'error'; text: string } | null>(null);
-    
+
     // Track if initial fetch is done to prevent infinite loop
     const [initialFetchDone, setInitialFetchDone] = useState(false);
 

@@ -74,9 +74,9 @@ const PlansPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await apiClient.get('/admin/plans');
-      
+
       if (Array.isArray(response.data)) {
         setPlans(response.data);
       } else if (response.data?.plans) {
@@ -114,11 +114,11 @@ const PlansPage: React.FC = () => {
     try {
       setError(null);
       await apiClient.patch(`/admin/plans/${selectedPlan.id}/mtproto-config`, editForm);
-      
+
       setSuccess(`Successfully updated ${selectedPlan.name} plan configuration`);
       setEditDialogOpen(false);
       fetchPlans();
-      
+
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to update plan');
@@ -323,7 +323,7 @@ const PlansPage: React.FC = () => {
               }
               label="Allow users to purchase interval boosts"
             />
-            
+
             <Alert severity="info" sx={{ mt: 1 }}>
               <Typography variant="body2">
                 <strong>Collections per day:</strong> {Math.floor(1440 / editForm.mtproto_interval_minutes)}

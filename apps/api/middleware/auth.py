@@ -10,7 +10,7 @@ Supports both:
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
@@ -67,7 +67,7 @@ async def get_channel_repository() -> ChannelRepository:
 
 async def get_current_user(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
     user_repo: UserRepository = Depends(get_user_repository),
     auth_utils: FastAPIAuthUtils = Depends(get_auth_utils),
 ) -> dict[str, Any]:
@@ -92,27 +92,28 @@ async def get_current_user(
     """
     try:
         token = None
-        
+
         # First, try Bearer token from Authorization header
         if credentials and credentials.credentials:
             token = credentials.credentials
             logger.debug("Using Bearer token from Authorization header")
-        
+
         # If no Bearer token, try httpOnly cookie (for admin panel)
         if not token:
             cookie_token = request.cookies.get("access_token")
             if cookie_token:
                 token = cookie_token
                 logger.debug("Using token from httpOnly cookie")
-        
+
         # If still no token, raise error
         if not token:
             raise AuthError("No authentication token provided")
-        
+
         # Create credentials object for auth_utils
         from fastapi.security import HTTPAuthorizationCredentials
+
         creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
-        
+
         # Use centralized auth utilities - eliminates duplicate JWT verification
         user = await auth_utils.get_user_from_token(creds, user_repo)
         logger.info(f"Authenticated user: {user.get('username', user.get('id'))}")

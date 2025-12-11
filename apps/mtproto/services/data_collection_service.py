@@ -64,7 +64,7 @@ class TelegramClientAdapter:
             entity = await self._client.get_entity(peer)
         except Exception as e1:
             logger.warning(f"Could not resolve entity for {peer}: {e1}")
-            
+
             # If peer is an int, try alternate formats
             if isinstance(peer, int):
                 # Try negative format
@@ -74,7 +74,7 @@ class TelegramClientAdapter:
                     logger.info(f"Resolved entity using negative ID: {negative_id}")
                 except Exception as e2:
                     logger.debug(f"Negative ID failed: {e2}")
-                    
+
                     # Try without 100 prefix if present
                     id_str = str(abs(peer))
                     if len(id_str) > 10 and id_str.startswith("100"):
@@ -84,7 +84,7 @@ class TelegramClientAdapter:
                             logger.info(f"Resolved entity using raw ID: {raw_id}")
                         except Exception as e3:
                             logger.debug(f"Raw ID failed: {e3}")
-        
+
         if entity:
             peer = entity  # Use resolved entity for iteration
         # Continue with original peer if resolution failed, might still work
@@ -112,7 +112,7 @@ class TelegramClientAdapter:
         entity = None
         try:
             entity = await self._client.get_entity(channel)
-        except Exception as e1:
+        except Exception:
             if isinstance(channel, int):
                 # Try alternate formats
                 try:
@@ -121,7 +121,7 @@ class TelegramClientAdapter:
                     id_str = str(abs(channel))
                     if len(id_str) > 10 and id_str.startswith("100"):
                         entity = await self._client.get_entity(int(id_str[3:]))
-        
+
         if not entity:
             entity = channel  # Fallback to original
 
@@ -158,7 +158,7 @@ class MTProtoDataCollectionService:
 
     async def _get_last_collection_time(self) -> datetime | None:
         """Get the timestamp of the last collection_end event from audit log.
-        
+
         Returns:
             The timestamp of the last collection, or None if no collections found.
         """
@@ -167,10 +167,10 @@ class MTProtoDataCollectionService:
             async with db_pool.acquire() as conn:
                 row = await conn.fetchrow(
                     """
-                    SELECT timestamp 
-                    FROM mtproto_audit_log 
+                    SELECT timestamp
+                    FROM mtproto_audit_log
                     WHERE action = 'collection_end'
-                    ORDER BY timestamp DESC 
+                    ORDER BY timestamp DESC
                     LIMIT 1
                     """
                 )
@@ -183,7 +183,7 @@ class MTProtoDataCollectionService:
 
     async def _is_collection_in_progress(self) -> tuple[bool, datetime | None]:
         """Check if there's a collection currently in progress (started but not ended).
-        
+
         Returns:
             Tuple of (is_in_progress, start_timestamp)
         """
@@ -193,69 +193,73 @@ class MTProtoDataCollectionService:
                 # Get the most recent collection_start
                 last_start = await conn.fetchrow(
                     """
-                    SELECT timestamp 
-                    FROM mtproto_audit_log 
+                    SELECT timestamp
+                    FROM mtproto_audit_log
                     WHERE action = 'collection_start'
-                    ORDER BY timestamp DESC 
+                    ORDER BY timestamp DESC
                     LIMIT 1
                     """
                 )
-                
+
                 if not last_start:
                     return False, None
-                
+
                 # Get the most recent collection_end
                 last_end = await conn.fetchrow(
                     """
-                    SELECT timestamp 
-                    FROM mtproto_audit_log 
+                    SELECT timestamp
+                    FROM mtproto_audit_log
                     WHERE action = 'collection_end'
-                    ORDER BY timestamp DESC 
+                    ORDER BY timestamp DESC
                     LIMIT 1
                     """
                 )
-                
+
                 start_time = last_start["timestamp"]
-                
+
                 # If no end or start is after end, collection is in progress
                 if not last_end or start_time > last_end["timestamp"]:
                     return True, start_time
-                
+
                 return False, None
         except Exception as e:
             logger.warning(f"Failed to check collection in progress: {e}")
             return False, None
 
-    async def _should_skip_collection(self, interval_minutes: int, min_gap_ratio: float = 0.5) -> tuple[bool, float]:
+    async def _should_skip_collection(
+        self, interval_minutes: int, min_gap_ratio: float = 0.5
+    ) -> tuple[bool, float]:
         """Check if collection should be skipped because one was completed recently or is in progress.
-        
+
         This prevents duplicate collections when the worker is restarted.
-        
+
         Args:
             interval_minutes: The configured collection interval in minutes
             min_gap_ratio: Minimum ratio of interval that must pass before allowing collection.
                           Default 0.5 means skip if less than 50% of interval has passed.
-        
+
         Returns:
             Tuple of (should_skip, seconds_until_next_collection)
         """
         now = datetime.now(UTC)
         interval_seconds = interval_minutes * 60
         min_gap_seconds = interval_seconds * min_gap_ratio
-        
+
         # First, check if a collection is currently in progress
         in_progress, start_time = await self._is_collection_in_progress()
         if in_progress and start_time:
             # Handle timezone-naive timestamps
             if start_time.tzinfo is None:
                 start_time = start_time.replace(tzinfo=UTC)
-            
+
             time_since_start = (now - start_time).total_seconds()
-            
+
             # If started less than 5 minutes ago, assume it's still running (or crashed recently)
             # Wait for the remaining interval time
             if time_since_start < 300:  # 5 minutes
-                logger.info(f"🔄 Collection appears to be in progress (started {time_since_start:.0f}s ago)")
+                logger.info(
+                    f"🔄 Collection appears to be in progress (started {time_since_start:.0f}s ago)"
+                )
                 wait_seconds = min_gap_seconds - time_since_start
                 if wait_seconds > 0:
                     return True, wait_seconds
@@ -266,48 +270,48 @@ class MTProtoDataCollectionService:
                     f"⚠️  Previous collection started {time_since_start/60:.1f}min ago but never ended. "
                     f"May have crashed. Proceeding with new collection."
                 )
-        
+
         # Check when the last collection completed
         last_collection = await self._get_last_collection_time()
-        
+
         if last_collection is None:
             # No previous collection found, don't skip
             return False, 0
-        
+
         # Handle timezone-naive timestamps from database
         if last_collection.tzinfo is None:
             last_collection = last_collection.replace(tzinfo=UTC)
-        
+
         time_since_last = (now - last_collection).total_seconds()
-        
+
         if time_since_last < min_gap_seconds:
             # Collection was too recent, calculate wait time
             wait_seconds = min_gap_seconds - time_since_last
             return True, wait_seconds
-        
+
         return False, 0
 
     async def _get_users_due_for_collection(self) -> list[dict]:
         """Get users who are due for collection based on their individual plan intervals.
-        
+
         This method implements tiered collection intervals:
         - Free users: 60 min interval (24 collections/day)
         - Pro users: 20 min interval (72 collections/day)
         - Business users: 10 min interval (144 collections/day)
         - Enterprise users: 5 min interval (288 collections/day)
-        
+
         A user is "due" if their last collection was >= their interval ago.
-        
+
         Returns:
             List of user dicts who need collection, sorted by priority (longest wait first)
         """
         try:
             db_pool = await self.container.database.asyncpg_pool()
-            
+
             # Get all MTProto-enabled users with their intervals and last collection time
             query = """
                 WITH user_intervals AS (
-                    SELECT 
+                    SELECT
                         ubc.user_id,
                         ubc.mtproto_phone,
                         COALESCE(
@@ -322,14 +326,14 @@ class MTProtoDataCollectionService:
                     WHERE ubc.mtproto_enabled = TRUE
                 ),
                 last_collections AS (
-                    SELECT 
+                    SELECT
                         user_id,
                         MAX(timestamp) as last_collection_time
-                    FROM mtproto_audit_log 
+                    FROM mtproto_audit_log
                     WHERE action = 'collection_end'
                     GROUP BY user_id
                 )
-                SELECT 
+                SELECT
                     ui.user_id,
                     ui.mtproto_phone,
                     ui.interval_minutes,
@@ -339,52 +343,54 @@ class MTProtoDataCollectionService:
                     (ui.interval_minutes * 60) as interval_seconds
                 FROM user_intervals ui
                 LEFT JOIN last_collections lc ON ui.user_id = lc.user_id
-                WHERE 
+                WHERE
                     -- User is due if never collected OR last collection was >= interval ago
                     lc.last_collection_time IS NULL
                     OR EXTRACT(EPOCH FROM (NOW() - lc.last_collection_time)) >= (ui.interval_minutes * 60)
-                ORDER BY 
+                ORDER BY
                     -- Priority: users waiting longest (relative to their interval) first
                     COALESCE(
                         EXTRACT(EPOCH FROM (NOW() - lc.last_collection_time)) / (ui.interval_minutes * 60),
                         999
                     ) DESC
             """
-            
+
             async with db_pool.acquire() as conn:
                 rows = await conn.fetch(query)
-                
+
             users_due = [dict(row) for row in rows]
-            
+
             if users_due:
                 logger.info(
                     f"📋 {len(users_due)} users due for collection: "
-                    + ", ".join([
-                        f"{u['user_id']}({u['plan_name']}/{u['interval_minutes']}min)" 
-                        for u in users_due[:5]  # Show first 5
-                    ])
+                    + ", ".join(
+                        [
+                            f"{u['user_id']}({u['plan_name']}/{u['interval_minutes']}min)"
+                            for u in users_due[:5]  # Show first 5
+                        ]
+                    )
                     + (f"... and {len(users_due) - 5} more" if len(users_due) > 5 else "")
                 )
-            
+
             return users_due
-            
+
         except Exception as e:
             logger.error(f"Error getting users due for collection: {e}")
             return []
 
     async def _get_next_collection_wait_time(self) -> int:
         """Calculate how long to wait until the next user is due for collection.
-        
+
         Returns:
             Seconds to wait (minimum 60, maximum 300)
         """
         try:
             db_pool = await self.container.database.asyncpg_pool()
-            
+
             # Find the user who will be due soonest
             query = """
                 WITH user_intervals AS (
-                    SELECT 
+                    SELECT
                         ubc.user_id,
                         COALESCE(
                             u.mtproto_interval_override,
@@ -397,18 +403,18 @@ class MTProtoDataCollectionService:
                     WHERE ubc.mtproto_enabled = TRUE
                 ),
                 last_collections AS (
-                    SELECT 
+                    SELECT
                         user_id,
                         MAX(timestamp) as last_collection_time
-                    FROM mtproto_audit_log 
+                    FROM mtproto_audit_log
                     WHERE action = 'collection_end'
                     GROUP BY user_id
                 )
-                SELECT 
+                SELECT
                     MIN(
                         GREATEST(
                             0,
-                            (ui.interval_minutes * 60) - 
+                            (ui.interval_minutes * 60) -
                             COALESCE(
                                 EXTRACT(EPOCH FROM (NOW() - lc.last_collection_time)),
                                 ui.interval_minutes * 60  -- If never collected, due now
@@ -418,27 +424,27 @@ class MTProtoDataCollectionService:
                 FROM user_intervals ui
                 LEFT JOIN last_collections lc ON ui.user_id = lc.user_id
             """
-            
+
             async with db_pool.acquire() as conn:
                 row = await conn.fetchrow(query)
-                
+
             if row and row["seconds_until_next"] is not None:
                 wait_time = int(row["seconds_until_next"])
                 # Clamp between 60 and 300 seconds
                 return max(60, min(300, wait_time))
-            
+
             return 60  # Default 1 minute check interval
-            
+
         except Exception as e:
             logger.warning(f"Error calculating next collection wait: {e}")
             return 60  # Default fallback
         time_since_last = (now - last_collection).total_seconds()
-        
+
         if time_since_last < min_gap_seconds:
             # Collection was too recent, calculate wait time
             wait_seconds = min_gap_seconds - time_since_last
             return True, wait_seconds
-        
+
         return False, 0
 
     async def initialize(self):
@@ -949,7 +955,7 @@ class MTProtoDataCollectionService:
         try:
             # Check if we should skip initial collection due to recent restart
             should_skip, wait_seconds = await self._should_skip_collection(interval_minutes)
-            
+
             if should_skip:
                 logger.info(
                     f"⏭️  Skipping initial collection - previous collection was {wait_seconds:.0f}s ago. "
@@ -1018,11 +1024,11 @@ class MTProtoDataCollectionService:
                 for i in range(int(remaining_wait)):
                     if not should_run():
                         break
-                    
+
                     # Update heartbeat every 60 seconds during wait to prevent timeout
                     if process_manager and i % 60 == 0:
                         process_manager.heartbeat()
-                    
+
                     await asyncio.sleep(1)
 
         except Exception as e:
@@ -1033,18 +1039,18 @@ class MTProtoDataCollectionService:
 
     async def run_continuous_service_tiered(self, process_manager=None):
         """Run continuous data collection service with per-user tiered intervals.
-        
+
         This is the new architecture that respects each user's plan-based interval:
         - Free users: 60 min interval
         - Pro users: 20 min interval
         - Business users: 10 min interval
         - Enterprise users: 5 min interval
-        
+
         Instead of collecting all users at a fixed global interval, this method:
         1. Checks which users are "due" for collection based on their interval
         2. Only collects those users
         3. Calculates smart wait times based on when next user is due
-        
+
         Args:
             process_manager: Optional ProcessManager for lifecycle management
         """
@@ -1057,6 +1063,7 @@ class MTProtoDataCollectionService:
 
         # Use process_manager if provided, otherwise set up own signal handlers
         if not process_manager:
+
             def signal_handler(signum, frame):
                 logger.info(f"🛑 Received signal {signum}, shutting down...")
                 self.running = False
@@ -1072,44 +1079,44 @@ class MTProtoDataCollectionService:
         try:
             while should_run():
                 cycle_start = datetime.now(UTC)
-                
+
                 # Update heartbeat if using process_manager
                 if process_manager:
                     process_manager.heartbeat()
 
                 # Get users who are due for collection
                 users_due = await self._get_users_due_for_collection()
-                
+
                 if users_due:
                     logger.info(
                         f"🔄 Collection cycle: {len(users_due)} users due at "
                         f"{cycle_start.strftime('%H:%M:%S')}"
                     )
-                    
+
                     total_messages = 0
                     users_processed = 0
                     limit = self.settings.MTPROTO_HISTORY_LIMIT_PER_RUN
-                    
+
                     # Process each due user
                     for user in users_due:
                         if not should_run():
                             break
-                            
+
                         user_id = user["user_id"]
                         plan_name = user.get("plan_name", "free")
                         interval = user.get("interval_minutes", 60)
-                        
+
                         logger.info(
                             f"📊 Processing user {user_id} "
                             f"(plan: {plan_name}, interval: {interval}min)..."
                         )
-                        
+
                         result = await self.collect_user_channel_history(user_id, limit)
-                        
+
                         if result.get("success"):
                             users_processed += 1
                             total_messages += result.get("total_messages", 0)
-                    
+
                     cycle_duration = (datetime.now(UTC) - cycle_start).total_seconds()
                     logger.info(
                         f"✅ Cycle complete: {users_processed}/{len(users_due)} users, "
@@ -1117,12 +1124,12 @@ class MTProtoDataCollectionService:
                     )
                 else:
                     logger.debug("😴 No users due for collection")
-                
+
                 # Calculate wait time until next user is due
                 wait_seconds = await self._get_next_collection_wait_time()
-                
+
                 logger.info(f"⏳ Waiting {wait_seconds}s until next collection check...")
-                
+
                 # Sleep in small chunks for responsive shutdown
                 for i in range(wait_seconds):
                     if not should_run():

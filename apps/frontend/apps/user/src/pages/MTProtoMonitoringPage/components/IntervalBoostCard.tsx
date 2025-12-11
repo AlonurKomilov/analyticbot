@@ -145,9 +145,9 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
         <Box display="flex" alignItems="center" gap={1} mb={2}>
           <SpeedIcon color="primary" />
           <Typography variant="h6">Speed Up Collection</Typography>
-          <Chip 
-            label={`${boostInfo.credits_balance} credits`} 
-            size="small" 
+          <Chip
+            label={`${boostInfo.credits_balance} credits`}
+            size="small"
             icon={<CreditIcon />}
             color="primary"
             variant="outlined"
@@ -174,7 +174,7 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
         {!boostInfo.can_purchase_boost && (
           <Alert severity="info" sx={{ mb: 2 }}>
             <AlertTitle>Boost Not Available</AlertTitle>
-            Your current plan ({planName}) does not support interval boosts. 
+            Your current plan ({planName}) does not support interval boosts.
             Upgrade your plan to unlock this feature.
           </Alert>
         )}
@@ -183,7 +183,7 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
         {isAtMinimum && boostInfo.can_purchase_boost && (
           <Alert severity="success" sx={{ mb: 2 }}>
             <AlertTitle>Maximum Speed Reached!</AlertTitle>
-            Your collection interval is already at the minimum ({boostInfo.min_interval}min) 
+            Your collection interval is already at the minimum ({boostInfo.min_interval}min)
             for your {planName} plan.
           </Alert>
         )}
@@ -242,10 +242,10 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
             )}
 
             {/* Purchase section */}
-            <Box 
-              sx={{ 
-                p: 2, 
-                bgcolor: 'action.hover', 
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: 'action.hover',
                 borderRadius: 1,
                 display: 'flex',
                 alignItems: 'center',

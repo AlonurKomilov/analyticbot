@@ -57,7 +57,7 @@ interface MTProtoState {
   verify: (data: MTProtoVerifyRequest) => Promise<void>;
   disconnect: () => Promise<void>;
   remove: () => Promise<void>;
-  
+
   // QR Code Login actions
   requestQRLogin: () => Promise<MTProtoQRLoginResponse | null>;
   checkQRStatus: () => Promise<MTProtoQRStatusResponse | null>;
@@ -183,20 +183,20 @@ export const useMTProtoStore = create<MTProtoState>()(
         } catch (error: any) {
           const errorMessage = error.response?.data?.detail || error.message || 'Failed to verify MTProto';
           const errorLower = errorMessage.toLowerCase();
-          
+
           // Check if this is a 2FA error - don't show toast for this, let component handle it
-          const is2FAError = 
-            errorLower.includes('2fa') || 
+          const is2FAError =
+            errorLower.includes('2fa') ||
             errorLower.includes('password') ||
             errorLower.includes('two-factor');
-          
+
           set({ error: is2FAError ? null : errorMessage, isVerifying: false });
-          
+
           // Only show toast for non-2FA errors
           if (!is2FAError) {
             toast.error(`❌ ${errorMessage}`);
           }
-          
+
           throw error; // Re-throw for component handling (2FA detection)
         }
       },
@@ -298,7 +298,7 @@ export const useMTProtoStore = create<MTProtoState>()(
         try {
           const response = await submitQR2FA(password);
           set({ isVerifying: false });
-          
+
           if (response.status === 'success') {
             // Refresh status after successful login
             const status = await getMTProtoStatus();
@@ -307,7 +307,7 @@ export const useMTProtoStore = create<MTProtoState>()(
           } else if (response.status === '2fa_required' && response.message.includes('Invalid')) {
             toast.error('❌ Invalid password. Please try again.');
           }
-          
+
           return response;
         } catch (error: any) {
           const errorMessage = error.response?.data?.detail || error.message || 'Failed to verify 2FA';

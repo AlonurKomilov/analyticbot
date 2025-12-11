@@ -7,7 +7,7 @@ Use this to track all admin operations for security and compliance.
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import Request
 
@@ -17,12 +17,12 @@ logger = logging.getLogger(__name__)
 async def log_admin_action(
     admin_user_id: int,
     action: str,
-    resource_type: Optional[str] = None,
-    resource_id: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
-    request: Optional[Request] = None,
+    resource_type: str | None = None,
+    resource_id: str | None = None,
+    details: dict[str, Any] | None = None,
+    request: Request | None = None,
     success: bool = True,
-    error_message: Optional[str] = None,
+    error_message: str | None = None,
 ) -> bool:
     """
     Log an administrative action to the audit log.

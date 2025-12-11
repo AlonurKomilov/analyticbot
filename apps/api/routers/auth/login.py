@@ -50,7 +50,7 @@ async def login(
     try:
         # Check if this is an admin panel request
         is_admin_request = request.headers.get("X-Admin-Request") == "true"
-        
+
         # Find user by email
         user_data = await user_repo.get_user_by_email(login_data.email)
         if not user_data:
@@ -134,11 +134,11 @@ async def login(
                 value=access_token,
                 max_age=30 * 60,  # 30 minutes
                 httponly=True,  # Not accessible via JavaScript
-                secure=True,    # Only send over HTTPS
+                secure=True,  # Only send over HTTPS
                 samesite="strict",  # Strict same-site policy
                 path="/",
             )
-            
+
             # Refresh token cookie - longer lived
             refresh_max_age = 30 * 24 * 3600 if login_data.remember_me else 24 * 3600
             response.set_cookie(
@@ -150,7 +150,7 @@ async def login(
                 samesite="strict",
                 path="/auth",  # Only sent to auth endpoints
             )
-            
+
             logger.info(f"Set httpOnly cookies for admin user: {user.username}")
 
         return AuthResponse(
@@ -164,7 +164,9 @@ async def login(
                 "full_name": user.full_name,
                 "role": user.role,  # role is now a string, no .value needed
                 "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
-                "credit_balance": float(user_data.get("credit_balance", 0)),  # Include credit balance
+                "credit_balance": float(
+                    user_data.get("credit_balance", 0)
+                ),  # Include credit balance
             },
         )
 
@@ -300,14 +302,14 @@ async def verify_telegram(
 async def get_csrf_token(request: Request, response: Response):
     """
     Get a CSRF token for the current session.
-    
+
     This endpoint should be called when the admin panel loads to get
     a valid CSRF token for subsequent state-changing requests.
-    
+
     The token is also set as a cookie for the double-submit pattern.
     """
     token = get_csrf_token_for_response()
-    
+
     # Set the token as a cookie
     response.set_cookie(
         key="csrf_token",
@@ -318,10 +320,5 @@ async def get_csrf_token(request: Request, response: Response):
         samesite="strict",
         path="/",
     )
-    
-    return {
-        "csrf_token": token,
-        "expires_in": 24 * 3600,
-        "header_name": "X-CSRF-Token"
-    }
 
+    return {"csrf_token": token, "expires_in": 24 * 3600, "header_name": "X-CSRF-Token"}

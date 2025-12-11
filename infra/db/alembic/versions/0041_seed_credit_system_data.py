@@ -47,18 +47,18 @@ def upgrade() -> None:
             ('ai_best_time_predictor', 'Best Time Predictor', 'AI predicts optimal posting times', 15, 'ai', 'schedule', 10, 4),
             ('ai_competitor_analysis', 'Competitor Analysis', 'Analyze competitor channels with AI', 50, 'ai', 'compare_arrows', 5, 5),
             ('ai_trend_detection', 'Trend Detection', 'Detect emerging trends in your niche', 30, 'ai', 'trending_up', 10, 6),
-            
+
             -- Export Features
             ('export_pdf_report', 'PDF Report Export', 'Export detailed analytics as PDF', 20, 'export', 'picture_as_pdf', NULL, 10),
             ('export_csv_data', 'CSV Data Export', 'Export raw data as CSV', 10, 'export', 'table_chart', NULL, 11),
             ('export_excel_report', 'Excel Report', 'Export comprehensive Excel report', 25, 'export', 'grid_on', NULL, 12),
-            
+
             -- Premium Features
             ('advanced_analytics', 'Advanced Analytics', 'Access advanced analytics dashboard', 30, 'feature', 'analytics', NULL, 20),
             ('custom_reports', 'Custom Reports', 'Create customized report templates', 40, 'feature', 'dashboard_customize', 5, 21),
             ('api_access_hour', 'API Access (1 Hour)', 'Programmatic API access for 1 hour', 50, 'api', 'api', NULL, 30),
             ('api_access_day', 'API Access (24 Hours)', 'Programmatic API access for 24 hours', 200, 'api', 'api', NULL, 31),
-            
+
             -- Upgrades
             ('priority_processing', 'Priority Processing', 'Get your analytics processed first', 15, 'upgrade', 'bolt', NULL, 40),
             ('extended_history', 'Extended History', 'Access 1 year of historical data', 100, 'upgrade', 'history', NULL, 41)
@@ -74,28 +74,28 @@ def upgrade() -> None:
             ('first_login', 'Welcome Aboard!', 'Complete your first login', 10, 'rocket_launch', 'account', NULL, NULL, 1),
             ('profile_complete', 'Profile Pro', 'Complete your profile information', 25, 'person_check', 'account', NULL, NULL, 2),
             ('verified_email', 'Verified', 'Verify your email address', 15, 'verified', 'account', NULL, NULL, 3),
-            
+
             -- Channel Achievements
             ('first_channel', 'Channel Pioneer', 'Connect your first channel', 50, 'tv', 'channels', 'count', 1, 10),
             ('five_channels', 'Channel Collector', 'Connect 5 channels', 100, 'workspace_premium', 'channels', 'count', 5, 11),
             ('ten_channels', 'Channel Empire', 'Connect 10 channels', 250, 'castle', 'channels', 'count', 10, 12),
-            
+
             -- Engagement Achievements
             ('first_1k_views', 'Rising Star', 'Get 1,000 total views across channels', 25, 'visibility', 'engagement', 'value', 1000, 20),
             ('first_10k_views', 'Going Viral', 'Get 10,000 total views across channels', 75, 'star', 'engagement', 'value', 10000, 21),
             ('first_100k_views', 'Superstar', 'Get 100,000 total views across channels', 200, 'diamond', 'engagement', 'value', 100000, 22),
-            
+
             -- Streak Achievements
             ('streak_3', 'Getting Started', 'Maintain a 3-day login streak', 15, 'local_fire_department', 'streaks', 'streak', 3, 30),
             ('streak_7', 'Week Warrior', 'Maintain a 7-day login streak', 35, 'whatshot', 'streaks', 'streak', 7, 31),
             ('streak_30', 'Monthly Master', 'Maintain a 30-day login streak', 150, 'emoji_events', 'streaks', 'streak', 30, 32),
             ('streak_100', 'Century Club', 'Maintain a 100-day login streak', 500, 'military_tech', 'streaks', 'streak', 100, 33),
-            
+
             -- Credit Achievements
             ('first_purchase', 'First Investment', 'Make your first credit purchase', 20, 'shopping_cart', 'credits', NULL, NULL, 40),
             ('big_spender', 'Big Spender', 'Spend 1,000 credits total', 100, 'savings', 'credits', 'value', 1000, 41),
             ('whale', 'Whale', 'Spend 10,000 credits total', 500, 'paid', 'credits', 'value', 10000, 42),
-            
+
             -- Referral Achievements
             ('first_referral', 'Friendly Face', 'Refer your first friend', 50, 'person_add', 'referrals', 'count', 1, 50),
             ('five_referrals', 'Social Butterfly', 'Refer 5 friends', 150, 'groups', 'referrals', 'count', 5, 51),

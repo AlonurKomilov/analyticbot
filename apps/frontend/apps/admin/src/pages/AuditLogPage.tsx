@@ -405,12 +405,12 @@ const AuditLogPage: React.FC = () => {
                     <TableCell sx={{ maxWidth: 200 }}>
                       {entry.details ? (
                         <Tooltip title={<pre style={{ margin: 0 }}>{JSON.stringify(entry.details, null, 2)}</pre>}>
-                          <Typography 
-                            variant="body2" 
-                            color="text.secondary" 
-                            sx={{ 
-                              overflow: 'hidden', 
-                              textOverflow: 'ellipsis', 
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
                               cursor: 'help',
                             }}

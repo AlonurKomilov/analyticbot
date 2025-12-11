@@ -54,10 +54,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [navigate]);
 
   const login = async (email: string, password: string, rememberMe = false): Promise<void> => {
-    const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, { 
-      email, 
+    const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, {
+      email,
       password,
-      remember_me: rememberMe 
+      remember_me: rememberMe
     });
     const { access_token, user: userData } = response.data;
 
@@ -69,10 +69,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Store token in localStorage as backup (httpOnly cookies are now primary)
     // This provides fallback for environments where cookies don't work
     localStorage.setItem('admin_token', access_token);
-    
+
     // Fetch CSRF token for the session
     await fetchCsrfToken().catch(() => {});
-    
+
     setUser(userData);
     navigate(ROUTES.DASHBOARD);
   };
@@ -84,7 +84,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Logout request failed:', error);
     }
-    
+
     // Clear local state regardless of server response
     localStorage.removeItem('admin_token');
     setUser(null);

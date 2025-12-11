@@ -14,11 +14,11 @@ try:
     from dotenv import load_dotenv
 
     project_root = Path(__file__).parent.parent
-    
+
     # Check ENVIRONMENT variable to determine which .env file to load
     # Priority: .env.development (if ENVIRONMENT=development) > .env
     environment = os.getenv("ENVIRONMENT", "production")
-    
+
     if environment == "development":
         env_file = project_root / ".env.development"
         if env_file.exists():

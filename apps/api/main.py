@@ -21,13 +21,13 @@ from apps.api.routers.auth import router as auth_router
 from apps.api.routers.channels import router as channels_router  # ✅ Microservice
 from apps.api.routers.content_protection_router import router as content_protection_router
 from apps.api.routers.credits_router import router as credits_router  # 💰 Credit System
-from apps.api.routers.marketplace_router import router as marketplace_router  # 🏪 Marketplace
 
 # Legacy routers (keeping for compatibility during transition)
 # DEPRECATED ROUTERS REMOVED - cleanup
 from apps.api.routers.exports_router import router as exports_router
 from apps.api.routers.health_router import router as health_router
 from apps.api.routers.home_dashboard_router import router as home_dashboard_router
+from apps.api.routers.marketplace_router import router as marketplace_router  # 🏪 Marketplace
 from apps.api.routers.media_router import router as media_router
 from apps.api.routers.ml_predictions_router import router as ml_predictions_router
 from apps.api.routers.mobile_router import router as mobile_router
@@ -459,7 +459,6 @@ from apps.api.middleware.rate_limiter import custom_rate_limit_exceeded_handler,
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
 logger.info("✅ Rate limiting middleware initialized")
-
 
 
 # Add root /health endpoint for frontend compatibility (redirects to /health/)

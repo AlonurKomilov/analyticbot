@@ -303,6 +303,7 @@ async def init_analytics_fusion_service() -> AnalyticsOrchestratorService:
         from core.services.analytics_fusion.recommendations.posting_time_service import (
             PostingTimeRecommendationService,
         )
+
         posting_time_service = PostingTimeRecommendationService(db_pool=pool)
         logger.info("✅ PostingTimeRecommendationService created")
 

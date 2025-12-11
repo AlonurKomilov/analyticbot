@@ -10,8 +10,8 @@ Fixes:
 3. Added new tier-relevant achievements
 4. Increased free tier monthly cap to allow earning rewards
 """
-from alembic import op
 
+from alembic import op
 
 # revision identifiers
 revision = "0043_fix_achievements_for_tiers"
@@ -24,21 +24,21 @@ def upgrade() -> None:
     print("=" * 70)
     print("MIGRATION 0043: Fix Achievements for Tier System")
     print("=" * 70)
-    
+
     # =========================================================================
     # 1. FIX CHANNEL ACHIEVEMENTS (max channels is now 5)
     # =========================================================================
     print("\n📦 Fixing channel achievements...")
-    
+
     # Remove impossible 10-channel achievement
     op.execute("""
         DELETE FROM achievements WHERE achievement_key = 'ten_channels'
     """)
     print("   ✅ Removed unreachable 'ten_channels' achievement")
-    
+
     # Update five_channels to be more achievable (3 channels for Pro users)
     op.execute("""
-        UPDATE achievements 
+        UPDATE achievements
         SET requirement_value = 3,
             name = 'Multi-Channel Pro',
             description = 'Connect 3 channels to your account',
@@ -46,7 +46,7 @@ def upgrade() -> None:
         WHERE achievement_key = 'five_channels'
     """)
     print("   ✅ Updated 'five_channels' → 'Multi-Channel Pro' (3 channels, 75 credits)")
-    
+
     # Add new achievement for reaching max channels (5)
     op.execute("""
         INSERT INTO achievements (achievement_key, name, description, credit_reward, category, requirement_type, requirement_value, sort_order, is_active)
@@ -58,43 +58,43 @@ def upgrade() -> None:
             requirement_value = 5
     """)
     print("   ✅ Added 'max_channels' achievement (5 channels, 150 credits)")
-    
+
     # =========================================================================
     # 2. INCREASE FREE TIER MONTHLY CAP
     # =========================================================================
     print("\n📦 Adjusting free tier monthly cap...")
-    
+
     # Increase from 100 to 300 so free users can actually earn achievements
     # Daily: 5-8 × 30 = 150-240 credits
     # Signup bonus: 50 credits
     # Some achievements: ~100 credits
     # Total possible: ~400 credits - cap at 300 is fair
     op.execute("""
-        UPDATE plans 
+        UPDATE plans
         SET monthly_credits_cap = 300
         WHERE name = 'free'
     """)
     print("   ✅ Free tier monthly cap: 100 → 300 credits")
-    
+
     # =========================================================================
     # 3. ADD TIER-UPGRADE ACHIEVEMENTS
     # =========================================================================
     print("\n📦 Adding tier-related achievements...")
-    
+
     op.execute("""
         INSERT INTO achievements (achievement_key, name, description, credit_reward, category, requirement_type, requirement_value, sort_order, is_active)
-        VALUES 
+        VALUES
             ('upgrade_pro', 'Pro Member', 'Upgrade to Pro plan', 100, 'account', 'action', 1, 15, true),
             ('upgrade_business', 'Business Elite', 'Upgrade to Business plan', 250, 'account', 'action', 1, 16, true)
         ON CONFLICT (achievement_key) DO NOTHING
     """)
     print("   ✅ Added 'upgrade_pro' (100 credits) and 'upgrade_business' (250 credits)")
-    
+
     # =========================================================================
     # 4. ADJUST STREAK REWARDS TO BE TIER-APPROPRIATE
     # =========================================================================
     print("\n📦 Adjusting streak rewards...")
-    
+
     # Reduce the crazy high streak rewards - they shouldn't be more than monthly bonus
     op.execute("""
         UPDATE achievements SET credit_reward = 50 WHERE achievement_key = 'streak_30'
@@ -104,22 +104,22 @@ def upgrade() -> None:
     """)
     print("   ✅ streak_30: 100 → 50 credits")
     print("   ✅ streak_100: 500 → 200 credits")
-    
+
     # =========================================================================
     # 5. ADD USAGE-BASED ACHIEVEMENTS
     # =========================================================================
     print("\n📦 Adding usage-based achievements...")
-    
+
     op.execute("""
         INSERT INTO achievements (achievement_key, name, description, credit_reward, category, requirement_type, requirement_value, sort_order, is_active)
-        VALUES 
+        VALUES
             ('first_ai_use', 'AI Explorer', 'Use an AI-powered feature for the first time', 10, 'engagement', 'action', 1, 40, true),
             ('ai_power_user', 'AI Power User', 'Use AI features 50 times', 50, 'engagement', 'count', 50, 41, true),
             ('first_export', 'Data Exporter', 'Export your first report', 5, 'engagement', 'action', 1, 42, true)
         ON CONFLICT (achievement_key) DO NOTHING
     """)
     print("   ✅ Added AI and export achievements")
-    
+
     # =========================================================================
     # SUMMARY
     # =========================================================================
@@ -146,21 +146,29 @@ def downgrade() -> None:
             credit_reward = 100,
             requirement_value = 10
     """)
-    
+
     op.execute("""
-        UPDATE achievements 
+        UPDATE achievements
         SET requirement_value = 5,
             name = 'Channel Master',
             description = 'Connect 5 channels to your account',
             credit_reward = 50
         WHERE achievement_key = 'five_channels'
     """)
-    
+
     op.execute("""DELETE FROM achievements WHERE achievement_key = 'max_channels'""")
-    op.execute("""DELETE FROM achievements WHERE achievement_key IN ('upgrade_pro', 'upgrade_business')""")
-    op.execute("""DELETE FROM achievements WHERE achievement_key IN ('first_ai_use', 'ai_power_user', 'first_export')""")
-    
-    op.execute("""UPDATE achievements SET credit_reward = 100 WHERE achievement_key = 'streak_30'""")
-    op.execute("""UPDATE achievements SET credit_reward = 500 WHERE achievement_key = 'streak_100'""")
-    
+    op.execute(
+        """DELETE FROM achievements WHERE achievement_key IN ('upgrade_pro', 'upgrade_business')"""
+    )
+    op.execute(
+        """DELETE FROM achievements WHERE achievement_key IN ('first_ai_use', 'ai_power_user', 'first_export')"""
+    )
+
+    op.execute(
+        """UPDATE achievements SET credit_reward = 100 WHERE achievement_key = 'streak_30'"""
+    )
+    op.execute(
+        """UPDATE achievements SET credit_reward = 500 WHERE achievement_key = 'streak_100'"""
+    )
+
     op.execute("""UPDATE plans SET monthly_credits_cap = 100 WHERE name = 'free'""")

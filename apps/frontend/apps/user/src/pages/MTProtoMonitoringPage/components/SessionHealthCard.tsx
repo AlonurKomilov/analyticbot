@@ -38,7 +38,7 @@ const getHealthChip = (score: number) => {
 export const SessionHealthCard: React.FC<SessionHealthCardProps> = ({ sessionHealth }) => {
   // Session is valid and ready to work
   const sessionReady = sessionHealth.session_valid && sessionHealth.health_score >= 70;
-  
+
   return (
     <Card sx={{ mb: 3 }}>
       <CardContent>

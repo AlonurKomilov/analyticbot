@@ -22,7 +22,9 @@ class MTProtoSetupRequest(BaseModel):
 class MTProtoSimpleSetupRequest(BaseModel):
     """Simplified MTProto setup - only requires phone number"""
 
-    mtproto_phone: str = Field(..., description="Phone number with country code (e.g., +1234567890)")
+    mtproto_phone: str = Field(
+        ..., description="Phone number with country code (e.g., +1234567890)"
+    )
 
     @validator("mtproto_phone")
     def validate_phone(cls, v):

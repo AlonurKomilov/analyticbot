@@ -314,8 +314,8 @@ async def _get_session_health(conn, user_id: int, has_session: bool) -> SessionH
     try:
         last_collection = await conn.fetchval(
             """
-            SELECT MAX(last_mtproto_collection) 
-            FROM user_channels 
+            SELECT MAX(last_mtproto_collection)
+            FROM user_channels
             WHERE user_id = $1 AND mtproto_enabled = true
             """,
             user_id,
@@ -364,23 +364,23 @@ async def _get_session_health(conn, user_id: int, has_session: bool) -> SessionH
     else:
         # Only deduct points for actual problems, NOT for being disconnected
         # (disconnected state is normal between collection runs)
-        
+
         if rate_limit_hits_today > 0:
             health_score -= min(30, rate_limit_hits_today * 5)
         if connection_errors_today > 0:
             health_score -= min(20, connection_errors_today * 10)
-        
+
         # Check if session was used recently
         if session_last_used:
             # Make session_last_used timezone-aware if it isn't
             if session_last_used.tzinfo is None:
                 session_last_used = session_last_used.replace(tzinfo=UTC)
             hours_since = (datetime.now(UTC) - session_last_used).total_seconds() / 3600
-            
+
             if hours_since > 24:
                 health_score -= 15  # Not used in last 24 hours
             elif hours_since > 6:
-                health_score -= 5   # Not used in last 6 hours (might be expected for low-tier plans)
+                health_score -= 5  # Not used in last 6 hours (might be expected for low-tier plans)
         else:
             # No last_used info - might be a new session that hasn't collected yet
             health_score -= 5
@@ -396,6 +396,8 @@ async def _get_session_health(conn, user_id: int, has_session: bool) -> SessionH
         connection_errors_today=connection_errors_today,
         health_score=health_score,
     )
+
+
 async def _get_collection_progress(conn, user_id: int) -> CollectionProgress:
     """Calculate collection progress metrics"""
 
@@ -514,7 +516,7 @@ async def _get_worker_status(user_id: int) -> WorkerStatus:
         # Get user's effective interval from their plan
         interval_row = await conn.fetchrow(
             """
-            SELECT 
+            SELECT
                 COALESCE(u.mtproto_interval_override, p.mtproto_interval_minutes, 60) as interval_minutes,
                 COALESCE(p.min_mtproto_interval_minutes, 30) as min_interval_minutes,
                 COALESCE(p.name, 'free') as plan_name
@@ -524,7 +526,7 @@ async def _get_worker_status(user_id: int) -> WorkerStatus:
             """,
             user_id,
         )
-        
+
         if interval_row:
             worker_interval = interval_row["interval_minutes"]
             min_interval = interval_row["min_interval_minutes"]
@@ -646,9 +648,7 @@ async def _get_worker_status(user_id: int) -> WorkerStatus:
 
             # Calculate channels processed from progress (we have 1 channel in this case)
             channels_processed = (
-                1
-                if progress_metadata.get("phase") in ["fetching", "processing", "complete"]
-                else 0
+                1 if progress_metadata.get("phase") in ["fetching", "processing", "complete"] else 0
             )
 
             # Get messages from detailed progress
@@ -746,7 +746,8 @@ async def _get_channel_stats(conn, user_id: int) -> list[ChannelCollectionStats]
                 total_posts=row["total_posts"] or 0,
                 latest_post_date=row["latest_post"],
                 oldest_post_date=row["oldest_post"],
-                last_collected=row["last_sync_time"] or row["latest_post"],  # Use actual sync time, fallback to latest post
+                last_collected=row["last_sync_time"]
+                or row["latest_post"],  # Use actual sync time, fallback to latest post
                 collection_enabled=row["collection_enabled"],
             )
         )

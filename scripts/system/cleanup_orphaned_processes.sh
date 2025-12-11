@@ -28,17 +28,17 @@ check_memory() {
 # Function to cleanup duplicate uvicorn servers
 cleanup_duplicate_uvicorn() {
     log "Checking for duplicate uvicorn servers..."
-    
+
     # Find all uvicorn processes on port 11400
     local uvicorn_pids=$(pgrep -f "uvicorn.*11400" 2>/dev/null || true)
     local count=$(echo "$uvicorn_pids" | grep -c . 2>/dev/null || echo "0")
-    
+
     if [ "$count" -gt 1 ]; then
         log "⚠️  Found $count uvicorn servers on port 11400 - keeping only the newest"
-        
+
         # Keep the newest (highest PID), kill the rest
         local newest_pid=$(echo "$uvicorn_pids" | sort -rn | head -1)
-        
+
         for pid in $uvicorn_pids; do
             if [ "$pid" != "$newest_pid" ]; then
                 log "  Killing duplicate uvicorn PID $pid"
@@ -152,7 +152,7 @@ main() {
 
     # Always cleanup orphaned workers
     cleanup_orphaned_workers
-    
+
     # Always cleanup zombie processes
     cleanup_zombies
 

@@ -206,7 +206,7 @@ const BotsPage: React.FC = () => {
       await fetchBots();
     } catch (err: unknown) {
       // Extract error message from API response
-      const errorMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail 
+      const errorMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
         || 'Failed to activate bot';
       setError(errorMessage);
       console.error('Activate error:', err);
@@ -241,7 +241,7 @@ const BotsPage: React.FC = () => {
       await fetchBots();
       setDeleteDialog(null);
     } catch (err: unknown) {
-      const errorMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail 
+      const errorMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
         || 'Failed to delete bot';
       setError(errorMessage);
       console.error('Delete error:', err);
@@ -506,7 +506,7 @@ const BotsPage: React.FC = () => {
           <ListItemText>Manage Credits</ListItemText>
         </MenuItem>
         {menuBot?.status === 'active' ? (
-          <MenuItem 
+          <MenuItem
             onClick={() => {
               if (menuBot) setSuspendDialog(menuBot);
               handleMenuClose();
@@ -517,7 +517,7 @@ const BotsPage: React.FC = () => {
             <ListItemText sx={{ color: 'error.main' }}>Suspend User</ListItemText>
           </MenuItem>
         ) : (
-          <MenuItem 
+          <MenuItem
             onClick={() => {
               if (menuBot) handleActivate(menuBot);
               handleMenuClose();
@@ -528,7 +528,7 @@ const BotsPage: React.FC = () => {
             <ListItemText sx={{ color: 'success.main' }}>Activate User</ListItemText>
           </MenuItem>
         )}
-        <MenuItem 
+        <MenuItem
           onClick={() => {
             if (menuBot) setDeleteDialog(menuBot);
             handleMenuClose();

@@ -150,10 +150,12 @@ async def cmd_start(message: types.Message, i18n: I18nContext):
     uid = message.from_user.id if message.from_user else None
     uname = message.from_user.username if message.from_user else None
     full_name = message.from_user.full_name if message.from_user else None
-    
-    log.info(f"📥 /start command received from telegram_id={uid}, username={uname}, full_name={full_name}")
+
+    log.info(
+        f"📥 /start command received from telegram_id={uid}, username={uname}, full_name={full_name}"
+    )
     log.info(f"📝 Raw message text: {message.text}")
-    
+
     # Extract referral code from deep link (format: /start ref_CODE)
     referral_code = None
     if message.text:
@@ -164,11 +166,11 @@ async def cmd_start(message: types.Message, i18n: I18nContext):
             log.info(f"🔗 Referral code detected from deep link: {referral_code}")
         else:
             log.info(f"ℹ️ No referral code in message (parts count: {len(parts)})")
-    
+
     is_new_user = False
     referral_result = None
     new_user_internal_id = None
-    
+
     if uid is not None:
         try:
             user_repo = await get_user_repository()
@@ -193,13 +195,13 @@ async def cmd_start(message: types.Message, i18n: I18nContext):
                 }
                 created_user = await user_repo.create_user(user_data)
                 log.info(f"✅ Created new user for telegram_id {uid}")
-                
+
                 # Get the internal user ID for referral processing
                 new_created_user = await user_repo.get_user_by_telegram_id(uid)
                 if new_created_user:
                     new_user_internal_id = new_created_user.get("id")
                     log.info(f"New user internal ID: {new_user_internal_id}")
-                
+
                 # Process referral code for new users
                 if referral_code and new_user_internal_id:
                     log.info(f"🎁 Processing referral for new user {uid} with code {referral_code}")
@@ -208,22 +210,22 @@ async def cmd_start(message: types.Message, i18n: I18nContext):
                         new_user_internal_id=new_user_internal_id,
                         referral_code=referral_code,
                         new_user_name=full_name or uname or "New user",
-                        bot=message.bot
+                        bot=message.bot,
                     )
                     if referral_result:
                         log.info(f"✅ Referral processed successfully: {referral_result}")
                     else:
-                        log.warning(f"❌ Referral processing returned None")
-                    
+                        log.warning("❌ Referral processing returned None")
+
         except Exception as e:
             log.error(f"create_user failed: {e}", exc_info=True)
-            
+
     await _set_webapp_menu_or_default(message, i18n)
 
     # Build comprehensive menu with action buttons
     start_kb = _build_start_menu_kb(i18n)
     user_display_name = message.from_user.full_name if message.from_user else "there"
-    
+
     # Build welcome message based on scenario
     if is_new_user and referral_code and referral_result:
         # New user who joined via referral - special welcome!
@@ -247,7 +249,7 @@ You joined via <b>{referrer_name}</b>'s referral link!
 💡 <b>Tip:</b> Invite your friends to earn +100 credits per signup!
 
 👇 <b>Choose an action below to get started!</b>"""
-        
+
     elif is_new_user:
         # New user without referral
         welcome_msg = f"""🚀 <b>Welcome to AnalyticBot, {user_display_name}!</b>
@@ -267,11 +269,11 @@ You joined via <b>{referrer_name}</b>'s referral link!
 💡 <b>Tip:</b> Invite friends with your referral code to earn +100 credits per signup!
 
 👇 <b>Choose an action below to get started!</b>"""
-        
+
     else:
         # Existing user
         welcome_msg = i18n.get("start_message", user_name=user_display_name)
-    
+
     await message.answer(welcome_msg, reply_markup=start_kb, parse_mode="HTML")
 
 
@@ -280,106 +282,142 @@ async def _process_referral(
     new_user_internal_id: int,
     referral_code: str,
     new_user_name: str,
-    bot: Bot | None
+    bot: Bot | None,
 ) -> dict | None:
     """Process referral code for a new user and notify the referrer"""
     try:
         from apps.di import get_container
+
         container = get_container()
         pool = await container.database.asyncpg_pool()
-        
+
         async with pool.acquire() as conn:
             # Get the referrer by code
             referrer = await conn.fetchrow(
                 "SELECT id, username, full_name, telegram_id FROM users WHERE referral_code = $1",
-                referral_code.upper()
+                referral_code.upper(),
             )
             if not referrer:
                 log.warning(f"❌ Invalid referral code: {referral_code}")
                 return None
-            
+
             referrer_id = referrer["id"]
             referrer_name = referrer["full_name"] or referrer["username"] or "Your friend"
             referrer_telegram_id = referrer["telegram_id"]
-            
-            log.info(f"Found referrer: {referrer_id} ({referrer_name}), telegram_id: {referrer_telegram_id}")
-            
+
+            log.info(
+                f"Found referrer: {referrer_id} ({referrer_name}), telegram_id: {referrer_telegram_id}"
+            )
+
             # Check if already referred (use correct table: user_referrals)
             existing = await conn.fetchval(
-                "SELECT 1 FROM user_referrals WHERE referred_user_id = $1",
-                new_user_internal_id
+                "SELECT 1 FROM user_referrals WHERE referred_user_id = $1", new_user_internal_id
             )
             if existing:
                 log.info(f"User {new_user_internal_id} already has a referrer")
                 return None
-            
+
             # Get referrer's current referral count (use correct table and column)
-            referral_count = await conn.fetchval(
-                "SELECT COUNT(*) FROM user_referrals WHERE referrer_user_id = $1 AND status = 'completed'",
-                referrer_id
-            ) or 0
-            
+            referral_count = (
+                await conn.fetchval(
+                    "SELECT COUNT(*) FROM user_referrals WHERE referrer_user_id = $1 AND status = 'completed'",
+                    referrer_id,
+                )
+                or 0
+            )
+
             # Check if referrer has user_credits record, create if not
             referrer_credits = await conn.fetchval(
-                "SELECT 1 FROM user_credits WHERE user_id = $1",
-                referrer_id
+                "SELECT 1 FROM user_credits WHERE user_id = $1", referrer_id
             )
             if not referrer_credits:
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO user_credits (user_id, balance, lifetime_earned, lifetime_spent, daily_streak)
                     VALUES ($1, 0, 0, 0, 0)
-                """, referrer_id)
+                """,
+                    referrer_id,
+                )
                 log.info(f"Created user_credits record for referrer {referrer_id}")
-            
+
             # Apply referral in transaction
             async with conn.transaction():
                 # Create referral record (use correct table: user_referrals, column: referrer_user_id)
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO user_referrals (referrer_user_id, referred_user_id, referral_code, status, completed_at, credits_awarded)
                     VALUES ($1, $2, $3, 'completed', NOW(), 100)
-                """, referrer_id, new_user_internal_id, referral_code.upper())
-                log.info(f"✅ Created referral record in user_referrals")
-                
+                """,
+                    referrer_id,
+                    new_user_internal_id,
+                    referral_code.upper(),
+                )
+                log.info("✅ Created referral record in user_referrals")
+
                 # Award credits to referrer (100 credits)
-                await conn.execute("""
-                    UPDATE user_credits SET 
+                await conn.execute(
+                    """
+                    UPDATE user_credits SET
                         balance = balance + 100,
                         lifetime_earned = lifetime_earned + 100
                     WHERE user_id = $1
-                """, referrer_id)
+                """,
+                    referrer_id,
+                )
                 log.info(f"✅ Awarded 100 credits to referrer {referrer_id}")
-                
+
                 # Award credits to new user (50 credits bonus)
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO user_credits (user_id, balance, lifetime_earned, lifetime_spent, daily_streak)
                     VALUES ($1, 50, 50, 0, 0)
-                    ON CONFLICT (user_id) DO UPDATE SET 
+                    ON CONFLICT (user_id) DO UPDATE SET
                         balance = user_credits.balance + 50,
                         lifetime_earned = user_credits.lifetime_earned + 50
-                """, new_user_internal_id)
+                """,
+                    new_user_internal_id,
+                )
                 log.info(f"✅ Awarded 50 bonus credits to new user {new_user_internal_id}")
-                
+
                 # Log transactions (get current balances for balance_after field)
-                referrer_balance = await conn.fetchval(
-                    "SELECT balance FROM user_credits WHERE user_id = $1", referrer_id
-                ) or 0
-                
-                new_user_balance = await conn.fetchval(
-                    "SELECT balance FROM user_credits WHERE user_id = $1", new_user_internal_id
-                ) or 50
-                
-                await conn.execute("""
+                referrer_balance = (
+                    await conn.fetchval(
+                        "SELECT balance FROM user_credits WHERE user_id = $1", referrer_id
+                    )
+                    or 0
+                )
+
+                new_user_balance = (
+                    await conn.fetchval(
+                        "SELECT balance FROM user_credits WHERE user_id = $1", new_user_internal_id
+                    )
+                    or 50
+                )
+
+                await conn.execute(
+                    """
                     INSERT INTO credit_transactions (user_id, amount, balance_after, type, description)
                     VALUES ($1, 100, $2, 'referral_reward', $3)
-                """, referrer_id, referrer_balance, f"Referral bonus: {new_user_name} joined via your link")
-                
-                await conn.execute("""
+                """,
+                    referrer_id,
+                    referrer_balance,
+                    f"Referral bonus: {new_user_name} joined via your link",
+                )
+
+                await conn.execute(
+                    """
                     INSERT INTO credit_transactions (user_id, amount, balance_after, type, description)
                     VALUES ($1, 50, $2, 'referral_bonus', $3)
-                """, new_user_internal_id, new_user_balance, f"Welcome bonus from {referrer_name}'s referral")
-            
-            log.info(f"🎉 Referral processed successfully: {referrer_id} referred {new_user_internal_id} via code {referral_code}")
-            
+                """,
+                    new_user_internal_id,
+                    new_user_balance,
+                    f"Welcome bonus from {referrer_name}'s referral",
+                )
+
+            log.info(
+                f"🎉 Referral processed successfully: {referrer_id} referred {new_user_internal_id} via code {referral_code}"
+            )
+
             # 🔔 Notify the referrer about the successful referral!
             if bot and referrer_telegram_id:
                 try:
@@ -398,25 +436,25 @@ Someone just joined using your referral link!
 • Total earned: {new_total * 100} credits
 
 Keep sharing your link to earn more! 🚀"""
-                    
+
                     await bot.send_message(
-                        chat_id=referrer_telegram_id,
-                        text=notification_msg,
-                        parse_mode="HTML"
+                        chat_id=referrer_telegram_id, text=notification_msg, parse_mode="HTML"
                     )
                     log.info(f"📬 Notified referrer {referrer_telegram_id} about new referral")
                 except Exception as notify_err:
                     log.warning(f"Failed to notify referrer: {notify_err}")
             else:
-                log.warning(f"Could not notify referrer: bot={bot is not None}, telegram_id={referrer_telegram_id}")
-            
+                log.warning(
+                    f"Could not notify referrer: bot={bot is not None}, telegram_id={referrer_telegram_id}"
+                )
+
             return {
                 "success": True,
                 "referrer_name": referrer_name,
                 "referrer_id": referrer_id,
-                "credits_received": 50
+                "credits_received": 50,
             }
-            
+
     except Exception as e:
         log.error(f"❌ Failed to process referral: {e}", exc_info=True)
         return None

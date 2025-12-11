@@ -95,10 +95,10 @@ class UserBotRepositoryFactory(IUserBotRepository):
 
     async def get_all_mtproto_enabled_users_with_intervals(self, pool) -> list[dict]:
         """Get all users with MTProto enabled, including their collection interval.
-        
+
         Args:
             pool: asyncpg pool for raw SQL query
-            
+
         Returns:
             List of user dicts with interval info from their plan
         """

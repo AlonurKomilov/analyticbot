@@ -2,15 +2,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
  * Custom hook for debouncing values
- * 
+ *
  * @param value - The value to debounce
  * @param delay - The debounce delay in milliseconds (default: 300ms)
  * @returns The debounced value
- * 
+ *
  * @example
  * const [searchTerm, setSearchTerm] = useState('');
  * const debouncedSearch = useDebounce(searchTerm, 500);
- * 
+ *
  * useEffect(() => {
  *   // This will only run 500ms after the user stops typing
  *   fetchResults(debouncedSearch);
@@ -36,11 +36,11 @@ export function useDebounce<T>(value: T, delay: number = 300): T {
 
 /**
  * Custom hook for debouncing callback functions
- * 
+ *
  * @param callback - The callback function to debounce
  * @param delay - The debounce delay in milliseconds (default: 300ms)
  * @returns A debounced version of the callback
- * 
+ *
  * @example
  * const handleSearch = useDebouncedCallback((searchTerm: string) => {
  *   fetchResults(searchTerm);
@@ -84,7 +84,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
 /**
  * Custom hook for throttling values
  * Unlike debounce, throttle ensures the callback is called at most once per interval
- * 
+ *
  * @param value - The value to throttle
  * @param interval - The throttle interval in milliseconds (default: 300ms)
  * @returns The throttled value

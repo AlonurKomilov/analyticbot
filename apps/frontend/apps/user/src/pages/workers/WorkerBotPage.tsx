@@ -11,11 +11,11 @@ import { useUserBotStore } from '@/store';
 
 export const WorkerBotPage: React.FC = () => {
   const { bot, isLoading, fetchBotStatus } = useUserBotStore();
-  
+
   // Track if we've completed the initial status check
   const hasCheckedRef = useRef(false);
   const [hasChecked, setHasChecked] = useState(false);
-  
+
   // Fetch bot status on mount (only once)
   useEffect(() => {
     const checkBotStatus = async () => {
@@ -23,9 +23,9 @@ export const WorkerBotPage: React.FC = () => {
       if (hasCheckedRef.current || isLoading) {
         return;
       }
-      
+
       hasCheckedRef.current = true;
-      
+
       try {
         await fetchBotStatus();
       } catch (err) {
@@ -35,7 +35,7 @@ export const WorkerBotPage: React.FC = () => {
         setHasChecked(true);
       }
     };
-    
+
     checkBotStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -55,7 +55,7 @@ export const WorkerBotPage: React.FC = () => {
       </Container>
     );
   }
-  
+
   // If bot is configured, show dashboard
   // If not, show setup wizard
   return (

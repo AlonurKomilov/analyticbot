@@ -31,7 +31,7 @@ interface State {
 
 /**
  * Error Boundary Component
- * 
+ *
  * Catches JavaScript errors anywhere in the child component tree,
  * logs those errors, and displays a fallback UI instead of crashing.
  */
@@ -54,7 +54,7 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log the error to console
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+
     this.setState({ errorInfo });
 
     // You could also log to an error reporting service here
@@ -116,11 +116,11 @@ class ErrorBoundary extends Component<Props, State> {
             <ErrorIcon
               sx={{ fontSize: 72, color: 'error.main', mb: 2 }}
             />
-            
+
             <Typography variant="h4" gutterBottom fontWeight={700}>
               Something went wrong
             </Typography>
-            
+
             <Typography color="text.secondary" sx={{ mb: 3 }}>
               We're sorry, but something unexpected happened. Please try refreshing the page
               or go back to the home page.
@@ -165,7 +165,7 @@ class ErrorBoundary extends Component<Props, State> {
               >
                 {showDetails ? 'Hide' : 'Show'} Technical Details
               </Button>
-              
+
               <Collapse in={showDetails}>
                 <Paper
                   variant="outlined"
@@ -222,8 +222,8 @@ export const withErrorBoundary = <P extends object>(
       <WrappedComponent {...props} />
     </ErrorBoundary>
   );
-  
+
   WithErrorBoundary.displayName = `WithErrorBoundary(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
-  
+
   return WithErrorBoundary;
 };

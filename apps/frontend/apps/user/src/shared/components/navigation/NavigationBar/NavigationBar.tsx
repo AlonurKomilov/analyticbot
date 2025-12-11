@@ -187,7 +187,7 @@ const NavigationBar: React.FC = () => {
                     <React.Fragment key={item.path}>
                         {/* Show divider before this item if specified */}
                         {item.dividerBefore && index > 0 && <Divider sx={{ my: 1 }} />}
-                        
+
                         {/* Show section label if specified */}
                         {item.sectionLabel && (
                             <Typography
@@ -203,7 +203,7 @@ const NavigationBar: React.FC = () => {
                                 {item.sectionLabel}
                             </Typography>
                         )}
-                        
+
                         <ListItem disablePadding>
                             <ListItemButton
                                 selected={location.pathname === item.path || location.pathname.startsWith(item.path + '/')}

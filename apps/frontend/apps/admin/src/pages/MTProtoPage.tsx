@@ -176,7 +176,7 @@ const MTProtoPage: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
-  
+
   // Details dialog state
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<SessionDetails | null>(null);
@@ -202,7 +202,7 @@ const MTProtoPage: React.FC = () => {
 
   const handleDeleteSession = async () => {
     if (!deleteSession) return;
-    
+
     setActionLoading(deleteSession.id);
     try {
       await apiClient.delete(`/admin/system/mtproto/sessions/${deleteSession.user_id}`);
@@ -535,7 +535,7 @@ const MTProtoPage: React.FC = () => {
           <ListItemIcon><ViewIcon fontSize="small" /></ListItemIcon>
           <ListItemText>View Details</ListItemText>
         </MenuItem>
-        <MenuItem 
+        <MenuItem
           onClick={() => {
             if (menuSession) handleToggleSession(menuSession);
             handleMenuClose();
@@ -554,7 +554,7 @@ const MTProtoPage: React.FC = () => {
           </ListItemText>
         </MenuItem>
         <Divider />
-        <MenuItem 
+        <MenuItem
           onClick={() => {
             if (menuSession) {
               setDeleteSession(menuSession);
@@ -583,9 +583,9 @@ const MTProtoPage: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button 
-            onClick={() => handleDeleteSession()} 
-            color="error" 
+          <Button
+            onClick={() => handleDeleteSession()}
+            color="error"
             variant="contained"
             disabled={actionLoading === deleteSession?.id}
           >
@@ -663,7 +663,7 @@ const MTProtoPage: React.FC = () => {
                           <Typography variant="body2" fontWeight={500}>
                             {channel.channel_name}
                           </Typography>
-                          <Chip 
+                          <Chip
                             label={channel.mtproto_enabled ? "Active" : "Disabled"}
                             color={channel.mtproto_enabled ? "success" : "default"}
                             size="small"
@@ -731,7 +731,7 @@ const MTProtoPage: React.FC = () => {
                 <Grid item xs={6} sm={3}>
                   <Card variant="outlined">
                     <CardContent sx={{ textAlign: 'center', py: 1.5 }}>
-                      <Chip 
+                      <Chip
                         label={selectedSession.mtproto_enabled ? "Enabled" : "Disabled"}
                         color={selectedSession.mtproto_enabled ? "success" : "default"}
                         size="small"

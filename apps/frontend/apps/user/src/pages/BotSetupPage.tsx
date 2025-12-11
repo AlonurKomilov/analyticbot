@@ -13,20 +13,20 @@ import toast from 'react-hot-toast';
 export const BotSetupPage: React.FC = () => {
   const navigate = useNavigate();
   const { bot, isLoading, fetchBotStatus } = useUserBotStore();
-  
+
   // Track if we've completed the initial status check
   const hasCheckedRef = useRef(false);
   const [hasChecked, setHasChecked] = useState(false);
-  
+
   // Check bot status on mount
   useEffect(() => {
     const checkBotStatus = async () => {
       if (hasCheckedRef.current || isLoading) {
         return;
       }
-      
+
       hasCheckedRef.current = true;
-      
+
       try {
         const fetchedBot = await fetchBotStatus();
         if (fetchedBot) {
@@ -45,11 +45,11 @@ export const BotSetupPage: React.FC = () => {
         setHasChecked(true);
       }
     };
-    
+
     checkBotStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
+
   // Loading state
   if (!hasChecked) {
     return (
@@ -65,7 +65,7 @@ export const BotSetupPage: React.FC = () => {
       </Container>
     );
   }
-  
+
   // If bot exists, don't show setup (redirect will happen via useEffect)
   if (bot) {
     return (
@@ -81,7 +81,7 @@ export const BotSetupPage: React.FC = () => {
       </Container>
     );
   }
-  
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <BotSetupWizard />

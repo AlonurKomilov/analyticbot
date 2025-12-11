@@ -53,11 +53,11 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
   const requestQR = useCallback(async () => {
     // Prevent multiple simultaneous requests
     if (isRefreshing) return;
-    
+
     setIsRefreshing(true);
     setStatus('loading');
     setStatusMessage('Generating QR code...');
-    
+
     // Clear any existing intervals
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
@@ -67,10 +67,10 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
       clearInterval(countdownRef.current);
       countdownRef.current = null;
     }
-    
+
     try {
       const result = await requestQRLogin();
-      
+
       if (result) {
         setQrCodeUrl(result.qr_code_url);
         setQrCodeBase64(result.qr_code_base64);
@@ -78,7 +78,7 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
         setStatus('waiting');
         setStatusMessage('Scan with Telegram app');
         setIsRefreshing(false); // Reset after successful load
-        
+
         // Start countdown
         countdownRef.current = setInterval(() => {
           setExpiresIn(prev => {
@@ -92,12 +92,12 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
             return prev - 1;
           });
         }, 1000);
-        
+
         // Start polling for status
         pollingRef.current = setInterval(async () => {
           try {
             const statusResult = await checkQRStatus();
-            
+
             if (statusResult) {
               if (statusResult.status === 'success') {
                 // Success!
@@ -151,16 +151,16 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
   // Handle 2FA password submission
   const handle2FASubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!password.trim()) {
       setPasswordError('Please enter your password');
       return;
     }
-    
+
     setPasswordError(null);
-    
+
     const result = await submitQR2FA(password);
-    
+
     if (result) {
       if (result.status === 'success') {
         setStatus('success');
@@ -270,11 +270,11 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
         </Typography>
       </Alert>
 
-      <Paper 
-        sx={{ 
-          p: 4, 
-          display: 'flex', 
-          flexDirection: 'column', 
+      <Paper
+        sx={{
+          p: 4,
+          display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           bgcolor: status === 'success' ? 'success.50' : 'background.paper',
           transition: 'background-color 0.3s',
@@ -300,17 +300,17 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
           {status === 'loading' && (
             <CircularProgress size={60} />
           )}
-          
+
           {status === 'waiting' && qrCodeBase64 && (
             <Fade in>
-              <img 
+              <img
                 src={`data:image/png;base64,${qrCodeBase64}`}
                 alt="Telegram Login QR Code"
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
             </Fade>
           )}
-          
+
           {status === 'waiting' && !qrCodeBase64 && qrCodeUrl && (
             <Box sx={{ textAlign: 'center', p: 2 }}>
               <QrCode2 sx={{ fontSize: 64, color: 'grey.400', mb: 1 }} />
@@ -321,13 +321,13 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
               </Typography>
             </Box>
           )}
-          
+
           {status === 'success' && (
             <Fade in>
               <CheckCircle sx={{ fontSize: 100, color: 'success.main' }} />
             </Fade>
           )}
-          
+
           {status === 'error' && (
             <Fade in>
               <Error sx={{ fontSize: 100, color: 'error.main' }} />
@@ -336,8 +336,8 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
         </Box>
 
         {/* Status Message */}
-        <Typography 
-          variant="body1" 
+        <Typography
+          variant="body1"
           color={status === 'success' ? 'success.main' : status === 'error' ? 'error.main' : 'text.secondary'}
           sx={{ mb: 1 }}
         >

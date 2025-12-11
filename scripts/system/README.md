@@ -32,4 +32,3 @@ Always use the symlinks to ensure the system folder stays organized.
 ## Warning
 
 ⚠️ Deleting any of these files may break the platform!
-

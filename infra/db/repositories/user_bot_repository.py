@@ -152,13 +152,13 @@ class UserBotRepository(IUserBotRepository):
 
     async def get_all_mtproto_enabled_users_with_intervals(self, pool) -> list[dict]:
         """Get all users with MTProto enabled, including their collection interval.
-        
+
         This method joins with users and plans tables to get the correct interval
         based on the user's plan (tiered intervals) or personal override.
-        
+
         Args:
             pool: asyncpg pool for raw SQL query (needed for JOIN across tables)
-        
+
         Returns:
             List of user dictionaries with interval info:
             - user_id: The user ID
@@ -168,7 +168,7 @@ class UserBotRepository(IUserBotRepository):
             - plan_name: User's plan name
         """
         query = """
-            SELECT 
+            SELECT
                 ubc.user_id,
                 ubc.mtproto_phone,
                 COALESCE(
@@ -184,7 +184,7 @@ class UserBotRepository(IUserBotRepository):
             WHERE ubc.mtproto_enabled = TRUE
             ORDER BY interval_minutes ASC
         """
-        
+
         rows = await pool.fetch(query)
         return [dict(row) for row in rows]
 

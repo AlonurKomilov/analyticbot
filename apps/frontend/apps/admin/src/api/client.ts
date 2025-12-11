@@ -67,14 +67,14 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Add admin header for backend to identify admin requests
     config.headers['X-Admin-Request'] = 'true';
-    
+
     // Add CSRF token for state-changing requests
     if (config.method && requiresCsrf(config.method)) {
       let token: string | null = getCsrfToken();
-      
+
       // If no token, try to fetch one
       if (!token) {
         try {
@@ -83,12 +83,12 @@ apiClient.interceptors.request.use(
           console.warn('Could not fetch CSRF token:', e);
         }
       }
-      
+
       if (token) {
         config.headers['X-CSRF-Token'] = token;
       }
     }
-    
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -104,7 +104,7 @@ apiClient.interceptors.response.use(
       csrfToken = null;
       window.location.href = '/login';
     }
-    
+
     // Handle CSRF errors - refresh token and retry
     if (error.response?.status === 403 && error.config) {
       const errorDetail = (error.response.data as any)?.detail || '';
@@ -121,7 +121,7 @@ apiClient.interceptors.response.use(
         }
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

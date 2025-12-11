@@ -85,7 +85,7 @@ const normalizeSystemData = (data: any): SystemInfo => {
   if (data?.system?.cpu?.percent !== undefined) {
     return data.system;
   }
-  
+
   // Handle old flat format
   return {
     cpu: {
@@ -132,14 +132,14 @@ const SystemHealthPage: React.FC = () => {
       setRefreshing(true);
     }
     setError(null);
-    
+
     try {
       const response = await apiClient.get(API_ENDPOINTS.ADMIN.HEALTH);
       const data = response.data;
-      
+
       // Normalize system data
       const normalizedSystem = normalizeSystemData(data);
-      
+
       setHealth({
         ...data,
         system: normalizedSystem,
@@ -161,7 +161,7 @@ const SystemHealthPage: React.FC = () => {
   // Auto-refresh with configurable interval
   useEffect(() => {
     if (!autoRefresh) return;
-    
+
     const interval = setInterval(() => fetchHealth(), refreshInterval * 1000);
     return () => clearInterval(interval);
   }, [fetchHealth, autoRefresh, refreshInterval]);
@@ -431,22 +431,22 @@ const SystemHealthPage: React.FC = () => {
             System Resources
           </Typography>
           {autoRefresh && (
-            <Chip 
-              label="Live" 
-              size="small" 
-              color="success" 
-              sx={{ 
+            <Chip
+              label="Live"
+              size="small"
+              color="success"
+              sx={{
                 animation: 'pulse 2s infinite',
                 '@keyframes pulse': {
                   '0%': { opacity: 1 },
                   '50%': { opacity: 0.6 },
                   '100%': { opacity: 1 },
                 },
-              }} 
+              }}
             />
           )}
         </Box>
-        
+
         <Grid container spacing={4}>
           {/* CPU Section */}
           <Grid size={{ xs: 12, md: 4 }}>
@@ -455,7 +455,7 @@ const SystemHealthPage: React.FC = () => {
                 <CpuIcon color="primary" />
                 <Typography variant="subtitle1" fontWeight={600}>CPU</Typography>
               </Box>
-              
+
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                   <Typography variant="body2">Usage</Typography>
@@ -477,9 +477,9 @@ const SystemHealthPage: React.FC = () => {
                   }}
                 />
               </Box>
-              
+
               <Divider sx={{ my: 1.5 }} />
-              
+
               <Stack spacing={0.5}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="caption" color="text.secondary">Cores (Physical/Logical)</Typography>
@@ -508,7 +508,7 @@ const SystemHealthPage: React.FC = () => {
                 <MemoryIcon color="secondary" />
                 <Typography variant="subtitle1" fontWeight={600}>Memory</Typography>
               </Box>
-              
+
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                   <Typography variant="body2">RAM Usage</Typography>
@@ -530,9 +530,9 @@ const SystemHealthPage: React.FC = () => {
                   }}
                 />
               </Box>
-              
+
               <Divider sx={{ my: 1.5 }} />
-              
+
               <Stack spacing={0.5}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="caption" color="text.secondary">Total RAM</Typography>
@@ -557,7 +557,7 @@ const SystemHealthPage: React.FC = () => {
                 <DiskIcon color="info" />
                 <Typography variant="subtitle1" fontWeight={600}>Disk</Typography>
               </Box>
-              
+
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                   <Typography variant="body2">Storage Usage</Typography>
@@ -579,9 +579,9 @@ const SystemHealthPage: React.FC = () => {
                   }}
                 />
               </Box>
-              
+
               <Divider sx={{ my: 1.5 }} />
-              
+
               <Stack spacing={0.5}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="caption" color="text.secondary">Total Space</Typography>

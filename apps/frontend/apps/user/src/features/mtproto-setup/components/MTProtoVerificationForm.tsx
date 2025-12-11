@@ -80,14 +80,14 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
       // Check if 2FA is needed - look for various indicators
       const errorMsg = error.message?.toLowerCase() || '';
       const errorDetail = error.response?.data?.detail?.toLowerCase() || '';
-      const is2FAError = 
-        errorMsg.includes('2fa') || 
+      const is2FAError =
+        errorMsg.includes('2fa') ||
         errorMsg.includes('password') ||
         errorMsg.includes('two-factor') ||
         errorDetail.includes('2fa') ||
         errorDetail.includes('password') ||
         errorDetail.includes('two-factor');
-      
+
       if (is2FAError && !needs2FA) {
         // Show 2FA input instead of error
         setNeeds2FA(true);
@@ -128,11 +128,11 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
       />
 
       {needs2FA && (
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            mt: 3, 
-            p: 3, 
+        <Paper
+          elevation={0}
+          sx={{
+            mt: 3,
+            p: 3,
             bgcolor: 'action.hover',
             borderRadius: 2,
             border: '1px solid',
@@ -143,11 +143,11 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
             <Lock sx={{ fontSize: 48, color: 'warning.main' }} />
           </Box>
-          
+
           <Typography variant="h6" align="center" gutterBottom>
             Two-Factor Authentication Required
           </Typography>
-          
+
           <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
             Your Telegram account has 2FA enabled. Please enter your password to complete login.
           </Typography>

@@ -106,13 +106,13 @@ const MarketplacePage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [creditBalance, setCreditBalance] = useState<number>(user?.credit_balance || 0);
-    
+
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
     const [showPremiumOnly, setShowPremiumOnly] = useState(false);
-    
+
     // Purchase dialog
     const [purchaseDialog, setPurchaseDialog] = useState<{
         open: boolean;
@@ -120,7 +120,7 @@ const MarketplacePage: React.FC = () => {
         type: 'item' | 'bundle';
     }>({ open: false, item: null, type: 'item' });
     const [purchasing, setPurchasing] = useState(false);
-    
+
     // Snackbar
     const [snackbar, setSnackbar] = useState<{
         open: boolean;
@@ -146,7 +146,7 @@ const MarketplacePage: React.FC = () => {
                 apiClient.get<{ categories: Category[] }>('/marketplace/categories'),
                 apiClient.get<{ purchases: { item_id: number }[] }>('/marketplace/purchases'),
             ]);
-            
+
             setItems(itemsRes.items || []);
             setBundles(bundlesRes.bundles || []);
             setCategories(categoriesRes.categories || []);
@@ -175,7 +175,7 @@ const MarketplacePage: React.FC = () => {
     // Purchase handlers
     const handlePurchase = async () => {
         if (!purchaseDialog.item) return;
-        
+
         setPurchasing(true);
         try {
             if (purchaseDialog.type === 'item') {
@@ -187,7 +187,7 @@ const MarketplacePage: React.FC = () => {
                     bundle_id: (purchaseDialog.item as Bundle).id
                 });
             }
-            
+
             setSnackbar({
                 open: true,
                 message: `Successfully purchased ${purchaseDialog.item.name}!`,
@@ -214,11 +214,11 @@ const MarketplacePage: React.FC = () => {
     const renderItemCard = (item: MarketplaceItem) => {
         const owned = isOwned(item.id);
         const config = CATEGORY_CONFIG[item.category] || { icon: <WidgetIcon />, color: '#757575', label: item.category };
-        
+
         return (
             <Grid item xs={12} sm={6} md={4} key={item.id}>
-                <Card 
-                    sx={{ 
+                <Card
+                    sx={{
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
@@ -245,12 +245,12 @@ const MarketplacePage: React.FC = () => {
                             sx={{ position: 'absolute', top: 8, left: 8, zIndex: 1 }}
                         />
                     )}
-                    
-                    <Box 
-                        sx={{ 
-                            p: 3, 
-                            display: 'flex', 
-                            alignItems: 'center', 
+
+                    <Box
+                        sx={{
+                            p: 3,
+                            display: 'flex',
+                            alignItems: 'center',
                             justifyContent: 'center',
                             bgcolor: `${config.color}15`,
                         }}
@@ -259,7 +259,7 @@ const MarketplacePage: React.FC = () => {
                             {config.icon}
                         </Box>
                     </Box>
-                    
+
                     <CardContent sx={{ flexGrow: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                             <Typography variant="h6" component="h3" noWrap>
@@ -271,17 +271,17 @@ const MarketplacePage: React.FC = () => {
                                 </Tooltip>
                             )}
                         </Box>
-                        
-                        <Chip 
+
+                        <Chip
                             label={config.label}
                             size="small"
                             sx={{ mb: 1, bgcolor: `${config.color}20`, color: config.color }}
                         />
-                        
+
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: 40 }}>
                             {item.description}
                         </Typography>
-                        
+
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                 <Rating value={item.rating} precision={0.1} size="small" readOnly />
@@ -297,7 +297,7 @@ const MarketplacePage: React.FC = () => {
                             </Box>
                         </Box>
                     </CardContent>
-                    
+
                     <CardActions sx={{ justifyContent: 'space-between', p: 2, pt: 0 }}>
                         <Chip
                             icon={<PriceIcon />}
@@ -323,8 +323,8 @@ const MarketplacePage: React.FC = () => {
     // Render bundle card
     const renderBundleCard = (bundle: Bundle) => (
         <Grid item xs={12} sm={6} md={4} key={bundle.id}>
-            <Card 
-                sx={{ 
+            <Card
+                sx={{
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
@@ -341,7 +341,7 @@ const MarketplacePage: React.FC = () => {
                         sx={{ position: 'absolute', top: 8, right: 8 }}
                     />
                 )}
-                
+
                 <CardContent sx={{ flexGrow: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                         <BundleIcon sx={{ fontSize: 32 }} />
@@ -349,32 +349,32 @@ const MarketplacePage: React.FC = () => {
                             {bundle.name}
                         </Typography>
                     </Box>
-                    
+
                     <Typography variant="body2" sx={{ mb: 2, opacity: 0.9, minHeight: 40 }}>
                         {bundle.description}
                     </Typography>
-                    
+
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                         <Typography variant="caption" sx={{ opacity: 0.7, textDecoration: 'line-through' }}>
                             {bundle.original_price} Credits
                         </Typography>
                     </Box>
-                    
+
                     <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
                         {bundle.price_credits} Credits
                     </Typography>
-                    
+
                     <Typography variant="caption" sx={{ opacity: 0.8 }}>
                         Valid for {bundle.valid_days} days
                     </Typography>
                 </CardContent>
-                
+
                 <CardActions sx={{ p: 2, pt: 0 }}>
                     <Button
                         variant="contained"
                         fullWidth
-                        sx={{ 
-                            bgcolor: 'white', 
+                        sx={{
+                            bgcolor: 'white',
                             color: '#667eea',
                             '&:hover': { bgcolor: '#f5f5f5' }
                         }}
@@ -398,7 +398,7 @@ const MarketplacePage: React.FC = () => {
                 <Typography variant="body1" color="text.secondary">
                     Enhance your experience with AI models, themes, widgets, and bundles
                 </Typography>
-                
+
                 {/* Credit Balance */}
                 <Paper sx={{ mt: 2, p: 2, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
                     <Typography variant="body1">Your Balance:</Typography>
@@ -411,8 +411,8 @@ const MarketplacePage: React.FC = () => {
             </Box>
 
             {/* Tabs */}
-            <Tabs 
-                value={activeTab} 
+            <Tabs
+                value={activeTab}
                 onChange={(_, v) => setActiveTab(v)}
                 sx={{ mb: 3 }}
             >
@@ -438,7 +438,7 @@ const MarketplacePage: React.FC = () => {
                         }}
                         sx={{ minWidth: 250 }}
                     />
-                    
+
                     <FormControl size="small" sx={{ minWidth: 150 }}>
                         <InputLabel>Category</InputLabel>
                         <Select
@@ -454,7 +454,7 @@ const MarketplacePage: React.FC = () => {
                             ))}
                         </Select>
                     </FormControl>
-                    
+
                     <Button
                         variant={showFeaturedOnly ? "contained" : "outlined"}
                         size="small"
@@ -463,7 +463,7 @@ const MarketplacePage: React.FC = () => {
                     >
                         Featured
                     </Button>
-                    
+
                     <Button
                         variant={showPremiumOnly ? "contained" : "outlined"}
                         size="small"
@@ -538,8 +538,8 @@ const MarketplacePage: React.FC = () => {
             )}
 
             {/* Purchase Dialog */}
-            <Dialog 
-                open={purchaseDialog.open} 
+            <Dialog
+                open={purchaseDialog.open}
                 onClose={() => !purchasing && setPurchaseDialog({ open: false, item: null, type: 'item' })}
                 maxWidth="sm"
                 fullWidth
@@ -572,14 +572,14 @@ const MarketplacePage: React.FC = () => {
                             <Divider sx={{ my: 2 }} />
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography>After Purchase:</Typography>
-                                <Typography 
+                                <Typography
                                     fontWeight="bold"
                                     color={(creditBalance || 0) >= purchaseDialog.item.price_credits ? 'success.main' : 'error.main'}
                                 >
                                     {((creditBalance || 0) - purchaseDialog.item.price_credits).toLocaleString()} Credits
                                 </Typography>
                             </Box>
-                            
+
                             {(creditBalance || 0) < purchaseDialog.item.price_credits && (
                                 <Alert severity="error" sx={{ mt: 2 }}>
                                     Insufficient credits. You need {purchaseDialog.item.price_credits - (creditBalance || 0)} more credits.
@@ -589,7 +589,7 @@ const MarketplacePage: React.FC = () => {
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button 
+                    <Button
                         onClick={() => setPurchaseDialog({ open: false, item: null, type: 'item' })}
                         disabled={purchasing}
                     >
@@ -612,7 +612,7 @@ const MarketplacePage: React.FC = () => {
                 autoHideDuration={5000}
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
             >
-                <Alert 
+                <Alert
                     severity={snackbar.severity}
                     onClose={() => setSnackbar({ ...snackbar, open: false })}
                 >

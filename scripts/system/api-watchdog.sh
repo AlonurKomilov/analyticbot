@@ -23,20 +23,20 @@ check_api_health() {
 restart_api() {
     current_time=$(date +%s)
     time_since_restart=$((current_time - LAST_RESTART))
-    
+
     if [ $time_since_restart -lt $RESTART_COOLDOWN ]; then
         log "⏳ Cooldown active. Wait $((RESTART_COOLDOWN - time_since_restart))s before next restart."
         return
     fi
-    
+
     log "🔄 Restarting API server..."
-    
+
     # Kill any existing API/uvicorn on port 11400
     pkill -f "uvicorn.*11400" 2>/dev/null || true
     sleep 2
     pkill -9 -f "uvicorn.*11400" 2>/dev/null || true
     sleep 1
-    
+
     # Activate venv and load environment
     source "$PROJECT_DIR/.venv/bin/activate"
     if [ -f "$PROJECT_DIR/.env.development" ]; then
@@ -44,7 +44,7 @@ restart_api() {
         source "$PROJECT_DIR/.env.development"
         set +a
     fi
-    
+
     # Start uvicorn
     nohup uvicorn apps.api.main:app \
         --host 0.0.0.0 \
@@ -55,13 +55,13 @@ restart_api() {
         --reload-exclude .venv \
         --reload-exclude "*/__pycache__/*" \
         >> "$PROJECT_DIR/logs/dev_api.log" 2>&1 &
-    
+
     new_pid=$!
     echo $new_pid > "$PROJECT_DIR/logs/dev_api.pid"
     LAST_RESTART=$(date +%s)
-    
+
     log "✅ API started (PID: $new_pid)"
-    
+
     # Wait for health
     for i in {1..30}; do
         sleep 2

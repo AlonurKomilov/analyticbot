@@ -139,11 +139,11 @@ const getAchievementIcon = (icon: string | null, category: string) => {
         groups: <ReferralIcon />,
         diversity_3: <ReferralIcon />,
     };
-    
+
     if (icon && iconMap[icon]) {
         return iconMap[icon];
     }
-    
+
     // Fallback by category
     const categoryIcons: Record<string, React.ReactElement> = {
         account: <CheckIcon />,
@@ -153,7 +153,7 @@ const getAchievementIcon = (icon: string | null, category: string) => {
         credits: <SavingsIcon />,
         referrals: <ReferralIcon />,
     };
-    
+
     return categoryIcons[category] || <TrophyIcon />;
 };
 
@@ -188,7 +188,7 @@ const RewardsPage: React.FC = () => {
             setAchievements(achievementsRes as AchievementProgress);
             setReferralStats(referralRes as ReferralStats);
             setLeaderboard(leaderboardRes as LeaderboardEntry[]);
-            
+
             // Extract daily streak from balance response
             const balance = balanceRes as { daily_streak?: number };
             setDailyStreak(balance.daily_streak || 0);
@@ -244,13 +244,13 @@ const RewardsPage: React.FC = () => {
     // Apply referral code
     const applyReferralCode = async () => {
         if (!referralCode.trim()) return;
-        
+
         setApplyingCode(true);
         try {
             const result = await apiClient.post('/credits/referral/apply', {
                 referral_code: referralCode.trim(),
             }) as any;
-            
+
             setSnackbar({
                 open: true,
                 message: result.message || 'Referral code applied!',
@@ -305,10 +305,10 @@ const RewardsPage: React.FC = () => {
         <Container maxWidth="lg" sx={{ py: 4 }}>
             {/* Claimable Alert */}
             {(achievements?.claimable_count || 0) > 0 && (
-                <Alert 
-                    severity="warning" 
-                    sx={{ 
-                        mb: 3, 
+                <Alert
+                    severity="warning"
+                    sx={{
+                        mb: 3,
                         '& .MuiAlert-icon': { fontSize: 28 },
                         animation: 'glow 2s ease-in-out infinite',
                         '@keyframes glow': {
@@ -347,11 +347,11 @@ const RewardsPage: React.FC = () => {
                             Achievements Earned
                         </Typography>
                         {(achievements?.claimable_count || 0) > 0 && (
-                            <Chip 
-                                label={`${achievements?.claimable_count} ready to claim!`} 
-                                color="warning" 
-                                size="small" 
-                                sx={{ mt: 1, fontWeight: 'bold' }} 
+                            <Chip
+                                label={`${achievements?.claimable_count} ready to claim!`}
+                                color="warning"
+                                size="small"
+                                sx={{ mt: 1, fontWeight: 'bold' }}
                             />
                         )}
                         <LinearProgress
@@ -441,20 +441,20 @@ const RewardsPage: React.FC = () => {
                                         variant="outlined"
                                         sx={{
                                             opacity: achievement.is_earned ? 1 : (achievement.is_claimable ? 1 : 0.7),
-                                            bgcolor: achievement.is_earned 
-                                                ? 'success.50' 
-                                                : achievement.is_claimable 
-                                                    ? 'warning.50' 
+                                            bgcolor: achievement.is_earned
+                                                ? 'success.50'
+                                                : achievement.is_claimable
+                                                    ? 'warning.50'
                                                     : 'background.paper',
-                                            border: achievement.is_earned 
-                                                ? '2px solid' 
-                                                : achievement.is_claimable 
-                                                    ? '2px solid' 
+                                            border: achievement.is_earned
+                                                ? '2px solid'
+                                                : achievement.is_claimable
+                                                    ? '2px solid'
                                                     : '1px solid',
-                                            borderColor: achievement.is_earned 
-                                                ? 'success.main' 
-                                                : achievement.is_claimable 
-                                                    ? 'warning.main' 
+                                            borderColor: achievement.is_earned
+                                                ? 'success.main'
+                                                : achievement.is_claimable
+                                                    ? 'warning.main'
                                                     : 'divider',
                                             transition: 'all 0.2s ease',
                                             '&:hover': achievement.is_claimable ? {
@@ -467,10 +467,10 @@ const RewardsPage: React.FC = () => {
                                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                                                 <Avatar
                                                     sx={{
-                                                        bgcolor: achievement.is_earned 
-                                                            ? 'success.main' 
-                                                            : achievement.is_claimable 
-                                                                ? 'warning.main' 
+                                                        bgcolor: achievement.is_earned
+                                                            ? 'success.main'
+                                                            : achievement.is_claimable
+                                                                ? 'warning.main'
                                                                 : 'grey.300',
                                                         width: 48,
                                                         height: 48,
@@ -510,7 +510,7 @@ const RewardsPage: React.FC = () => {
                                                                 size="small"
                                                                 onClick={() => handleClaimAchievement(achievement.achievement_key)}
                                                                 disabled={claimingAchievement === achievement.achievement_key}
-                                                                sx={{ 
+                                                                sx={{
                                                                     fontWeight: 'bold',
                                                                     animation: 'pulse 2s infinite',
                                                                     '@keyframes pulse': {
@@ -557,7 +557,7 @@ const RewardsPage: React.FC = () => {
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                 Share this code with friends and earn 100 credits for each signup!
                             </Typography>
-                            
+
                             <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
                                 <TextField
                                     value={referralStats?.referral_code || ''}
@@ -578,7 +578,7 @@ const RewardsPage: React.FC = () => {
                                     </IconButton>
                                 </Tooltip>
                             </Box>
-                            
+
                             {/* Telegram Bot Link - Primary */}
                             <Button
                                 variant="contained"
@@ -590,7 +590,7 @@ const RewardsPage: React.FC = () => {
                                     }
                                 }}
                                 fullWidth
-                                sx={{ 
+                                sx={{
                                     mb: 1.5,
                                     background: 'linear-gradient(45deg, #0088cc 30%, #00a8e8 90%)',
                                     '&:hover': {
@@ -600,7 +600,7 @@ const RewardsPage: React.FC = () => {
                             >
                                 📱 Copy Telegram Bot Link
                             </Button>
-                            
+
                             {/* Web Link - Secondary */}
                             <Button
                                 variant="outlined"
@@ -616,14 +616,14 @@ const RewardsPage: React.FC = () => {
                             >
                                 🌐 Copy Web Registration Link
                             </Button>
-                            
+
                             <Alert severity="info" sx={{ mt: 2 }}>
                                 <Typography variant="body2">
                                     <strong>You get:</strong> 100 credits per referral<br />
                                     <strong>Friend gets:</strong> 50 bonus credits on signup
                                 </Typography>
                             </Alert>
-                            
+
                             {/* Show actual links for reference */}
                             <Box sx={{ mt: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
@@ -635,7 +635,7 @@ const RewardsPage: React.FC = () => {
                             </Box>
                         </Paper>
                     </Grid>
-                    
+
                     <Grid item xs={12} md={6}>
                         <Paper sx={{ p: 3 }}>
                             <Typography variant="h6" gutterBottom>
@@ -644,7 +644,7 @@ const RewardsPage: React.FC = () => {
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                 If someone referred you, enter their code to get bonus credits!
                             </Typography>
-                            
+
                             <Box sx={{ display: 'flex', gap: 1 }}>
                                 <TextField
                                     placeholder="Enter referral code"
@@ -664,7 +664,7 @@ const RewardsPage: React.FC = () => {
                                 </Button>
                             </Box>
                         </Paper>
-                        
+
                         {/* Recent Referrals */}
                         <Paper sx={{ p: 3, mt: 3 }}>
                             <Typography variant="h6" gutterBottom>
@@ -713,7 +713,7 @@ const RewardsPage: React.FC = () => {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         Rankings based on achievements unlocked
                     </Typography>
-                    
+
                     <List>
                         {leaderboard.map((entry, index) => (
                             <React.Fragment key={entry.user_id}>
@@ -767,7 +767,7 @@ const RewardsPage: React.FC = () => {
                             </React.Fragment>
                         ))}
                     </List>
-                    
+
                     {leaderboard.length === 0 && (
                         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
                             No achievers yet. Be the first to unlock achievements!

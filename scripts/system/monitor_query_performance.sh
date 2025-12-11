@@ -19,8 +19,8 @@ echo ""
 echo "📊 Extension Status:"
 PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" \
     -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c \
-    "SELECT '✅ ' || name || ' v' || installed_version || ' installed' 
-     FROM pg_available_extensions 
+    "SELECT '✅ ' || name || ' v' || installed_version || ' installed'
+     FROM pg_available_extensions
      WHERE name = 'pg_stat_statements' AND installed_version IS NOT NULL;"
 echo ""
 
@@ -29,7 +29,7 @@ echo "🐌 Top 10 Slowest Queries (by mean execution time):"
 echo "---------------------------------------------------"
 PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" \
     -U "$POSTGRES_USER" -d "$POSTGRES_DB" << 'EOSQL'
-SELECT 
+SELECT
     substring(query, 1, 80) as query_snippet,
     calls,
     round(mean_exec_time::numeric, 2) as avg_ms,
@@ -48,7 +48,7 @@ echo "📈 Top 10 Most Called Queries:"
 echo "------------------------------"
 PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" \
     -U "$POSTGRES_USER" -d "$POSTGRES_DB" << 'EOSQL'
-SELECT 
+SELECT
     substring(query, 1, 80) as query_snippet,
     calls,
     round(mean_exec_time::numeric, 2) as avg_ms,
@@ -66,7 +66,7 @@ echo "⏱️  Queries Taking >100ms:"
 echo "-------------------------"
 PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" \
     -U "$POSTGRES_USER" -d "$POSTGRES_DB" << 'EOSQL'
-SELECT 
+SELECT
     substring(query, 1, 80) as query_snippet,
     calls,
     round(mean_exec_time::numeric, 2) as avg_ms,

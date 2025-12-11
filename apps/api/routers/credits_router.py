@@ -417,6 +417,7 @@ async def get_service(
 
 class ReferralStatsResponse(BaseModel):
     """User's referral statistics"""
+
     referral_code: str | None
     total_referrals: int
     total_credits_earned: float
@@ -427,11 +428,13 @@ class ReferralStatsResponse(BaseModel):
 
 class ApplyReferralRequest(BaseModel):
     """Apply a referral code"""
+
     referral_code: str = Field(..., min_length=6, max_length=20)
 
 
 class ApplyReferralResponse(BaseModel):
     """Response after applying referral"""
+
     success: bool
     message: str
     referrer_username: str | None
@@ -446,15 +449,22 @@ async def get_referral_stats(
     """Get user's referral code and statistics"""
     user_id = int(current_user["id"])
     stats = await credit_repo.get_referral_stats(user_id)
-    
+
     # Build referral links
     import os
+
     base_url = os.getenv("FRONTEND_URL", "https://analyticbot.org")
     bot_username = os.getenv("TELEGRAM_BOT_USERNAME", "abccontrol_bot")
-    
-    referral_link = f"{base_url}/register?ref={stats['referral_code']}" if stats['referral_code'] else ""
-    bot_referral_link = f"https://t.me/{bot_username}?start=ref_{stats['referral_code']}" if stats['referral_code'] else ""
-    
+
+    referral_link = (
+        f"{base_url}/register?ref={stats['referral_code']}" if stats["referral_code"] else ""
+    )
+    bot_referral_link = (
+        f"https://t.me/{bot_username}?start=ref_{stats['referral_code']}"
+        if stats["referral_code"]
+        else ""
+    )
+
     return ReferralStatsResponse(
         referral_code=stats["referral_code"],
         total_referrals=stats["total_referrals"],
@@ -473,13 +483,13 @@ async def apply_referral_code(
 ):
     """Apply a referral code (for new users who didn't use one during signup)"""
     user_id = int(current_user["id"])
-    
+
     try:
         result = await credit_repo.apply_referral(
             referred_user_id=user_id,
             referral_code=request.referral_code,
         )
-        
+
         return ApplyReferralResponse(
             success=True,
             message=f"Referral code applied! You received {result['referred_bonus']} bonus credits!",
@@ -500,6 +510,7 @@ async def apply_referral_code(
 
 class AchievementResponse(BaseModel):
     """Achievement definition"""
+
     achievement_key: str
     name: str
     description: str | None
@@ -515,6 +526,7 @@ class AchievementResponse(BaseModel):
 
 class AchievementProgressResponse(BaseModel):
     """User's achievement progress"""
+
     total_achievements: int
     earned_count: int
     claimable_count: int = 0  # Number of achievements ready to claim
@@ -524,6 +536,7 @@ class AchievementProgressResponse(BaseModel):
 
 class EarnedAchievementResponse(BaseModel):
     """Achievement that was just earned"""
+
     achievement_key: str
     name: str
     description: str | None
@@ -540,13 +553,17 @@ async def get_achievements(
     """Get user's achievement progress with claimable status"""
     user_id = int(current_user["id"])
     progress = await credit_repo.get_achievement_progress(user_id)
-    
+
     # Get claimable achievements to mark them
     claimable = await credit_repo.get_claimable_achievements(user_id)
     claimable_keys = {a["achievement_key"] for a in claimable}
-    
-    completion_percent = int(progress["earned_count"] / progress["total_achievements"] * 100) if progress["total_achievements"] > 0 else 0
-    
+
+    completion_percent = (
+        int(progress["earned_count"] / progress["total_achievements"] * 100)
+        if progress["total_achievements"] > 0
+        else 0
+    )
+
     return AchievementProgressResponse(
         total_achievements=progress["total_achievements"],
         earned_count=progress["earned_count"],
@@ -579,7 +596,7 @@ async def get_earned_achievements(
     """Get list of achievements user has earned"""
     user_id = int(current_user["id"])
     achievements = await credit_repo.get_user_achievements(user_id)
-    
+
     return [
         EarnedAchievementResponse(
             achievement_key=a["achievement_key"],
@@ -595,11 +612,13 @@ async def get_earned_achievements(
 
 class ClaimAchievementRequest(BaseModel):
     """Request to claim an achievement"""
+
     achievement_key: str
 
 
 class ClaimAchievementResponse(BaseModel):
     """Response after claiming an achievement"""
+
     success: bool
     message: str
     achievement: EarnedAchievementResponse | None = None
@@ -617,22 +636,22 @@ async def claim_achievement(
     User must meet the achievement requirements to claim.
     """
     user_id = int(current_user["id"])
-    
+
     # Check if user can claim this achievement
     result = await credit_repo.claim_achievement(user_id, request.achievement_key)
-    
+
     if result is None:
         return ClaimAchievementResponse(
             success=False,
             message="Achievement not found or already claimed",
         )
-    
+
     if result.get("error"):
         return ClaimAchievementResponse(
             success=False,
             message=result["error"],
         )
-    
+
     return ClaimAchievementResponse(
         success=True,
         message=f"🎉 Achievement unlocked: {result['name']}! +{result['credits_awarded']} credits",
@@ -650,6 +669,7 @@ async def claim_achievement(
 
 class ClaimableAchievementResponse(BaseModel):
     """Achievement that can be claimed"""
+
     achievement_key: str
     name: str
     description: str | None
@@ -668,7 +688,7 @@ async def get_claimable_achievements(
     """Get list of achievements that user can claim (requirements met but not yet claimed)"""
     user_id = int(current_user["id"])
     claimable = await credit_repo.get_claimable_achievements(user_id)
-    
+
     return [
         ClaimableAchievementResponse(
             achievement_key=a["achievement_key"],
@@ -691,6 +711,7 @@ async def get_claimable_achievements(
 
 class LeaderboardEntryResponse(BaseModel):
     """Leaderboard entry - privacy-friendly, shows achievements not credits"""
+
     rank: int
     user_id: int
     username: str | None
@@ -706,7 +727,7 @@ async def get_leaderboard(
 ):
     """Get achievements leaderboard (privacy-friendly - no credit amounts shown)"""
     entries = await credit_repo.get_leaderboard(limit=limit)
-    
+
     return [
         LeaderboardEntryResponse(
             rank=i + 1,

@@ -62,12 +62,12 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
+
   // Action states
   const [isToggling, setIsToggling] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
-  
+
   // UI states
   const [showPhone, setShowPhone] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
@@ -353,7 +353,7 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
         {/* Warning about removing */}
         <Alert severity="warning" icon={<WarningIcon />} sx={{ mt: 2 }}>
           <Typography variant="caption">
-            <strong>Disconnect:</strong> Closes active connection but keeps your session. 
+            <strong>Disconnect:</strong> Closes active connection but keeps your session.
             <strong> Remove:</strong> Permanently deletes all MTProto data including session.
           </Typography>
         </Alert>

@@ -16,9 +16,9 @@ from apps.api.middleware.auth import get_current_user_id
 from apps.api.routers.user_mtproto.deps import get_user_bot_repository, safe_disconnect
 from apps.api.routers.user_mtproto.models import (
     ErrorResponse,
+    MTProtoQR2FARequest,
     MTProtoSetupRequest,
     MTProtoSetupResponse,
-    MTProtoQR2FARequest,
 )
 from apps.api.routers.user_mtproto.session_storage import (
     get_pending_session,
@@ -61,10 +61,10 @@ async def setup_mtproto(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"This Telegram account ({request.mtproto_phone}) is already connected to another user. "
-                       f"Each Telegram account can only be linked to one AnalyticBot account. "
-                       f"Please use a different Telegram account.",
+                f"Each Telegram account can only be linked to one AnalyticBot account. "
+                f"Please use a different Telegram account.",
             )
-        
+
         # Create temporary Telethon client with empty session
         session = StringSession()
         client = TelegramClient(
@@ -342,51 +342,51 @@ async def setup_mtproto_simple(
 ):
     """
     Simplified MTProto setup - only requires phone number.
-    
+
     Uses system-provided API credentials so users don't need to
     create their own app at my.telegram.org.
-    
+
     Steps:
     1. User provides only their phone number
     2. System sends verification code to phone
     3. User calls /verify endpoint with the code
     """
     import os
-    
+
     # Get system default API credentials from environment
     default_api_id = int(os.getenv("TELEGRAM_API_ID", "0"))
     default_api_hash = os.getenv("TELEGRAM_API_HASH", "")
-    
+
     if not default_api_id or not default_api_hash:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="System MTProto credentials not configured. Please contact support.",
         )
-    
+
     # Validate phone format
     phone = request.mtproto_phone.strip()
     if not phone.startswith("+"):
         phone = "+" + phone
-    
+
     # Remove spaces and dashes
     phone = "".join(c for c in phone if c.isdigit() or c == "+")
-    
+
     if len(phone) < 10:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Phone number too short. Please include country code (e.g., +1234567890)",
         )
-    
+
     # Check if this phone is already assigned to another user
     existing = await repository.get_by_mtproto_phone(phone)
     if existing and existing.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"This Telegram account ({phone}) is already connected to another user. "
-                   f"Each Telegram account can only be linked to one AnalyticBot account. "
-                   f"Please use a different Telegram account.",
+            f"Each Telegram account can only be linked to one AnalyticBot account. "
+            f"Please use a different Telegram account.",
         )
-    
+
     try:
         # Create temporary Telethon client with empty session
         session = StringSession()
@@ -469,8 +469,13 @@ async def setup_mtproto_simple(
 
 
 # Import for type hint
-from apps.api.routers.user_mtproto.models import MTProtoSimpleSetupRequest, MTProtoQRLoginResponse, MTProtoQRStatusResponse
+from datetime import UTC
 
+from apps.api.routers.user_mtproto.models import (
+    MTProtoQRLoginResponse,
+    MTProtoQRStatusResponse,
+    MTProtoSimpleSetupRequest,
+)
 
 # QR Code Login - In-memory storage for pending QR sessions
 _qr_pending_sessions: dict[int, dict] = {}
@@ -490,30 +495,29 @@ async def request_qr_login(
 ):
     """
     Request QR code for login.
-    
+
     The user scans this QR code with their Telegram app to authenticate.
     QR code is valid for ~30 seconds and must be refreshed.
-    
+
     Returns:
     - qr_code_url: URL to encode in QR code (tg://login?token=...)
     - qr_code_base64: Pre-generated QR code image (if qrcode library available)
     - expires_in: Seconds until expiration
     """
-    import os
     import base64
-    import asyncio
+    import os
     from io import BytesIO
-    
+
     # Get system default API credentials from environment
     default_api_id = int(os.getenv("TELEGRAM_API_ID", "0"))
     default_api_hash = os.getenv("TELEGRAM_API_HASH", "")
-    
+
     if not default_api_id or not default_api_hash:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="System MTProto credentials not configured. Please contact support.",
         )
-    
+
     try:
         # Create temporary Telethon client with empty session
         session = StringSession()
@@ -524,33 +528,32 @@ async def request_qr_login(
         )
 
         await client.connect()
-        
+
         # Request QR code token
         logger.info(f"[QR Login] Requesting QR code for user {user_id}")
-        
+
         from telethon.tl.functions.auth import ExportLoginTokenRequest
-        
-        result = await client(ExportLoginTokenRequest(
-            api_id=default_api_id,
-            api_hash=default_api_hash,
-            except_ids=[]
-        ))
-        
+
+        result = await client(
+            ExportLoginTokenRequest(api_id=default_api_id, api_hash=default_api_hash, except_ids=[])
+        )
+
         # Build the login URL
         token_bytes = result.token
-        token_base64 = base64.urlsafe_b64encode(token_bytes).decode('utf-8').rstrip('=')
+        token_base64 = base64.urlsafe_b64encode(token_bytes).decode("utf-8").rstrip("=")
         qr_url = f"tg://login?token={token_base64}"
-        
+
         # Calculate expiration - result.expires is a datetime object
-        from datetime import datetime, timezone
-        now_ts = datetime.now(timezone.utc).timestamp()
+        from datetime import datetime
+
+        now_ts = datetime.now(UTC).timestamp()
         # Handle both datetime and int/float types for expires
-        if hasattr(result.expires, 'timestamp'):
+        if hasattr(result.expires, "timestamp"):
             expires_ts = result.expires.timestamp()
         else:
             expires_ts = float(result.expires)
         expires_in = max(1, int(expires_ts - now_ts))
-        
+
         # Store session for later polling
         session_string = session.save()
         _qr_pending_sessions[user_id] = {
@@ -560,30 +563,31 @@ async def request_qr_login(
             "token": token_bytes,
             "expires": expires_ts,  # Store as timestamp
         }
-        
+
         # Try to generate QR code image
         qr_base64 = None
         try:
             import qrcode
+
             qr = qrcode.QRCode(version=1, box_size=10, border=4)
             qr.add_data(qr_url)
             qr.make(fit=True)
             img = qr.make_image(fill_color="black", back_color="white")
-            
+
             buffer = BytesIO()
-            img.save(buffer, format='PNG')
+            img.save(buffer, format="PNG")
             buffer.seek(0)
-            qr_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            qr_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
         except ImportError:
             logger.warning("qrcode library not installed, returning URL only")
         except Exception as e:
             logger.warning(f"Failed to generate QR image: {e}")
-        
+
         # Don't disconnect yet - keep for polling
         await safe_disconnect(client)
-        
+
         logger.info(f"[QR Login] QR code generated for user {user_id}, expires in {expires_in}s")
-        
+
         return MTProtoQRLoginResponse(
             success=True,
             qr_code_url=qr_url,
@@ -591,7 +595,7 @@ async def request_qr_login(
             expires_in=expires_in,
             message="Scan this QR code with your Telegram app to login",
         )
-        
+
     except Exception as e:
         logger.error(f"[QR Login] Error for user {user_id}: {e}")
         raise HTTPException(
@@ -611,34 +615,33 @@ async def check_qr_login_status(
 ):
     """
     Check if QR code has been scanned and login completed.
-    
+
     Frontend should poll this endpoint every 2-3 seconds after
     displaying the QR code.
-    
+
     Returns:
     - status: "pending" (waiting for scan), "success" (logged in), "expired" (need new QR)
     """
-    import os
-    from datetime import datetime, timezone
-    
+    from datetime import datetime
+
     pending = _qr_pending_sessions.get(user_id)
-    
+
     if not pending:
         return MTProtoQRStatusResponse(
             status="expired",
             success=False,
             message="No pending QR login. Please request a new QR code.",
         )
-    
+
     # Check if expired
-    if datetime.now(timezone.utc).timestamp() > pending["expires"]:
+    if datetime.now(UTC).timestamp() > pending["expires"]:
         del _qr_pending_sessions[user_id]
         return MTProtoQRStatusResponse(
             status="expired",
             success=False,
             message="QR code expired. Please request a new one.",
         )
-    
+
     try:
         # Recreate client from stored session
         session = StringSession(pending["session_string"])
@@ -647,41 +650,45 @@ async def check_qr_login_status(
             api_id=pending["api_id"],
             api_hash=pending["api_hash"],
         )
-        
+
         await client.connect()
-        
+
         from telethon.tl.functions.auth import ExportLoginTokenRequest
-        
+
         # Try to export token again - if successful with auth, we're logged in
         try:
-            result = await client(ExportLoginTokenRequest(
-                api_id=pending["api_id"],
-                api_hash=pending["api_hash"],
-                except_ids=[]
-            ))
-            
+            result = await client(
+                ExportLoginTokenRequest(
+                    api_id=pending["api_id"], api_hash=pending["api_hash"], except_ids=[]
+                )
+            )
+
             # Check result type
             result_type = type(result).__name__
-            
+
             if result_type == "LoginTokenSuccess":
                 # Login successful!
                 logger.info(f"[QR Login] Success for user {user_id}")
-                
+
                 # Get authorization details
                 auth = result.authorization
-                tg_user_id = auth.user.id if hasattr(auth, 'user') else None
-                tg_username = auth.user.username if hasattr(auth, 'user') and hasattr(auth.user, 'username') else None
-                
+                tg_user_id = auth.user.id if hasattr(auth, "user") else None
+                tg_username = (
+                    auth.user.username
+                    if hasattr(auth, "user") and hasattr(auth.user, "username")
+                    else None
+                )
+
                 # Save session
                 session_string = session.save()
-                
+
                 # Store credentials
                 encryption = get_encryption_service()
                 encrypted_api_hash = encryption.encrypt(pending["api_hash"])
                 encrypted_session = encryption.encrypt(session_string)
-                
+
                 credentials = await repository.get_by_user_id(user_id)
-                
+
                 if credentials:
                     credentials.mtproto_id = tg_user_id  # Store MTProto user ID
                     credentials.mtproto_username = tg_username  # Store MTProto username
@@ -692,7 +699,7 @@ async def check_qr_login_status(
                     await repository.update(credentials)
                 else:
                     from core.models.user_bot_domain import BotStatus, UserBotCredentials
-                    
+
                     credentials = UserBotCredentials(
                         id=None,
                         user_id=user_id,
@@ -711,18 +718,18 @@ async def check_qr_login_status(
                         max_concurrent_requests=3,
                     )
                     await repository.create(credentials)
-                
+
                 # Cleanup
                 del _qr_pending_sessions[user_id]
                 await safe_disconnect(client)
-                
+
                 return MTProtoQRStatusResponse(
                     status="success",
                     success=True,
                     message="Login successful! You can now use MTProto features.",
                     user_id=tg_user_id,
                 )
-            
+
             elif result_type == "LoginTokenMigrateTo":
                 # Need to migrate to another DC
                 logger.info(f"[QR Login] Migration needed for user {user_id}")
@@ -732,7 +739,7 @@ async def check_qr_login_status(
                     success=False,
                     message="Processing login... please wait.",
                 )
-            
+
             else:
                 # Still waiting for scan
                 # Update stored session
@@ -743,10 +750,10 @@ async def check_qr_login_status(
                     success=False,
                     message="Waiting for QR code scan...",
                 )
-                
+
         except Exception as inner_e:
             error_name = type(inner_e).__name__
-            
+
             if "SessionPasswordNeeded" in error_name:
                 # 2FA required - user needs to enter password
                 logger.info(f"[QR Login] 2FA required for user {user_id}")
@@ -760,9 +767,9 @@ async def check_qr_login_status(
                     message="Two-factor authentication required. Please enter your password.",
                     needs_2fa=True,
                 )
-            
+
             raise inner_e
-            
+
     except Exception as e:
         logger.error(f"[QR Login] Error checking status for user {user_id}: {e}")
         return MTProtoQRStatusResponse(
@@ -788,24 +795,24 @@ async def verify_qr_login_2fa(
 ):
     """
     Complete QR login with 2FA password.
-    
+
     Called when QR status returns '2fa_required'. User must provide their
     Telegram two-factor authentication password.
     """
     pending = _qr_pending_sessions.get(user_id)
-    
+
     if not pending:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No pending QR login session. Please request a new QR code.",
         )
-    
+
     if not pending.get("needs_2fa"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="2FA not required for this session.",
         )
-    
+
     try:
         # Recreate client from stored session
         session = StringSession(pending["session_string"])
@@ -814,12 +821,12 @@ async def verify_qr_login_2fa(
             api_id=pending["api_id"],
             api_hash=pending["api_hash"],
         )
-        
+
         await client.connect()
-        
+
         # Sign in with password
         from telethon.errors import PasswordHashInvalidError
-        
+
         try:
             await client.sign_in(password=request.password)
         except PasswordHashInvalidError:
@@ -830,26 +837,26 @@ async def verify_qr_login_2fa(
                 message="Invalid password. Please try again.",
                 needs_2fa=True,
             )
-        
+
         # Check if we're now authorized
         if await client.is_user_authorized():
             logger.info(f"[QR Login 2FA] Success for user {user_id}")
-            
+
             # Get user info
             me = await client.get_me()
             tg_user_id = me.id if me else None
             tg_username = me.username if me else None
-            
+
             # Save session
             session_string = session.save()
-            
+
             # Store credentials
             encryption = get_encryption_service()
             encrypted_api_hash = encryption.encrypt(pending["api_hash"])
             encrypted_session = encryption.encrypt(session_string)
-            
+
             credentials = await repository.get_by_user_id(user_id)
-            
+
             if credentials:
                 credentials.mtproto_id = tg_user_id  # Store MTProto user ID
                 credentials.mtproto_username = tg_username  # Store MTProto username
@@ -860,7 +867,7 @@ async def verify_qr_login_2fa(
                 await repository.update(credentials)
             else:
                 from core.models.user_bot_domain import BotStatus, UserBotCredentials
-                
+
                 credentials = UserBotCredentials(
                     id=None,
                     user_id=user_id,
@@ -879,11 +886,11 @@ async def verify_qr_login_2fa(
                     max_concurrent_requests=3,
                 )
                 await repository.create(credentials)
-            
+
             # Cleanup
             del _qr_pending_sessions[user_id]
             await safe_disconnect(client)
-            
+
             return MTProtoQRStatusResponse(
                 status="success",
                 success=True,
@@ -897,7 +904,7 @@ async def verify_qr_login_2fa(
                 success=False,
                 message="Authentication failed. Please try again.",
             )
-            
+
     except Exception as e:
         logger.error(f"[QR Login 2FA] Error for user {user_id}: {e}")
         raise HTTPException(

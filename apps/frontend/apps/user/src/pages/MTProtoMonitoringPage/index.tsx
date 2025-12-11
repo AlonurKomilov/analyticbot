@@ -226,20 +226,20 @@ export const MTProtoMonitoringPage: React.FC = () => {
 
       {/* Session Health Card */}
       <SessionHealthCard sessionHealth={data.session_health} />
-      
+
       {/* Collection Progress Card */}
       <CollectionProgressCard collectionProgress={data.collection_progress} />
-      
+
       {/* Worker Status Card */}
       <WorkerStatusCard workerStatus={data.worker_status} />
-      
+
       {/* Interval Boost Card - Purchase faster collection */}
       <IntervalBoostCard
         currentInterval={data.worker_status.worker_interval_minutes}
         planName={data.worker_status.plan_name || 'free'}
         onBoostPurchased={() => fetchMonitoringData(false)}
       />
-      
+
       {/* Channel Statistics Card */}
       <ChannelStatisticsCard channels={data.channels} />
 

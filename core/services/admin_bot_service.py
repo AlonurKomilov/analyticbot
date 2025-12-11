@@ -178,7 +178,7 @@ class AdminBotService:
 
         Returns:
             Updated UserBotCredentials if successful, None otherwise
-            
+
         Raises:
             ValueError: If bot is incomplete (no bot_token or bot_id)
         """

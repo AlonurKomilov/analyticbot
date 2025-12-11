@@ -61,14 +61,21 @@ async def test_mtproto_ingestion():
             "SELECT * FROM user_bot_credentials WHERE user_id = $1", 844338517
         )
         if user_creds:
-            has_session = user_creds.get("session_string") is not None and len(str(user_creds.get("session_string", ""))) > 0
+            has_session = (
+                user_creds.get("session_string") is not None
+                and len(str(user_creds.get("session_string", ""))) > 0
+            )
             has_api_id = user_creds.get("mtproto_api_id") is not None
             has_phone = user_creds.get("mtproto_phone") is not None
             is_enabled = user_creds.get("mtproto_enabled", False)
 
             print("   MTProto credentials:")
-            print(f"      API ID: {'✅' if has_api_id else '❌'} {user_creds.get('mtproto_api_id', 'N/A')}")
-            print(f"      Phone: {'✅' if has_phone else '❌'} {user_creds.get('mtproto_phone', 'N/A')}")
+            print(
+                f"      API ID: {'✅' if has_api_id else '❌'} {user_creds.get('mtproto_api_id', 'N/A')}"
+            )
+            print(
+                f"      Phone: {'✅' if has_phone else '❌'} {user_creds.get('mtproto_phone', 'N/A')}"
+            )
             print(f"      Session: {'✅ Has session' if has_session else '❌ No session'}")
             print(f"      Enabled: {'✅' if is_enabled else '❌'}")
 

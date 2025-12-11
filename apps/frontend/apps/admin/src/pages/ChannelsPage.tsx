@@ -90,7 +90,7 @@ const ChannelsPage: React.FC = () => {
       const response = await apiClient.get(API_ENDPOINTS.ADMIN.CHANNELS);
       const channelList = response.data.channels || response.data || [];
       setChannels(channelList);
-      
+
       // Calculate stats
       setStats({
         total: channelList.length,
@@ -435,8 +435,8 @@ const ChannelsPage: React.FC = () => {
             {filteredChannels
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((channel) => (
-                <TableRow 
-                  key={channel.id} 
+                <TableRow
+                  key={channel.id}
                   hover
                   selected={selectedChannels.includes(channel.id)}
                 >
@@ -473,7 +473,7 @@ const ChannelsPage: React.FC = () => {
                   </TableCell>
                   <TableCell align="right">
                     <Tooltip title="View Details">
-                      <IconButton 
+                      <IconButton
                         size="small"
                         onClick={() => setViewDialog(channel)}
                       >
@@ -481,8 +481,8 @@ const ChannelsPage: React.FC = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Force Sync">
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         color="info"
                         onClick={() => handleSync(channel)}
                         disabled={actionLoading === channel.id}
@@ -492,8 +492,8 @@ const ChannelsPage: React.FC = () => {
                     </Tooltip>
                     {channel.is_active ? (
                       <Tooltip title="Suspend Channel">
-                        <IconButton 
-                          size="small" 
+                        <IconButton
+                          size="small"
                           color="warning"
                           onClick={() => handleSuspend(channel)}
                           disabled={actionLoading === channel.id}
@@ -503,8 +503,8 @@ const ChannelsPage: React.FC = () => {
                       </Tooltip>
                     ) : (
                       <Tooltip title="Reactivate Channel">
-                        <IconButton 
-                          size="small" 
+                        <IconButton
+                          size="small"
                           color="success"
                           onClick={() => handleUnsuspend(channel)}
                           disabled={actionLoading === channel.id}
@@ -514,8 +514,8 @@ const ChannelsPage: React.FC = () => {
                       </Tooltip>
                     )}
                     <Tooltip title="Delete Channel">
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         color="error"
                         onClick={() => setDeleteDialog(channel)}
                         disabled={actionLoading === channel.id}
@@ -601,8 +601,8 @@ const ChannelsPage: React.FC = () => {
                 </Box>
                 <Box>
                   <Typography variant="caption" color="text.secondary">Status</Typography>
-                  <Chip 
-                    label={viewDialog.is_active ? 'Active' : 'Suspended'} 
+                  <Chip
+                    label={viewDialog.is_active ? 'Active' : 'Suspended'}
                     color={viewDialog.is_active ? 'success' : 'error'}
                     size="small"
                   />

@@ -313,11 +313,11 @@ const DashboardPage: React.FC = () => {
                     <ErrorIcon color="error" />
                   )}
                 </ListItemIcon>
-                <ListItemText 
-                  primary="System Health" 
+                <ListItemText
+                  primary="System Health"
                   secondary={
-                    <Chip 
-                      size="small" 
+                    <Chip
+                      size="small"
                       label={stats?.system_health || 'Unknown'}
                       color={stats?.system_health === 'Healthy' ? 'success' : stats?.system_health === 'Warning' ? 'warning' : 'error'}
                     />
@@ -329,8 +329,8 @@ const DashboardPage: React.FC = () => {
                 <ListItemIcon>
                   <BotIcon color="primary" />
                 </ListItemIcon>
-                <ListItemText 
-                  primary="Bot Workers" 
+                <ListItemText
+                  primary="Bot Workers"
                   secondary="Status available in Bot Management"
                 />
               </ListItem>
@@ -339,8 +339,8 @@ const DashboardPage: React.FC = () => {
                 <ListItemIcon>
                   <MemoryIcon color="info" />
                 </ListItemIcon>
-                <ListItemText 
-                  primary="Total Posts Tracked" 
+                <ListItemText
+                  primary="Total Posts Tracked"
                   secondary={(stats?.total_posts || 0).toLocaleString()}
                 />
               </ListItem>
@@ -349,8 +349,8 @@ const DashboardPage: React.FC = () => {
                 <ListItemIcon>
                   <SpeedIcon color="warning" />
                 </ListItemIcon>
-                <ListItemText 
-                  primary="Total Views Collected" 
+                <ListItemText
+                  primary="Total Views Collected"
                   secondary={(stats?.total_views || 0).toLocaleString()}
                 />
               </ListItem>

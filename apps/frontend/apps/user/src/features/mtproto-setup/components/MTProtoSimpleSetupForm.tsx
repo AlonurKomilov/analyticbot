@@ -31,25 +31,25 @@ export const MTProtoSimpleSetupForm: React.FC<MTProtoSimpleSetupFormProps> = ({
 
   const validatePhone = (): boolean => {
     let cleanPhone = phone.trim();
-    
+
     // Add + if missing
     if (!cleanPhone.startsWith('+')) {
       cleanPhone = '+' + cleanPhone;
     }
-    
+
     // Remove spaces and dashes for validation
     const digits = cleanPhone.replace(/[^\d]/g, '');
-    
+
     if (digits.length < 10) {
       setPhoneError('Phone number must be at least 10 digits with country code');
       return false;
     }
-    
+
     if (digits.length > 15) {
       setPhoneError('Phone number is too long');
       return false;
     }
-    
+
     setPhoneError(null);
     return true;
   };
@@ -128,7 +128,7 @@ export const MTProtoSimpleSetupForm: React.FC<MTProtoSimpleSetupFormProps> = ({
 
       <Alert severity="warning" sx={{ mt: 3 }}>
         <Typography variant="body2">
-          <strong>⚠️ Important:</strong> You will receive a code in your Telegram app. 
+          <strong>⚠️ Important:</strong> You will receive a code in your Telegram app.
           Make sure you have access to Telegram on this device or another device to get the code.
         </Typography>
       </Alert>

@@ -109,10 +109,10 @@ export const MTProtoSetupPage: React.FC = () => {
             <Typography variant="h4" gutterBottom>
               MTProto Connected
             </Typography>
-            <Chip 
-              label="Active" 
-              color="success" 
-              size="small" 
+            <Chip
+              label="Active"
+              color="success"
+              size="small"
               sx={{ mb: 2 }}
             />
             <Typography variant="body1" color="text.secondary">
@@ -130,13 +130,13 @@ export const MTProtoSetupPage: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               What you can do now
             </Typography>
-            
+
             <Grid container spacing={3} sx={{ mt: 1 }}>
               <Grid item xs={12} md={4}>
-                <Paper 
-                  elevation={0} 
-                  sx={{ 
-                    p: 2, 
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
                     textAlign: 'center',
                     bgcolor: 'action.hover',
                     borderRadius: 2,
@@ -155,12 +155,12 @@ export const MTProtoSetupPage: React.FC = () => {
                   </Button>
                 </Paper>
               </Grid>
-              
+
               <Grid item xs={12} md={4}>
-                <Paper 
-                  elevation={0} 
-                  sx={{ 
-                    p: 2, 
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
                     textAlign: 'center',
                     bgcolor: 'action.hover',
                     borderRadius: 2,
@@ -179,12 +179,12 @@ export const MTProtoSetupPage: React.FC = () => {
                   </Button>
                 </Paper>
               </Grid>
-              
+
               <Grid item xs={12} md={4}>
-                <Paper 
-                  elevation={0} 
-                  sx={{ 
-                    p: 2, 
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
                     textAlign: 'center',
                     bgcolor: 'action.hover',
                     borderRadius: 2,
@@ -265,11 +265,11 @@ export const MTProtoSetupPage: React.FC = () => {
 
               {!useQRLogin ? (
                 <>
-                  <MTProtoSimpleSetupForm 
-                    onSuccess={handlePhoneSuccess} 
+                  <MTProtoSimpleSetupForm
+                    onSuccess={handlePhoneSuccess}
                     onPhoneChange={setPhoneNumber}
                   />
-                  
+
                   {/* Advanced Option - Hidden by default */}
                   <Box sx={{ mt: 3, borderTop: 1, borderColor: 'divider', pt: 2 }}>
                     <Button
@@ -280,7 +280,7 @@ export const MTProtoSetupPage: React.FC = () => {
                     >
                       {showAdvanced ? 'Hide' : 'Show'} Advanced Options
                     </Button>
-                    
+
                     <Collapse in={showAdvanced}>
                       <Alert severity="info" sx={{ mt: 2 }}>
                         <Typography variant="body2">
@@ -323,8 +323,8 @@ export const MTProtoSetupPage: React.FC = () => {
               <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
                 Redirecting to your MTProto dashboard...
               </Typography>
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 onClick={() => window.location.reload()}
               >
                 View Dashboard

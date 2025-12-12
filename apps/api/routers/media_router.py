@@ -199,9 +199,11 @@ async def list_storage_files(
                 all_files.append(
                     {
                         "file_id": file_path.stem,
-                        "filename": file_path.name.split("_", 2)[-1]
-                        if "_" in file_path.name
-                        else file_path.name,
+                        "filename": (
+                            file_path.name.split("_", 2)[-1]
+                            if "_" in file_path.name
+                            else file_path.name
+                        ),
                         "file_size": stat.st_size,
                         "uploaded_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
                         "preview_url": f"/uploads/{file_path.name}",
@@ -214,7 +216,12 @@ async def list_storage_files(
         # Apply pagination
         paginated_files = all_files[offset : offset + limit]
 
-        return {"files": paginated_files, "total": len(all_files), "offset": offset, "limit": limit}
+        return {
+            "files": paginated_files,
+            "total": len(all_files),
+            "offset": offset,
+            "limit": limit,
+        }
 
     except Exception as e:
         logger.error(f"❌ Failed to list storage files: {e}", exc_info=True)

@@ -16,7 +16,6 @@ class DeliveryJobService:
 
     def __init__(self):
         """Initialize the delivery job service."""
-        pass
 
     async def deliver_scheduled_content(self, schedule_id: int) -> dict[str, Any]:
         """
@@ -46,7 +45,10 @@ class DeliveryJobService:
             return result
 
         except Exception as e:
-            logger.error(f"Content delivery failed for schedule {schedule_id}: {e}", exc_info=True)
+            logger.error(
+                f"Content delivery failed for schedule {schedule_id}: {e}",
+                exc_info=True,
+            )
             return {
                 "status": "failed",
                 "schedule_id": schedule_id,

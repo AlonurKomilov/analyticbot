@@ -120,4 +120,4 @@ def test_multiple_requests_stable(test_client: TestClient):
     """Test that multiple rapid requests are stable"""
     for i in range(5):
         response = test_client.get("/health")
-        assert response.status_code == 200, f"Request {i+1} failed"
+        assert response.status_code == 200, f"Request {i + 1} failed"

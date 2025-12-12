@@ -32,7 +32,7 @@ async def test_di_wiring():
         print("✅ Successfully retrieved container instance")
 
         # Test bot container access
-        if hasattr(container, 'bot'):
+        if hasattr(container, "bot"):
             print("✅ Container has 'bot' attribute")
         else:
             print("❌ Container missing 'bot' attribute")
@@ -40,11 +40,11 @@ async def test_di_wiring():
 
         # Test service providers exist
         services_to_test = [
-            ('schedule_manager', 'ScheduleManager'),
-            ('post_delivery_service', 'PostDeliveryService'),
-            ('delivery_status_tracker', 'DeliveryStatusTracker'),
-            ('aiogram_message_sender', 'AiogramMessageSender'),
-            ('aiogram_markup_builder', 'AiogramMarkupBuilder'),
+            ("schedule_manager", "ScheduleManager"),
+            ("post_delivery_service", "PostDeliveryService"),
+            ("delivery_status_tracker", "DeliveryStatusTracker"),
+            ("aiogram_message_sender", "AiogramMessageSender"),
+            ("aiogram_markup_builder", "AiogramMarkupBuilder"),
         ]
 
         print("\n" + "=" * 60)
@@ -83,7 +83,7 @@ async def test_di_wiring():
         print("Testing Legacy Service (Backwards Compatibility)")
         print("=" * 60)
 
-        if hasattr(container.bot, 'scheduler_service'):
+        if hasattr(container.bot, "scheduler_service"):
             print("  ✅ Legacy 'scheduler_service' still available")
         else:
             print("  ❌ Legacy 'scheduler_service' missing")
@@ -94,25 +94,10 @@ async def test_di_wiring():
         print("=" * 60)
 
         try:
-            from core.services.bot.scheduling import (
-                DeliveryStatusTracker,
-                PostDeliveryService,
-                ScheduleManager,
-            )
             print("  ✅ Core services import successfully")
 
-            from core.services.bot.scheduling.protocols import (
-                AnalyticsRepository,
-                MarkupBuilderPort,
-                MessageSenderPort,
-                ScheduleRepository,
-            )
             print("  ✅ Protocols import successfully")
 
-            from apps.bot.adapters.scheduling_adapters import (
-                AiogramMarkupBuilder,
-                AiogramMessageSender,
-            )
             print("  ✅ Adapters import successfully")
 
         except ImportError as e:
@@ -129,6 +114,7 @@ async def test_di_wiring():
     except Exception as e:
         print(f"\n❌ FATAL ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

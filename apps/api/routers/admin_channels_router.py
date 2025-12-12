@@ -19,7 +19,10 @@ from apps.api.middleware.auth import (
     require_admin_user,
 )
 from apps.api.services.channel_management_service import ChannelManagementService
-from apps.di.analytics_container import get_channel_management_service, get_database_pool
+from apps.di.analytics_container import (
+    get_channel_management_service,
+    get_database_pool,
+)
 from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
@@ -77,7 +80,8 @@ async def get_all_channels(
         pool = await get_database_pool()
 
         async with pool.acquire() as conn:
-            channels = await conn.fetch("""
+            channels = await conn.fetch(
+                """
                 SELECT 
                     c.id,
                     c.title as name,
@@ -102,7 +106,10 @@ async def get_all_channels(
                 ) post_stats ON c.id = post_stats.channel_id
                 ORDER BY c.created_at DESC
                 LIMIT $1 OFFSET $2
-            """, limit, offset)
+            """,
+                limit,
+                offset,
+            )
 
             return [
                 AdminChannelInfo(
@@ -112,7 +119,7 @@ async def get_all_channels(
                     owner_id=channel["owner_id"] or 0,
                     owner_username=channel["owner_username"],
                     subscriber_count=channel["subscriber_count"] or 0,
-                    is_active=channel["is_active"] if channel["is_active"] is not None else True,
+                    is_active=(channel["is_active"] if channel["is_active"] is not None else True),
                     created_at=channel["created_at"],
                     last_activity=channel["last_activity"],
                     total_posts=channel["total_posts"],

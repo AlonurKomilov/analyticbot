@@ -352,7 +352,10 @@ async def detect_anomalies(
 
         # Perform analysis to get anomalies
         analysis = await service.analyze_advanced_trends(
-            channel_id=channel_id, metric=metric, days=days, trend_analysis_type="comprehensive"
+            channel_id=channel_id,
+            metric=metric,
+            days=days,
+            trend_analysis_type="comprehensive",
         )
 
         # Check for errors
@@ -434,7 +437,10 @@ async def detect_change_points(
 
         # Perform analysis to get change points
         analysis = await service.analyze_advanced_trends(
-            channel_id=channel_id, metric=metric, days=days, trend_analysis_type="comprehensive"
+            channel_id=channel_id,
+            metric=metric,
+            days=days,
+            trend_analysis_type="comprehensive",
         )
 
         # Check for errors

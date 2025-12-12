@@ -258,12 +258,14 @@ async def get_audit_log_actions(
         pool = await get_database_pool()
 
         async with pool.acquire() as conn:
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT DISTINCT action, COUNT(*) as count
                 FROM admin_audit_log
                 GROUP BY action
                 ORDER BY count DESC
-            """)
+            """
+            )
 
             return {"actions": [{"action": row["action"], "count": row["count"]} for row in rows]}
 
@@ -351,8 +353,6 @@ async def get_system_health(
     redis_status = "unknown"
     redis_latency = 0
     redis_memory = None
-    bot_status = "unknown"
-    bot_connections = 0
     issues = []
 
     # Get detailed system resources first (this should always work)
@@ -788,8 +788,12 @@ async def get_bot_health_metrics(
                 "consecutive_failures": metrics.consecutive_failures,
                 "is_rate_limited": metrics.is_rate_limited,
                 "last_error_type": metrics.last_error_type,
-                "last_success": metrics.last_success.isoformat() if metrics.last_success else None,
-                "last_failure": metrics.last_failure.isoformat() if metrics.last_failure else None,
+                "last_success": (
+                    metrics.last_success.isoformat() if metrics.last_success else None
+                ),
+                "last_failure": (
+                    metrics.last_failure.isoformat() if metrics.last_failure else None
+                ),
                 "last_check": metrics.last_check.isoformat(),
             },
         }
@@ -1195,7 +1199,8 @@ class TokenValidationRequest(BaseModel):
 
     token: str = Field(..., description="Bot token to validate")
     live_check: bool = Field(
-        default=True, description="Perform live validation (test connection to Telegram)"
+        default=True,
+        description="Perform live validation (test connection to Telegram)",
     )
 
 
@@ -1258,7 +1263,10 @@ class MTProtoPoolConfig(BaseModel):
     """MTProto Connection Pool Configuration"""
 
     max_concurrent_users: int = Field(
-        ..., description="Maximum concurrent user sessions (system-wide limit)", ge=1, le=200
+        ...,
+        description="Maximum concurrent user sessions (system-wide limit)",
+        ge=1,
+        le=200,
     )
     max_connections_per_user: int = Field(
         ..., description="Maximum connections per user", ge=1, le=5
@@ -1637,7 +1645,8 @@ async def get_mtproto_stats(
 
         async with pool.acquire() as conn:
             # Get session counts with accurate status
-            stats = await conn.fetchrow("""
+            stats = await conn.fetchrow(
+                """
                 SELECT
                     COUNT(*) as total_sessions,
                     COUNT(*) FILTER (WHERE cms.mtproto_enabled = true AND ubc.session_string IS NOT NULL AND ubc.is_verified = true) as active_sessions,
@@ -1646,7 +1655,8 @@ async def get_mtproto_stats(
                     COUNT(DISTINCT cms.user_id) as users_with_mtproto
                 FROM channel_mtproto_settings cms
                 LEFT JOIN user_bot_credentials ubc ON cms.user_id = ubc.user_id
-            """)
+            """
+            )
 
             return MTProtoStatsResponse(
                 total_sessions=stats["total_sessions"] or 0,
@@ -1685,7 +1695,8 @@ async def toggle_mtproto_session(
         async with pool.acquire() as conn:
             # Get current status
             current = await conn.fetchrow(
-                "SELECT mtproto_enabled FROM channel_mtproto_settings WHERE id = $1", session_id
+                "SELECT mtproto_enabled FROM channel_mtproto_settings WHERE id = $1",
+                session_id,
             )
 
             if not current:
@@ -1732,7 +1743,8 @@ async def delete_mtproto_session(
         async with pool.acquire() as conn:
             # Check if user has MTProto settings
             count = await conn.fetchval(
-                "SELECT COUNT(*) FROM channel_mtproto_settings WHERE user_id = $1", user_id
+                "SELECT COUNT(*) FROM channel_mtproto_settings WHERE user_id = $1",
+                user_id,
             )
 
             if count == 0:
@@ -1774,7 +1786,10 @@ async def delete_mtproto_session(
 
             logger.info(f"Admin deleted MTProto for user {user_id}")
 
-            return {"success": True, "message": f"MTProto configuration deleted for user {user_id}"}
+            return {
+                "success": True,
+                "message": f"MTProto configuration deleted for user {user_id}",
+            }
 
     except HTTPException:
         raise
@@ -1866,7 +1881,7 @@ async def get_mtproto_session_details(
             if not session:
                 raise HTTPException(status_code=404, detail="MTProto session not found")
 
-            channel_id = session["channel_id"]
+            session["channel_id"]
             user_id = session["user_id"]
 
             # Get ALL channels connected to this user's MTProto (up to 5 per user)
@@ -1894,7 +1909,7 @@ async def get_mtproto_session_details(
                     "channel_name": ch["channel_name"] or "Unknown",
                     "channel_username": ch["channel_username"],
                     "mtproto_enabled": ch["mtproto_enabled"],
-                    "connected_at": ch["created_at"].isoformat() if ch["created_at"] else None,
+                    "connected_at": (ch["created_at"].isoformat() if ch["created_at"] else None),
                 }
                 for ch in channels
             ]
@@ -1945,7 +1960,7 @@ async def get_mtproto_session_details(
                 recent_actions.append(
                     {
                         "action": r["action"],
-                        "timestamp": r["timestamp"].isoformat() if r["timestamp"] else None,
+                        "timestamp": (r["timestamp"].isoformat() if r["timestamp"] else None),
                         "channel_id": r["channel_id"],
                     }
                 )
@@ -1961,8 +1976,12 @@ async def get_mtproto_session_details(
                 "channel_name": session["channel_name"],
                 "channel_username": session["channel_username"],
                 "mtproto_enabled": session["mtproto_enabled"],
-                "created_at": session["created_at"].isoformat() if session["created_at"] else None,
-                "updated_at": session["updated_at"].isoformat() if session["updated_at"] else None,
+                "created_at": (
+                    session["created_at"].isoformat() if session["created_at"] else None
+                ),
+                "updated_at": (
+                    session["updated_at"].isoformat() if session["updated_at"] else None
+                ),
                 "connected_channels": connected_channels,
                 "stats": {
                     "total_runs": total_runs,
@@ -2079,12 +2098,12 @@ async def get_mtproto_collection_history(
                         "started_at": started_at.isoformat() if started_at else None,
                         "ended_at": ended_at.isoformat() if ended_at else None,
                         "duration_seconds": round(duration, 1) if duration else None,
-                        "messages_collected": end_meta.get("messages_current")
-                        if end_meta
-                        else None,
-                        "speed_msg_per_sec": end_meta.get("speed_messages_per_second")
-                        if end_meta
-                        else None,
+                        "messages_collected": (
+                            end_meta.get("messages_current") if end_meta else None
+                        ),
+                        "speed_msg_per_sec": (
+                            end_meta.get("speed_messages_per_second") if end_meta else None
+                        ),
                         "status": "completed" if ended_at else "in_progress",
                     }
                 )
@@ -2250,7 +2269,8 @@ async def update_setting(
 
             if existing["is_system"]:
                 raise HTTPException(
-                    status_code=403, detail="System-level settings cannot be modified through API"
+                    status_code=403,
+                    detail="System-level settings cannot be modified through API",
                 )
 
             # Update the setting
@@ -2266,7 +2286,11 @@ async def update_setting(
             )
 
             # Log the action
-            from apps.api.utils.audit_logger import AdminActions, ResourceTypes, log_admin_action
+            from apps.api.utils.audit_logger import (
+                AdminActions,
+                ResourceTypes,
+                log_admin_action,
+            )
 
             await log_admin_action(
                 admin_user_id=current_user["id"],
@@ -2333,7 +2357,11 @@ async def create_setting(
             )
 
             # Log the action
-            from apps.api.utils.audit_logger import AdminActions, ResourceTypes, log_admin_action
+            from apps.api.utils.audit_logger import (
+                AdminActions,
+                ResourceTypes,
+                log_admin_action,
+            )
 
             await log_admin_action(
                 admin_user_id=current_user["id"],
@@ -2391,7 +2419,11 @@ async def delete_setting(
             await conn.execute("DELETE FROM system_settings WHERE key = $1", key)
 
             # Log the action
-            from apps.api.utils.audit_logger import AdminActions, ResourceTypes, log_admin_action
+            from apps.api.utils.audit_logger import (
+                AdminActions,
+                ResourceTypes,
+                log_admin_action,
+            )
 
             await log_admin_action(
                 admin_user_id=current_user["id"],

@@ -193,7 +193,7 @@ async def cmd_start(message: types.Message, i18n: I18nContext):
                     "auth_provider": "telegram",
                     "status": "active",
                 }
-                created_user = await user_repo.create_user(user_data)
+                await user_repo.create_user(user_data)
                 log.info(f"✅ Created new user for telegram_id {uid}")
 
                 # Get the internal user ID for referral processing
@@ -311,7 +311,8 @@ async def _process_referral(
 
             # Check if already referred (use correct table: user_referrals)
             existing = await conn.fetchval(
-                "SELECT 1 FROM user_referrals WHERE referred_user_id = $1", new_user_internal_id
+                "SELECT 1 FROM user_referrals WHERE referred_user_id = $1",
+                new_user_internal_id,
             )
             if existing:
                 log.info(f"User {new_user_internal_id} already has a referrer")
@@ -382,14 +383,16 @@ async def _process_referral(
                 # Log transactions (get current balances for balance_after field)
                 referrer_balance = (
                     await conn.fetchval(
-                        "SELECT balance FROM user_credits WHERE user_id = $1", referrer_id
+                        "SELECT balance FROM user_credits WHERE user_id = $1",
+                        referrer_id,
                     )
                     or 0
                 )
 
                 new_user_balance = (
                     await conn.fetchval(
-                        "SELECT balance FROM user_credits WHERE user_id = $1", new_user_internal_id
+                        "SELECT balance FROM user_credits WHERE user_id = $1",
+                        new_user_internal_id,
                     )
                     or 50
                 )
@@ -438,7 +441,9 @@ Someone just joined using your referral link!
 Keep sharing your link to earn more! 🚀"""
 
                     await bot.send_message(
-                        chat_id=referrer_telegram_id, text=notification_msg, parse_mode="HTML"
+                        chat_id=referrer_telegram_id,
+                        text=notification_msg,
+                        parse_mode="HTML",
                     )
                     log.info(f"📬 Notified referrer {referrer_telegram_id} about new referral")
                 except Exception as notify_err:

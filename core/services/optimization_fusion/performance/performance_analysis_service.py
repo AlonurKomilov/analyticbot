@@ -18,7 +18,10 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from ..protocols.optimization_protocols import PerformanceAnalysisProtocol, PerformanceBaseline
+from ..protocols.optimization_protocols import (
+    PerformanceAnalysisProtocol,
+    PerformanceBaseline,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +71,12 @@ class PerformanceAnalysisService(PerformanceAnalysisProtocol):
             cache_metrics = await self.analyze_cache_performance()
 
             # Combine all metrics
-            combined_metrics = {**raw_metrics, **query_metrics, **resource_metrics, **cache_metrics}
+            combined_metrics = {
+                **raw_metrics,
+                **query_metrics,
+                **resource_metrics,
+                **cache_metrics,
+            }
 
             # Create performance baselines
             baselines = {}
@@ -218,13 +226,27 @@ class PerformanceAnalysisService(PerformanceAnalysisProtocol):
                     "total_queries_analyzed": 450,
                     "queries_over_threshold": 8,
                     "most_expensive_queries": [
-                        {"query": "SELECT * FROM analytics_data WHERE...", "avg_time_ms": 2100},
+                        {
+                            "query": "SELECT * FROM analytics_data WHERE...",
+                            "avg_time_ms": 2100,
+                        },
                         {"query": "JOIN heavy_table ON...", "avg_time_ms": 1850},
-                        {"query": "GROUP BY complex_aggregation...", "avg_time_ms": 1650},
+                        {
+                            "query": "GROUP BY complex_aggregation...",
+                            "avg_time_ms": 1650,
+                        },
                     ],
                     "index_suggestions": [
-                        {"table": "analytics_data", "column": "timestamp", "impact": "high"},
-                        {"table": "user_metrics", "column": "channel_id", "impact": "medium"},
+                        {
+                            "table": "analytics_data",
+                            "column": "timestamp",
+                            "impact": "high",
+                        },
+                        {
+                            "table": "user_metrics",
+                            "column": "channel_id",
+                            "impact": "medium",
+                        },
                     ],
                 }
             else:
@@ -400,7 +422,7 @@ class PerformanceAnalysisService(PerformanceAnalysisProtocol):
         """Health check for performance analysis service"""
         # Check service dependencies
         dependency_health = {
-            "analytics_service": "available" if self.analytics_service else "unavailable",
+            "analytics_service": ("available" if self.analytics_service else "unavailable"),
             "cache_service": "available" if self.cache_service else "unavailable",
             "config_manager": "available" if self.config_manager else "unavailable",
         }

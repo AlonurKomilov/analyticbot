@@ -186,7 +186,7 @@ async def setup_mtproto(
             success=True,
             phone_code_hash=phone_code_hash,
             message=(
-                "Verification code sent! Check your Telegram app " "for a message from 'Telegram'."
+                "Verification code sent! Check your Telegram app for a message from 'Telegram'."
             ),
         )
 
@@ -302,8 +302,7 @@ async def resend_mtproto_code(
                 success=True,
                 phone_code_hash=phone_code_hash,
                 message=(
-                    "Verification code sent! Check your Telegram app "
-                    "for a message from 'Telegram'."
+                    "Verification code sent! Check your Telegram app for a message from 'Telegram'."
                 ),
             )
 
@@ -659,7 +658,9 @@ async def check_qr_login_status(
         try:
             result = await client(
                 ExportLoginTokenRequest(
-                    api_id=pending["api_id"], api_hash=pending["api_hash"], except_ids=[]
+                    api_id=pending["api_id"],
+                    api_hash=pending["api_hash"],
+                    except_ids=[],
                 )
             )
 
@@ -698,7 +699,10 @@ async def check_qr_login_status(
                     credentials.is_verified = True
                     await repository.update(credentials)
                 else:
-                    from core.models.user_bot_domain import BotStatus, UserBotCredentials
+                    from core.models.user_bot_domain import (
+                        BotStatus,
+                        UserBotCredentials,
+                    )
 
                     credentials = UserBotCredentials(
                         id=None,

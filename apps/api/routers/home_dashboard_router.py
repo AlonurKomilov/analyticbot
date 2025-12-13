@@ -319,7 +319,7 @@ async def _get_user_alerts(pool, user_id: int) -> list[ActionAlert]:
                 and mtproto_config["telegram_api_hash"] is not None
             )
             has_session = mtproto_config["session_string"] is not None
-            mtproto_enabled = mtproto_config["mtproto_enabled"]
+            mtproto_config["mtproto_enabled"]
 
             if not has_mtproto_credentials:
                 alerts.append(
@@ -622,10 +622,12 @@ async def _get_channel_health(pool, user_id: int) -> list[ChannelHealth]:
                     subscriber_growth_week=0,  # No historical data
                     avg_views=int(stats["avg_views"]) if stats else 0,
                     last_post_time=stats["last_post_time"] if stats else None,
-                    last_post_ago=_time_ago(stats["last_post_time"])
-                    if stats and stats["last_post_time"]
-                    else None,
-                    engagement_rate=round(stats["engagement_rate"], 2) if stats else 0.0,
+                    last_post_ago=(
+                        _time_ago(stats["last_post_time"])
+                        if stats and stats["last_post_time"]
+                        else None
+                    ),
+                    engagement_rate=(round(stats["engagement_rate"], 2) if stats else 0.0),
                     last_sync=last_sync,
                     last_sync_ago=_time_ago(last_sync),
                     sync_status=sync_status,

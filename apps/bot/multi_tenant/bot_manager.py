@@ -118,8 +118,7 @@ class MultiTenantBotManager:
 
             if not credentials.can_make_request():
                 raise ValueError(
-                    f"Bot for user {user_id} is {credentials.status.value}. "
-                    f"Cannot make requests."
+                    f"Bot for user {user_id} is {credentials.status.value}. Cannot make requests."
                 )
 
             # Create new instance
@@ -154,7 +153,10 @@ class MultiTenantBotManager:
                 admin_user_id=admin_id,
                 target_user_id=target_user_id,
                 action="admin_access_bot",
-                details={"timestamp": datetime.now().isoformat(), "action_type": "access"},
+                details={
+                    "timestamp": datetime.now().isoformat(),
+                    "action_type": "access",
+                },
             )
         )
 
@@ -298,7 +300,9 @@ async def get_bot_manager() -> MultiTenantBotManager:
 
 
 async def initialize_bot_manager(
-    repository: IUserBotRepository, max_active_bots: int = 100, bot_idle_timeout_minutes: int = 30
+    repository: IUserBotRepository,
+    max_active_bots: int = 100,
+    bot_idle_timeout_minutes: int = 30,
 ) -> MultiTenantBotManager:
     """
     Initialize and start bot manager

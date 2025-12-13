@@ -123,7 +123,6 @@ class InMemoryCacheAdapter(AsyncCachePort):
 
     async def close(self) -> None:
         """No-op for in-memory storage."""
-        pass
 
 
 def create_redis_cache_adapter(redis_client: Any | None = None) -> AsyncCachePort:

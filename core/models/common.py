@@ -20,8 +20,6 @@ class BaseEntity:
 class TimestampedEntity(BaseEntity):
     """Entity with automatic timestamp management"""
 
-    pass
-
 
 # === ANALYTICS MODELS ===
 

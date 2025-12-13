@@ -216,9 +216,9 @@ class DatabaseOptimizationValidator:
                 "total_tests": total_tests,
                 "passed_tests": passed_tests,
                 "failed_tests": failed_tests,
-                "success_rate": f"{(passed_tests / total_tests * 100):.1f}%"
-                if total_tests > 0
-                else "0%",
+                "success_rate": (
+                    f"{(passed_tests / total_tests * 100):.1f}%" if total_tests > 0 else "0%"
+                ),
             },
             "test_results": self.test_results,
             "status": "passed" if failed_tests == 0 else "failed",

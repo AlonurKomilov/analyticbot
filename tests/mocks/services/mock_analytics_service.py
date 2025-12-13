@@ -42,7 +42,7 @@ class MockAnalyticsService(AnalyticsServiceProtocol):
         await asyncio.sleep(DEMO_API_DELAY_MS / 1000)
 
         # Generate realistic mock data based on period
-        days = self._parse_period_days(period)
+        self._parse_period_days(period)
         base_views = random.randint(10000, 50000)
 
         return {
@@ -132,7 +132,15 @@ class MockAnalyticsService(AnalyticsServiceProtocol):
 
         # Generate best times for each day
         best_times = {}
-        days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        days = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
 
         for day in days:
             best_times[day] = {
@@ -175,8 +183,14 @@ class MockAnalyticsService(AnalyticsServiceProtocol):
                         "female": random.randint(35, 55),
                     },
                     "top_countries": [
-                        {"country": "United States", "percentage": random.randint(20, 35)},
-                        {"country": "United Kingdom", "percentage": random.randint(10, 20)},
+                        {
+                            "country": "United States",
+                            "percentage": random.randint(20, 35),
+                        },
+                        {
+                            "country": "United Kingdom",
+                            "percentage": random.randint(10, 20),
+                        },
                         {"country": "Germany", "percentage": random.randint(8, 15)},
                         {"country": "Canada", "percentage": random.randint(5, 12)},
                     ],

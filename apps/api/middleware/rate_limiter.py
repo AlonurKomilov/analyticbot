@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 # === RATE LIMIT CONFIGURATION ===
 
+
 class RateLimitConfig:
     """Rate limit configuration for different endpoint types"""
 
@@ -47,6 +48,7 @@ class RateLimitConfig:
 
 
 # === IP WHITELIST ===
+
 
 def get_ip_whitelist() -> set[str]:
     """
@@ -76,6 +78,7 @@ def get_ip_whitelist() -> set[str]:
 
 # === CUSTOM KEY FUNCTION ===
 
+
 def get_remote_address_with_whitelist(request: Request) -> str | None:
     """
     Get remote IP address, but return None for whitelisted IPs
@@ -100,10 +103,8 @@ def get_remote_address_with_whitelist(request: Request) -> str | None:
 
 # === LIMITER INSTANCE ===
 
-def create_limiter(
-    storage_uri: str | None = None,
-    enabled: bool = True
-) -> Limiter:
+
+def create_limiter(storage_uri: str | None = None, enabled: bool = True) -> Limiter:
     """
     Create rate limiter instance
 
@@ -125,8 +126,8 @@ def create_limiter(
         logger.warning("Rate limiting is DISABLED - not recommended for production!")
         # Return limiter that does nothing
         return Limiter(
-            key_func=lambda r: None,  # Always return None = no limiting
-            enabled=False
+            key_func=lambda r: None,
+            enabled=False,  # Always return None = no limiting
         )
 
     # Create limiter with optional Redis backend
@@ -154,6 +155,7 @@ limiter = create_limiter()
 
 # === RATE LIMIT EXCEEDED HANDLER ===
 
+
 def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> Response:
     """
     Custom handler for rate limit exceeded errors
@@ -168,13 +170,14 @@ def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded)
     from fastapi.responses import JSONResponse
 
     # Extract retry-after from exception
-    retry_after = exc.detail.split("Retry after ")[1].split(" ")[0] if "Retry after" in exc.detail else "60"
+    retry_after = (
+        exc.detail.split("Retry after ")[1].split(" ")[0] if "Retry after" in exc.detail else "60"
+    )
 
     # Log rate limit violation
     ip = get_remote_address(request)
     logger.warning(
-        f"Rate limit exceeded for IP {ip} on {request.url.path} - "
-        f"Retry after {retry_after} seconds"
+        f"Rate limit exceeded for IP {ip} on {request.url.path} - Retry after {retry_after} seconds"
     )
 
     return JSONResponse(
@@ -183,18 +186,19 @@ def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded)
             "error": "rate_limit_exceeded",
             "message": "Too many requests. Please slow down and try again later.",
             "retry_after_seconds": int(retry_after),
-            "details": exc.detail
+            "details": exc.detail,
         },
         headers={
             "Retry-After": retry_after,
             "X-RateLimit-Limit": str(getattr(exc, "limit", "unknown")),
             "X-RateLimit-Remaining": "0",
             "X-RateLimit-Reset": str(int(float(retry_after))),
-        }
+        },
     )
 
 
 # === UTILITY FUNCTIONS ===
+
 
 def get_client_ip(request: Request) -> str:
     """
@@ -250,7 +254,7 @@ def check_rate_limit_status(request: Request, limit: str) -> dict:
         "ip": ip,
         "limit": limit,
         "max_requests": max_requests,
-        "whitelisted": ip in get_ip_whitelist()
+        "whitelisted": ip in get_ip_whitelist(),
     }
 
 

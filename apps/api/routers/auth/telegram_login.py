@@ -362,13 +362,15 @@ async def telegram_webapp_login(
         if not user_data or not isinstance(user_data, dict):
             logger.warning(f"TWA login failed: missing/invalid user data. Body: {body}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing or invalid user data"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing or invalid user data",
             )
 
         telegram_id_raw = user_data.get("id")
         if not telegram_id_raw:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing Telegram user ID"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing Telegram user ID",
             )
 
         # Convert telegram_id to int (Telegram sends it as string sometimes)

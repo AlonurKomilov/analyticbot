@@ -209,7 +209,11 @@ class UserBotService:
                         exc_info=True,
                     )
                     # Return failure if test message was requested but failed
-                    return False, f"Bot verified but failed to send test message: {str(e)}", None
+                    return (
+                        False,
+                        f"Bot verified but failed to send test message: {str(e)}",
+                        None,
+                    )
 
             # Update verification status
             credentials.is_verified = True

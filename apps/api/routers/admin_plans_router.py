@@ -61,7 +61,8 @@ async def get_all_plans(
 ):
     """Get all subscription plans with MTProto configuration."""
     async with pool.acquire() as conn:
-        rows = await conn.fetch("""
+        rows = await conn.fetch(
+            """
             SELECT
                 id, name, slug, description, price, duration_days,
                 is_active, features,
@@ -72,7 +73,8 @@ async def get_all_plans(
                 COALESCE(can_purchase_boost, true) as can_purchase_boost
             FROM plans
             ORDER BY price ASC
-        """)
+        """
+        )
 
         plans = []
         for row in rows:

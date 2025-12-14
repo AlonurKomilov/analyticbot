@@ -493,14 +493,20 @@ async def delete_user_bot(
                 admin_user_id=admin_id,
                 target_user_id=user_id,
                 action="delete_bot",
-                details={"bot_username": credentials.bot_username, "bot_id": credentials.bot_id},
+                details={
+                    "bot_username": credentials.bot_username,
+                    "bot_id": credentials.bot_id,
+                },
                 timestamp=datetime.utcnow(),
             )
         )
 
         logger.info(f"Admin {admin_id} deleted bot for user {user_id}")
 
-        return {"message": f"Bot for user {user_id} deleted successfully", "deleted": True}
+        return {
+            "message": f"Bot for user {user_id} deleted successfully",
+            "deleted": True,
+        }
 
     except HTTPException:
         raise

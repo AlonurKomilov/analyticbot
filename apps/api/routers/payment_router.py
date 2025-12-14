@@ -118,7 +118,8 @@ async def process_payment(
         payment = PaymentData(
             payment_method_id=payment_data["payment_method_id"],
             amount=Money(
-                amount=payment_data["amount"], currency=payment_data.get("currency", "USD")
+                amount=payment_data["amount"],
+                currency=payment_data.get("currency", "USD"),
             ),
             description=payment_data.get("description"),
         )
@@ -209,13 +210,15 @@ async def get_user_subscription(
 # Webhook Endpoints
 @router.post("/webhooks/{provider}")
 async def process_webhook(
-    provider: str, request: Request, container: ApplicationContainer = Depends(get_container)
+    provider: str,
+    request: Request,
+    container: ApplicationContainer = Depends(get_container),
 ):
     """Process incoming webhooks from payment providers"""
     try:
         # Get webhook payload
-        payload = await request.body()
-        signature = request.headers.get("stripe-signature", "")
+        await request.body()
+        request.headers.get("stripe-signature", "")
 
         return JSONResponse(
             content={
@@ -266,7 +269,9 @@ async def get_payment_stats(
 
 # Health Check
 @router.get("/health")
-async def payment_system_health(container: ApplicationContainer = Depends(get_container)):
+async def payment_system_health(
+    container: ApplicationContainer = Depends(get_container),
+):
     """Get payment system health status"""
     try:
         return JSONResponse(

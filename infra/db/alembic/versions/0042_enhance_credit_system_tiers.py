@@ -78,7 +78,8 @@ def upgrade() -> None:
     print("📦 Updating plans with credit allowances...")
 
     # FREE plan: 5 base, 8 max daily, 100/month cap, 1 channel
-    op.execute("""
+    op.execute(
+        """
         UPDATE plans SET
             monthly_credits = 0,
             daily_credits_base = 5,
@@ -94,11 +95,13 @@ def upgrade() -> None:
                 "api_access": false
             }'::jsonb
         WHERE name = 'free'
-    """)
+    """
+    )
     print("   ✅ Updated FREE plan: 5-8 credits/day, 100/month cap, 1 channel")
 
     # PRO plan: 200 monthly + 10 base, 15 max daily, 3 channels
-    op.execute("""
+    op.execute(
+        """
         UPDATE plans SET
             monthly_credits = 200,
             daily_credits_base = 10,
@@ -114,11 +117,13 @@ def upgrade() -> None:
                 "api_access": false
             }'::jsonb
         WHERE name = 'pro'
-    """)
+    """
+    )
     print("   ✅ Updated PRO plan: 200/mo + 10-15/day bonus, 3 channels")
 
     # BUSINESS plan: 1000 monthly + 20 base, 30 max daily, 5 channels
-    op.execute("""
+    op.execute(
+        """
         UPDATE plans SET
             monthly_credits = 1000,
             daily_credits_base = 20,
@@ -135,7 +140,8 @@ def upgrade() -> None:
                 "priority_support": true
             }'::jsonb
         WHERE name = 'business'
-    """)
+    """
+    )
     print("   ✅ Updated BUSINESS plan: 1000/mo + 20-30/day bonus, 5 channels")
 
     # ============================================
@@ -144,70 +150,96 @@ def upgrade() -> None:
     print("\n📦 Updating credit services pricing...")
 
     # AI Services - adjusted for new economy
-    op.execute("""
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 3
         WHERE service_key = 'ai_post_analysis'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 5
         WHERE service_key = 'ai_content_suggestions'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 5
         WHERE service_key = 'ai_optimal_time'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 10
         WHERE service_key = 'ai_competitor_analysis'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 15
         WHERE service_key = 'ai_trend_prediction'
-    """)
+    """
+    )
     print("   ✅ AI: Post=3, Suggestions=5, Timing=5, Competitor=10, Trends=15")
 
     # Export Services - cheaper for accessibility
-    op.execute("""
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 1
         WHERE service_key = 'export_image_chart'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 2
         WHERE service_key = 'export_csv_data'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 3
         WHERE service_key = 'export_pdf_report'
-    """)
+    """
+    )
     print("   ✅ Exports: Image=1, CSV=2, PDF=3")
 
     # Premium features - one-time purchases
-    op.execute("""
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 20
         WHERE service_key = 'advanced_filters'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 25
         WHERE service_key = 'remove_watermark'
-    """)
+    """
+    )
     print("   ✅ Features: Filters=20, No Watermark=25")
 
     # Themes - cosmetic, slightly lower
-    op.execute("""
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 30
         WHERE service_key IN ('theme_premium_dark', 'theme_premium_light')
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 50
         WHERE service_key = 'theme_custom_colors'
-    """)
+    """
+    )
     print("   ✅ Themes: Premium=30, Custom=50")
 
     # Channel slot - valuable but accessible
-    op.execute("""
+    op.execute(
+        """
         UPDATE credit_services SET credit_cost = 150
         WHERE service_key = 'extra_channel_slot'
-    """)
+    """
+    )
     print("   ✅ Extra Channel: 150 credits")
 
     # ============================================
@@ -215,26 +247,36 @@ def upgrade() -> None:
     # ============================================
     print("\n📦 Updating achievement rewards...")
 
-    op.execute("""
+    op.execute(
+        """
         UPDATE achievements SET credit_reward = 50
         WHERE achievement_key = 'first_login'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE achievements SET credit_reward = 20
         WHERE achievement_key = 'first_channel'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE achievements SET credit_reward = 10
         WHERE achievement_key = 'first_ai_analysis'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE achievements SET credit_reward = 25
         WHERE achievement_key = 'streak_7'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE achievements SET credit_reward = 100
         WHERE achievement_key = 'streak_30'
-    """)
+    """
+    )
     print("   ✅ Signup=50, First Channel=20, First AI=10, 7-day=25, 30-day=100")
 
     # ============================================
@@ -242,36 +284,45 @@ def upgrade() -> None:
     # ============================================
     print("\n📦 Updating credit packages...")
 
-    op.execute("""
+    op.execute(
+        """
         UPDATE credit_packages SET
             credits = 50, bonus_credits = 0, price = 2.99,
             description = 'Try premium features - enough for ~15 AI analyses'
         WHERE slug = 'starter'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_packages SET
             credits = 200, bonus_credits = 25, price = 9.99,
             description = 'Most popular - great value for regular users'
         WHERE slug = 'popular'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_packages SET
             credits = 500, bonus_credits = 100, price = 19.99,
             description = 'Power user pack - 20% bonus credits!'
         WHERE slug = 'pro'
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         UPDATE credit_packages SET
             credits = 1500, bonus_credits = 500, price = 49.99,
             description = 'Best value - 33% bonus for heavy users!'
         WHERE slug = 'enterprise'
-    """)
+    """
+    )
     print("   ✅ Starter=$2.99(50), Popular=$9.99(225), Pro=$19.99(600), Enterprise=$49.99(2000)")
 
     print("\n" + "=" * 70)
     print("✅ MIGRATION COMPLETE - Credit System Enhanced")
     print("=" * 70)
-    print("""
+    print(
+        """
 Summary:
   • FREE: 5-8 credits/day, 100/month cap, 1 channel
   • PRO ($9.99): 200/mo + 10-15/day, unlimited cap, 3 channels
@@ -279,7 +330,8 @@ Summary:
   • API access: NOT included (separate product)
   • AI pricing: 3-15 credits (affordable for daily users)
   • Signup bonus: 50 credits
-""")
+"""
+    )
 
 
 def downgrade() -> None:

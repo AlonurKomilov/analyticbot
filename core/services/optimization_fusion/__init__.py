@@ -21,7 +21,9 @@ Factory Function: create_optimization_orchestrator() - Easy instantiation
 import logging
 
 from .application.optimization_application_service import OptimizationApplicationService
-from .orchestrator.optimization_orchestrator_service import OptimizationOrchestratorService
+from .orchestrator.optimization_orchestrator_service import (
+    OptimizationOrchestratorService,
+)
 from .performance.performance_analysis_service import PerformanceAnalysisService
 from .protocols.optimization_protocols import (
     OptimizationApplicationProtocol,
@@ -63,7 +65,10 @@ __all__ = [
 
 
 def create_optimization_orchestrator(
-    analytics_service=None, cache_service=None, config_manager=None, logger_instance=None
+    analytics_service=None,
+    cache_service=None,
+    config_manager=None,
+    logger_instance=None,
 ) -> OptimizationOrchestratorService:
     """
     Factory function to create fully configured optimization orchestrator.

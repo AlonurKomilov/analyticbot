@@ -84,7 +84,10 @@ async def get_all_channel_settings(
     response_model=ChannelMTProtoSettingResponse,
     status_code=status.HTTP_200_OK,
     responses={
-        404: {"model": ErrorResponse, "description": "Setting not found (uses global default)"},
+        404: {
+            "model": ErrorResponse,
+            "description": "Setting not found (uses global default)",
+        },
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
@@ -187,8 +190,7 @@ async def toggle_channel_mtproto(
                 )
         except Exception as e:
             logger.warning(
-                f"Failed to write MTProto audit log for user {user_id}, "
-                f"channel {channel_id}: {e}"
+                f"Failed to write MTProto audit log for user {user_id}, channel {channel_id}: {e}"
             )
 
         action = "enabled" if payload.enabled else "disabled"
@@ -250,7 +252,7 @@ async def delete_channel_setting(
         return MTProtoActionResponse(
             success=True,
             message=(
-                f"Per-channel setting deleted for channel {channel_id}. " "Now uses global default."
+                f"Per-channel setting deleted for channel {channel_id}. Now uses global default."
             ),
         )
 

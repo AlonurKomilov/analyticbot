@@ -140,9 +140,7 @@ class TestWebhookService:
         mock_payment_repository.log_webhook_event.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_process_payment_failed_webhook(
-        self, webhook_service, mock_payment_repository
-    ):
+    async def test_process_payment_failed_webhook(self, webhook_service, mock_payment_repository):
         """Test processing payment failed webhook"""
         # Arrange
         payment_record = {
@@ -201,7 +199,7 @@ class TestWebhookService:
                     "customer": "cus_test123",
                     "status": "active",
                     "current_period_start": int(datetime.now().timestamp()),
-                    "current_period_end": int(datetime.now().timestamp()) + 30*24*60*60,
+                    "current_period_end": int(datetime.now().timestamp()) + 30 * 24 * 60 * 60,
                 }
             },
         }
@@ -263,9 +261,7 @@ class TestWebhookService:
         mock_payment_repository.update_subscription.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_process_refund_created_webhook(
-        self, webhook_service, mock_payment_repository
-    ):
+    async def test_process_refund_created_webhook(self, webhook_service, mock_payment_repository):
         """Test processing refund created webhook"""
         # Arrange
         payment_record = {
@@ -358,9 +354,7 @@ class TestWebhookService:
         mock_payment_repository.log_webhook_event.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_process_unknown_event_type(
-        self, webhook_service, mock_payment_repository
-    ):
+    async def test_process_unknown_event_type(self, webhook_service, mock_payment_repository):
         """Test processing unknown webhook event type"""
         # Arrange
         webhook_payload = {
@@ -434,9 +428,7 @@ class TestWebhookEdgeCases:
             await webhook_service.process_webhook(webhook_event)
 
     @pytest.mark.asyncio
-    async def test_webhook_timestamp_validation(
-        self, webhook_service, sample_webhook_payload
-    ):
+    async def test_webhook_timestamp_validation(self, webhook_service, sample_webhook_payload):
         """Test webhook timestamp validation for replay attack prevention"""
         # Arrange
         secret = "whsec_test_secret"

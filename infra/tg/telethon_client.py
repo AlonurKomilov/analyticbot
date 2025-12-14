@@ -101,7 +101,7 @@ class TelethonTGClient:
 
             # Start the client - use bot token if available, otherwise user session
             if hasattr(self._client, "start") and callable(self._client.start):
-                bot_token = getattr(self.settings, 'TELEGRAM_BOT_TOKEN', None)
+                bot_token = getattr(self.settings, "TELEGRAM_BOT_TOKEN", None)
                 if bot_token:
                     self.logger.info("Starting Telethon client with bot token...")
                     await self._client.start(bot_token=bot_token)  # type: ignore[misc]

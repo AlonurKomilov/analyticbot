@@ -71,9 +71,7 @@ class ContentProtectionService:
             # Check premium status if user_id provided
             has_premium = False
             if request.user_id is not None:
-                has_premium = await self._subscription_port.check_premium_status(
-                    request.user_id
-                )
+                has_premium = await self._subscription_port.check_premium_status(request.user_id)
 
             # Handle different content types
             if request.content_type == "image":
@@ -198,9 +196,7 @@ class ContentProtectionService:
             )
 
         # Analyze content
-        theft_analysis = await self._theft_detector.analyze_content(
-            request.text_content or ""
-        )
+        theft_analysis = await self._theft_detector.analyze_content(request.text_content or "")
 
         return ContentProtectionResponse(
             success=True,

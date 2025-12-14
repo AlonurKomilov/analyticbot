@@ -30,7 +30,9 @@ async def get_db_pool():
         raise HTTPException(status_code=500, detail="Database pool not available")
 
 
-async def get_marketplace_repository(pool=Depends(get_db_pool)) -> MarketplaceRepository:
+async def get_marketplace_repository(
+    pool=Depends(get_db_pool),
+) -> MarketplaceRepository:
     """Get marketplace repository instance."""
     return MarketplaceRepository(pool)
 
@@ -115,7 +117,9 @@ async def get_item_by_slug(
 
 
 @router.get("/categories")
-async def get_categories(repo: MarketplaceRepository = Depends(get_marketplace_repository)):
+async def get_categories(
+    repo: MarketplaceRepository = Depends(get_marketplace_repository),
+):
     """Get all marketplace categories with item counts."""
     categories = await repo.get_categories()
     return {"categories": categories}
@@ -250,7 +254,8 @@ async def get_gift_history(
 
 @router.get("/bundles")
 async def get_bundles(
-    featured_only: bool = False, repo: MarketplaceRepository = Depends(get_marketplace_repository)
+    featured_only: bool = False,
+    repo: MarketplaceRepository = Depends(get_marketplace_repository),
 ):
     """Get available service bundles."""
     bundles = await repo.get_bundles(featured_only)

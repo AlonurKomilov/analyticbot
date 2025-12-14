@@ -98,7 +98,11 @@ class UserMTProtoService:
     Ensures proper isolation between users.
     """
 
-    def __init__(self, user_bot_repo: IUserBotRepository | None = None, user_bot_repo_factory=None):
+    def __init__(
+        self,
+        user_bot_repo: IUserBotRepository | None = None,
+        user_bot_repo_factory=None,
+    ):
         """
         Initialize service with either a repository or a factory.
         Factory pattern is preferred for long-running services.
@@ -321,7 +325,9 @@ class UserMTProtoService:
 
             # Check per-channel setting
             from apps.di import get_container
-            from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
+            from infra.db.repositories.channel_mtproto_repository import (
+                ChannelMTProtoRepository,
+            )
 
             container = get_container()
             session_factory = await container.database.async_session_maker()

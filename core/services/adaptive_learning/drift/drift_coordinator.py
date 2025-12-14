@@ -213,7 +213,10 @@ class DriftCoordinator:
             return False
 
     async def detect_data_drift(
-        self, model_id: str, current_data: np.ndarray, feature_names: list[str] | None = None
+        self,
+        model_id: str,
+        current_data: np.ndarray,
+        feature_names: list[str] | None = None,
     ) -> ComprehensiveDriftAnalysis | None:
         """Perform comprehensive data drift detection"""
         try:
@@ -366,18 +369,22 @@ class DriftCoordinator:
             return {
                 "model_id": model_id,
                 "monitoring_enabled": True,
-                "last_analysis": recent_analyses[-1].timestamp.isoformat()
-                if recent_analyses
-                else None,
+                "last_analysis": (
+                    recent_analyses[-1].timestamp.isoformat() if recent_analyses else None
+                ),
                 "active_alerts": len(active_alerts),
                 "recent_analyses": len(recent_analyses),
                 "drift_trends": {
-                    "data_drift_avg": sum(data_drift_scores) / len(data_drift_scores)
-                    if data_drift_scores
-                    else 0.0,
-                    "concept_drift_avg": sum(concept_drift_scores) / len(concept_drift_scores)
-                    if concept_drift_scores
-                    else 0.0,
+                    "data_drift_avg": (
+                        sum(data_drift_scores) / len(data_drift_scores)
+                        if data_drift_scores
+                        else 0.0
+                    ),
+                    "concept_drift_avg": (
+                        sum(concept_drift_scores) / len(concept_drift_scores)
+                        if concept_drift_scores
+                        else 0.0
+                    ),
                 },
                 "reference_data_available": model_id in self.reference_data,
                 "performance_baseline_available": model_id in self.performance_baselines,
@@ -451,7 +458,10 @@ class DriftCoordinator:
 
         # Generate recommendation
         recommendation = await self._generate_recommendation(
-            DriftType.DATA_DRIFT, overall_severity, affected_features, overall_drift_score
+            DriftType.DATA_DRIFT,
+            overall_severity,
+            affected_features,
+            overall_drift_score,
         )
 
         return ComprehensiveDriftAnalysis(

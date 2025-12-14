@@ -127,7 +127,10 @@ class AnomalyOrchestrator:
                 "anomaly_detected": True,
                 "explanation": "An unusual pattern was detected that requires investigation.",
                 "error": str(e),
-                "recommendations": ["Manual review recommended", "Check recent changes"],
+                "recommendations": [
+                    "Manual review recommended",
+                    "Check recent changes",
+                ],
                 "severity": "unknown",
             }
 

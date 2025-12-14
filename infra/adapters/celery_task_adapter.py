@@ -35,7 +35,7 @@ class CeleryTaskAdapter(TaskClientProtocol):
     def _check_celery_availability(self) -> bool:
         """Check if Celery is available"""
         try:
-            from apps.celery.tasks import ml_tasks
+            pass
 
             return True
         except ImportError as e:
@@ -114,7 +114,11 @@ class CeleryTaskAdapter(TaskClientProtocol):
         """
         try:
             if not self._celery_available:
-                return {"task_id": task_id, "status": "error", "error": "Celery is not available"}
+                return {
+                    "task_id": task_id,
+                    "status": "error",
+                    "error": "Celery is not available",
+                }
 
             # Import Celery app
             from apps.celery.celery_app import celery_app
@@ -134,7 +138,12 @@ class CeleryTaskAdapter(TaskClientProtocol):
 
             status = status_map.get(task_result.state, "unknown")
 
-            result_dict = {"task_id": task_id, "status": status, "result": None, "error": None}
+            result_dict = {
+                "task_id": task_id,
+                "status": status,
+                "result": None,
+                "error": None,
+            }
 
             # Add result or error if available
             if task_result.successful():

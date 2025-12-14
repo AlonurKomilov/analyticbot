@@ -197,7 +197,8 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         if not is_valid:
             logger.warning(f"CSRF: Cookie token invalid - {error_msg}")
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail=f"CSRF validation failed: {error_msg}"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"CSRF validation failed: {error_msg}",
             )
 
         # Verify header token matches cookie token (double-submit pattern)

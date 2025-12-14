@@ -20,7 +20,10 @@ from apps.api.middleware.auth import (
     require_admin_user,
 )
 from apps.api.services.channel_management_service import ChannelManagementService
-from apps.di.analytics_container import get_channel_management_service, get_database_pool
+from apps.di.analytics_container import (
+    get_channel_management_service,
+    get_database_pool,
+)
 from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
@@ -448,9 +451,9 @@ async def unsuspend_user(
                 "username": user["username"],
                 "status": "active",
                 "previous_suspension_reason": user["suspension_reason"],
-                "was_suspended_at": user["suspended_at"].isoformat()
-                if user["suspended_at"]
-                else None,
+                "was_suspended_at": (
+                    user["suspended_at"].isoformat() if user["suspended_at"] else None
+                ),
                 "unsuspended_by": current_user["id"],
                 "unsuspended_at": datetime.now().isoformat(),
                 "channels_enabled": channels_enabled,
@@ -559,9 +562,11 @@ async def get_user_channels_admin(
                     "username": getattr(channel, "username", None),
                     "is_active": channel.is_active,
                     "subscriber_count": channel.subscriber_count,
-                    "created_at": channel.created_at.isoformat()
-                    if channel.created_at
-                    else datetime.now().isoformat(),
+                    "created_at": (
+                        channel.created_at.isoformat()
+                        if channel.created_at
+                        else datetime.now().isoformat()
+                    ),
                     "total_posts": getattr(channel, "total_posts", 0),
                     "total_views": getattr(channel, "total_views", 0),
                 }
@@ -694,7 +699,9 @@ async def adjust_user_credits(
 
             # Update user's credit balance
             await conn.execute(
-                "UPDATE users SET credit_balance = $1 WHERE id = $2", new_balance, user_id
+                "UPDATE users SET credit_balance = $1 WHERE id = $2",
+                new_balance,
+                user_id,
             )
 
             # Update user_credits table

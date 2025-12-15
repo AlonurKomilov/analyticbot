@@ -15,7 +15,12 @@ from typing import Any
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
 
-from apps.api.auth_utils import AuthError, FastAPIAuthUtils, get_auth_utils, security_scheme
+from apps.api.auth_utils import (
+    AuthError,
+    FastAPIAuthUtils,
+    get_auth_utils,
+    security_scheme,
+)
 from core.repositories.interfaces import ChannelRepository, UserRepository
 from core.security_engine import LegacyUserRole as UserRole
 from core.security_engine import (
@@ -134,15 +139,17 @@ async def get_current_user(
         logger.error(f"Token present: {credentials is not None}")
         logger.error(f"User repo available: {user_repo is not None}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Authentication service error"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication service error",
         )
 
 
 async def require_channel_access(
     channel_id: int,
     user_id: int,  # ✅ FIXED: Changed from current_user dict to user_id int
-    channel_repo: ChannelRepository
-    | None = None,  # ✅ FIXED: Made optional, will get from DI if not provided
+    channel_repo: (
+        ChannelRepository | None
+    ) = None,  # ✅ FIXED: Made optional, will get from DI if not provided
 ) -> int:
     """
     Validate that the current user has access to the specified channel
@@ -195,7 +202,9 @@ async def require_channel_access(
         )
 
 
-async def get_current_user_id(current_user: dict[str, Any] = Depends(get_current_user)) -> int:
+async def get_current_user_id(
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> int:
     """
     Simple dependency to get just the user ID
 
@@ -432,7 +441,8 @@ async def require_analytics_permission(
 
     if NewPermission.VIEW_ANALYTICS not in user_info.permissions:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Analytics access permission required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Analytics access permission required",
         )
     return current_user
 
@@ -449,7 +459,8 @@ async def require_user_management_permission(
 
     if NewPermission.MANAGE_USERS not in user_info.permissions:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="User management permission required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User management permission required",
         )
     return current_user
 
@@ -463,7 +474,8 @@ async def require_admin_role_new(
     user_role = current_user.get("role", "user")
     if not is_administrative_role(user_role):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Administrative access required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrative access required",
         )
     return current_user
 

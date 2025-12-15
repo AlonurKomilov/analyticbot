@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from apps.api.middleware.auth import get_current_user
-from apps.di.analytics_container import get_database_pool, get_cache
+from apps.di.analytics_container import get_cache, get_database_pool
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +25,10 @@ router = APIRouter(tags=["Analytics - Overview"])
 # Response Models
 # ============================================================================
 
+
 class SubscriberStatsResponse(BaseModel):
     """Subscriber statistics response"""
+
     total: int = Field(description="Total subscribers")
     today_change: int = Field(description="Change today (+/-)")
     week_change: int = Field(description="Change this week (+/-)")
@@ -36,6 +38,7 @@ class SubscriberStatsResponse(BaseModel):
 
 class PostsStatsResponse(BaseModel):
     """Posts statistics response"""
+
     total: int = Field(description="Total posts")
     today: int = Field(description="Posts today")
     week: int = Field(description="Posts this week")
@@ -45,6 +48,7 @@ class PostsStatsResponse(BaseModel):
 
 class EngagementStatsResponse(BaseModel):
     """Engagement statistics response"""
+
     total_views: int = Field(description="Total views")
     total_reactions: int = Field(description="Total reactions")
     total_forwards: int = Field(description="Total forwards/shares")
@@ -58,6 +62,7 @@ class EngagementStatsResponse(BaseModel):
 
 class ReachStatsResponse(BaseModel):
     """Reach statistics response"""
+
     avg_post_reach: int = Field(description="Average post reach")
     avg_ad_reach: int = Field(description="Average advertising reach")
     reach_12h: int = Field(description="Reach in last 12 hours")
@@ -68,6 +73,7 @@ class ReachStatsResponse(BaseModel):
 
 class ChannelInfoResponse(BaseModel):
     """Channel information response"""
+
     id: int = Field(description="Channel ID")
     title: str = Field(description="Channel title")
     username: str | None = Field(description="Channel username")
@@ -83,12 +89,14 @@ class ChannelInfoResponse(BaseModel):
 
 class DataPointResponse(BaseModel):
     """Single data point for charts"""
+
     date: str = Field(description="Date in ISO format")
     value: int = Field(description="Value for this date")
 
 
 class ChannelOverviewResponse(BaseModel):
     """Complete channel overview response"""
+
     channel_info: ChannelInfoResponse
     subscribers: SubscriberStatsResponse
     posts: PostsStatsResponse
@@ -103,6 +111,7 @@ class ChannelOverviewResponse(BaseModel):
 # ============================================================================
 # Endpoints
 # ============================================================================
+
 
 @router.get(
     "/dashboard/{channel_id}",
@@ -136,15 +145,21 @@ async def get_channel_overview_dashboard(
     """Get complete channel overview for dashboard"""
     try:
         logger.info(f"📊 Getting overview dashboard for channel {channel_id}, period={period}")
-        
+
         # Validate period
-        valid_periods = ["today", "last_7_days", "last_30_days", "last_90_days", "all_time"]
+        valid_periods = [
+            "today",
+            "last_7_days",
+            "last_30_days",
+            "last_90_days",
+            "all_time",
+        ]
         if period not in valid_periods:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid period. Must be one of: {', '.join(valid_periods)}"
+                detail=f"Invalid period. Must be one of: {', '.join(valid_periods)}",
             )
-        
+
         # Try cache first (5 minute TTL for dashboard)
         cache_key = f"analytics_overview:dashboard:{channel_id}:{period}"
         cached = await cache.get_json(cache_key)
@@ -152,29 +167,26 @@ async def get_channel_overview_dashboard(
             logger.info(f"📦 Returning cached dashboard for channel {channel_id}, period={period}")
             cached["data_freshness"] = "cached"
             return cached
-        
+
         # Import here to avoid circular imports
         from core.services.analytics_fusion.overview import AnalyticsOverviewService
-        
+
         # Create service and get metrics with period
         service = AnalyticsOverviewService(pool)
         metrics = await service.get_channel_overview(channel_id, period=period)
-        
+
         # Convert to response format
         response_data = metrics.to_dict()
-        
+
         # Cache the response
         await cache.set_json(cache_key, response_data, expire_seconds=300)
-        
+
         logger.info(f"✅ Generated fresh dashboard for channel {channel_id}, period={period}")
         return response_data
-        
+
     except Exception as e:
         logger.error(f"❌ Error getting overview dashboard for channel {channel_id}: {e}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Failed to get channel overview: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get channel overview: {str(e)}")
 
 
 @router.get(
@@ -191,18 +203,18 @@ async def get_channel_quick_stats(
     """Get quick channel statistics (without chart data)"""
     try:
         logger.info(f"📊 Getting quick stats for channel {channel_id}")
-        
+
         # Try cache first (2 minute TTL for quick stats)
         cache_key = f"analytics_overview:quick_stats:{channel_id}"
         cached = await cache.get_json(cache_key)
         if cached:
             return cached
-        
+
         from core.services.analytics_fusion.overview import AnalyticsOverviewService
-        
+
         service = AnalyticsOverviewService(pool)
         metrics = await service.get_channel_overview(channel_id)
-        
+
         # Return only stats without chart data
         response_data = {
             "channel_info": metrics.channel_info.to_dict(),
@@ -212,18 +224,15 @@ async def get_channel_quick_stats(
             "reach": metrics.reach.to_dict(),
             "generated_at": metrics.generated_at.isoformat(),
         }
-        
+
         # Cache the response
         await cache.set_json(cache_key, response_data, expire_seconds=120)
-        
+
         return response_data
-        
+
     except Exception as e:
         logger.error(f"❌ Error getting quick stats for channel {channel_id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get channel stats: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get channel stats: {str(e)}")
 
 
 @router.get(
@@ -241,22 +250,22 @@ async def get_channel_charts(
     """Get chart data for the channel"""
     try:
         logger.info(f"📈 Getting charts for channel {channel_id} ({days} days)")
-        
+
         # Try cache first
         cache_key = f"analytics_overview:charts:{channel_id}:{days}"
         cached = await cache.get_json(cache_key)
         if cached:
             return cached
-        
+
         from core.services.analytics_fusion.overview import AnalyticsOverviewService
-        
+
         service = AnalyticsOverviewService(pool)
-        
+
         # Get chart data
         async with pool.acquire() as conn:
             views_history = await service._get_views_history(conn, channel_id, days)
             posts_history = await service._get_posts_history(conn, channel_id, days)
-        
+
         response_data = {
             "channel_id": channel_id,
             "days": days,
@@ -264,26 +273,25 @@ async def get_channel_charts(
             "posts_history": posts_history,
             "generated_at": datetime.utcnow().isoformat(),
         }
-        
+
         # Cache for 10 minutes
         await cache.set_json(cache_key, response_data, expire_seconds=600)
-        
+
         return response_data
-        
+
     except Exception as e:
         logger.error(f"❌ Error getting charts for channel {channel_id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get chart data: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get chart data: {str(e)}")
 
 
 # ============================================================================
 # Telegram Statistics API Endpoints (Phase 3)
 # ============================================================================
 
+
 class LanguageStatsResponse(BaseModel):
     """Language distribution statistics"""
+
     language_code: str = Field(description="ISO language code")
     language_name: str = Field(description="Human-readable language name")
     percentage: float = Field(description="Percentage of subscribers")
@@ -291,6 +299,7 @@ class LanguageStatsResponse(BaseModel):
 
 class CountryStatsResponse(BaseModel):
     """Country distribution statistics"""
+
     country_code: str = Field(description="ISO country code")
     country_name: str = Field(description="Human-readable country name")
     percentage: float = Field(description="Percentage of subscribers")
@@ -298,13 +307,17 @@ class CountryStatsResponse(BaseModel):
 
 class DeviceStatsResponse(BaseModel):
     """Device type distribution statistics"""
+
     device_type: str = Field(description="Device type (android, ios, desktop, web)")
     percentage: float = Field(description="Percentage of subscribers")
 
 
 class TrafficSourceResponse(BaseModel):
     """Traffic source statistics"""
-    source_type: str = Field(description="Source category (search, mentions, links, other_channels, direct)")
+
+    source_type: str = Field(
+        description="Source category (search, mentions, links, other_channels, direct)"
+    )
     source_name: str = Field(description="Source name")
     subscribers_count: int = Field(description="Number of subscribers from this source")
     percentage: float = Field(description="Percentage of total subscribers")
@@ -312,6 +325,7 @@ class TrafficSourceResponse(BaseModel):
 
 class GrowthPointResponse(BaseModel):
     """Single point in growth chart"""
+
     date: str = Field(description="Date in ISO format")
     subscribers: int = Field(description="Total subscribers on this date")
     joined: int = Field(description="Number of new subscribers")
@@ -320,6 +334,7 @@ class GrowthPointResponse(BaseModel):
 
 class InteractionStatsResponse(BaseModel):
     """Interaction statistics per post"""
+
     views_per_post: float = Field(description="Average views per post")
     shares_per_post: float = Field(description="Average shares per post")
     reactions_per_post: float = Field(description="Average reactions per post")
@@ -328,31 +343,32 @@ class InteractionStatsResponse(BaseModel):
 
 class TelegramStatsResponse(BaseModel):
     """Complete Telegram Statistics API response"""
+
     channel_id: int = Field(description="Channel ID")
     is_available: bool = Field(description="Whether stats are available for this channel")
     error_message: str | None = Field(description="Error message if stats unavailable")
-    
+
     # Basic stats from Telegram API
     subscriber_count: int = Field(description="Current subscriber count")
     mean_view_count: int = Field(description="Average views per post")
     mean_share_count: int = Field(description="Average shares per post")
     mean_reaction_count: int = Field(description="Average reactions per post")
-    
+
     # Demographics
     languages: list[LanguageStatsResponse] = Field(description="Language distribution")
     countries: list[CountryStatsResponse] = Field(description="Country distribution")
     devices: list[DeviceStatsResponse] = Field(description="Device type distribution")
-    
+
     # Traffic sources
     traffic_sources: list[TrafficSourceResponse] = Field(description="Where subscribers come from")
-    
+
     # Growth data
     growth_history: list[GrowthPointResponse] = Field(description="Historical growth data")
     followers_growth_rate: float = Field(description="Growth rate percentage")
-    
+
     # Interactions
     interactions: InteractionStatsResponse | None = Field(description="Interaction statistics")
-    
+
     # Metadata
     fetched_at: str = Field(description="When this data was fetched")
     period_start: str | None = Field(description="Start of statistics period")
@@ -390,44 +406,46 @@ async def get_telegram_stats(
     """Get Telegram Statistics API data for a channel"""
     try:
         logger.info(f"📊 Getting Telegram stats for channel {channel_id}")
-        
+
         # Try cache first (10 minute TTL - Telegram stats don't change frequently)
         cache_key = f"analytics_overview:telegram_stats:{channel_id}"
         cached = await cache.get_json(cache_key)
         if cached:
             logger.info(f"📦 Returning cached Telegram stats for channel {channel_id}")
             return cached
-        
+
         # Get user_id from the channel
         user_id = current_user.get("id")
         if not user_id:
             raise HTTPException(status_code=401, detail="User ID not found")
-        
+
         # Import and create the service
-        from core.services.analytics_fusion.overview import TelegramStatsService
         from apps.di import get_container
-        
+        from core.services.analytics_fusion.overview import TelegramStatsService
+
         container = get_container()
-        
+
         # Get the MTProto service from the container
         user_mtproto_service = await container.mtproto.user_mtproto_service()
-        
+
         # Create the stats service
         stats_service = TelegramStatsService(user_mtproto_service)
-        
+
         # Fetch the stats
         stats = await stats_service.get_channel_stats(user_id, channel_id)
-        
+
         # Convert to response format
         response_data = stats.to_dict()
-        
+
         # Cache successful responses for 10 minutes
         if stats.is_available:
             await cache.set_json(cache_key, response_data, expire_seconds=600)
-        
-        logger.info(f"✅ Fetched Telegram stats for channel {channel_id}: available={stats.is_available}")
+
+        logger.info(
+            f"✅ Fetched Telegram stats for channel {channel_id}: available={stats.is_available}"
+        )
         return response_data
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -476,12 +494,14 @@ async def sync_channel_creation_date(
     """Sync Telegram channel creation date from API"""
     try:
         logger.info(f"🔄 Syncing creation date for channel {channel_id}")
-        
+
+        from apps.api.services.telegram_validation_service import (
+            TelegramValidationService,
+        )
         from apps.di import get_container
-        from apps.api.services.telegram_validation_service import TelegramValidationService
-        
+
         container = get_container()
-        
+
         # Get channel info first
         async with pool.acquire() as conn:
             channel = await conn.fetchrow(
@@ -489,36 +509,39 @@ async def sync_channel_creation_date(
                 channel_id,
                 -abs(channel_id),
             )
-        
+
         if not channel:
             raise HTTPException(status_code=404, detail="Channel not found")
-        
+
         username = channel["username"]
         if not username:
             raise HTTPException(status_code=400, detail="Channel has no username, cannot sync")
-        
+
         # Get Telegram client and validate
         try:
             telethon_client = await container.mtproto.telethon_client()
             validation_service = TelegramValidationService(telethon_client)
-            
+
             result = await validation_service.validate_channel_by_username(username)
-            
+
             if not result.is_valid:
-                raise HTTPException(status_code=400, detail=f"Could not validate channel: {result.error_message}")
-            
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Could not validate channel: {result.error_message}",
+                )
+
             telegram_created_at = result.telegram_created_at
-            
+
             if not telegram_created_at:
                 return {
                     "channel_id": channel_id,
                     "success": False,
                     "message": "Channel creation date not available from Telegram API",
                 }
-            
+
             # Parse and update
-            created_dt = datetime.fromisoformat(telegram_created_at.replace('Z', '+00:00'))
-            
+            created_dt = datetime.fromisoformat(telegram_created_at.replace("Z", "+00:00"))
+
             async with pool.acquire() as conn:
                 await conn.execute(
                     """
@@ -530,22 +553,22 @@ async def sync_channel_creation_date(
                     channel_id,
                     -abs(channel_id),
                 )
-            
+
             logger.info(f"✅ Synced creation date for channel {channel_id}: {created_dt}")
-            
+
             return {
                 "channel_id": channel_id,
                 "success": True,
                 "telegram_created_at": telegram_created_at,
                 "message": f"Channel creation date synced: {created_dt.strftime('%B %d, %Y')}",
             }
-            
+
         except HTTPException:
             raise
         except Exception as e:
             logger.error(f"Error syncing creation date: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to sync: {str(e)}")
-        
+
     except HTTPException:
         raise
     except Exception as e:

@@ -166,7 +166,10 @@ async def _check_user_admin_access(
             )
 
         if not creds:
-            return False, "No verified bot credentials found. Please set up your bot in Settings."
+            return (
+                False,
+                "No verified bot credentials found. Please set up your bot in Settings.",
+            )
 
         # Try checking with user's bot first
         bot_token = creds["bot_token"]
@@ -319,7 +322,10 @@ async def _check_mtproto_admin(
             participant = await client(GetParticipantRequest(channel=entity, participant=me))
             participant_type = type(participant.participant).__name__
 
-            is_admin = participant_type in ["ChannelParticipantAdmin", "ChannelParticipantCreator"]
+            is_admin = participant_type in [
+                "ChannelParticipantAdmin",
+                "ChannelParticipantCreator",
+            ]
 
             await client.disconnect()
             return is_admin

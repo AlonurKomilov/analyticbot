@@ -111,7 +111,7 @@ async def main():
 
     # Initialize process manager for lifecycle management
     process_manager = ProcessManager(
-        name=f"mtproto_worker_user_{args.user_id}" if args.user_id else "mtproto_worker_all",
+        name=(f"mtproto_worker_user_{args.user_id}" if args.user_id else "mtproto_worker_all"),
         max_runtime_hours=args.max_runtime if args.max_runtime > 0 else None,
         memory_limit_mb=args.memory_limit if args.memory_limit > 0 else None,
         cpu_limit_percent=args.cpu_limit if args.cpu_limit > 0 else None,

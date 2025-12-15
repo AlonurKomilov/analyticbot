@@ -17,7 +17,11 @@ class HistoryCollector:
     """
 
     def __init__(
-        self, tg_client: TGClient, repos: Any, settings: MTProtoSettings, user_id: int | None = None
+        self,
+        tg_client: TGClient,
+        repos: Any,
+        settings: MTProtoSettings,
+        user_id: int | None = None,
     ):
         """Initialize the history collector.
 
@@ -146,7 +150,8 @@ class HistoryCollector:
                 metadata["session_messages_current"] = messages_in_session
                 metadata["session_messages_limit"] = session_limit
                 metadata["session_messages_percent"] = round(
-                    (messages_in_session / session_limit * 100) if session_limit > 0 else 0, 2
+                    ((messages_in_session / session_limit * 100) if session_limit > 0 else 0),
+                    2,
                 )
 
             # Add performance metrics
@@ -180,7 +185,13 @@ class HistoryCollector:
         """
         if not self.settings.MTPROTO_ENABLED or not self.settings.MTPROTO_HISTORY_ENABLED:
             self.logger.info("History collection disabled by feature flags")
-            return {"status": "disabled", "ingested": 0, "updated": 0, "skipped": 0, "errors": 0}
+            return {
+                "status": "disabled",
+                "ingested": 0,
+                "updated": 0,
+                "skipped": 0,
+                "errors": 0,
+            }
 
         limit_per_peer = limit_per_peer or self.settings.MTPROTO_HISTORY_LIMIT_PER_RUN
         stats = {"ingested": 0, "updated": 0, "skipped": 0, "errors": 0}
@@ -226,7 +237,7 @@ class HistoryCollector:
                 # Telethon returns a messages.ChatFull object with full_chat and chats attributes
                 full_chat = getattr(full_channel_response, "full_chat", None)
                 chats = getattr(full_channel_response, "chats", [])
-                
+
                 if full_chat:
                     subscriber_count = getattr(full_chat, "participants_count", 0)
                     about = getattr(full_chat, "about", None)  # Channel description
@@ -237,7 +248,7 @@ class HistoryCollector:
                         if getattr(chat, "id", None) == abs(channel_id):
                             channel_entity = chat
                             break
-                    
+
                     # Extract title and username from channel entity
                     title = getattr(channel_entity, "title", None) if channel_entity else None
                     username = getattr(channel_entity, "username", None) if channel_entity else None
@@ -255,32 +266,32 @@ class HistoryCollector:
                         update_fields = ["subscriber_count = $1", "updated_at = NOW()"]
                         params = [subscriber_count]
                         param_idx = 2
-                        
+
                         if about is not None:
                             update_fields.append(f"description = ${param_idx}")
                             params.append(about)
                             param_idx += 1
-                        
+
                         if title is not None:
                             update_fields.append(f"title = ${param_idx}")
                             params.append(title)
                             param_idx += 1
-                        
+
                         if username is not None:
                             update_fields.append(f"username = ${param_idx}")
                             params.append(username)
                             param_idx += 1
-                        
+
                         params.append(abs(channel_id))  # WHERE clause param
-                        
+
                         query = f"""
                             UPDATE channels
-                            SET {', '.join(update_fields)}
+                            SET {", ".join(update_fields)}
                             WHERE id = ${param_idx}
                         """
-                        
+
                         await conn.execute(query, *params)
-                        
+
                     self.logger.info(
                         f"💾 Updated channel {abs(channel_id)}: subscriber_count={subscriber_count:,}, "
                         f"description synced, title synced"
@@ -404,7 +415,7 @@ class HistoryCollector:
                     eta = int((limit - message_count) / speed) if speed > 0 else 0
 
                     self.logger.info(
-                        f"  📊 Fetched {message_count:,}/{limit:,} messages ({message_count/limit*100:.1f}%) - {speed:.1f} msg/s"
+                        f"  📊 Fetched {message_count:,}/{limit:,} messages ({message_count / limit * 100:.1f}%) - {speed:.1f} msg/s"
                     )
 
                     # Log detailed progress
@@ -518,7 +529,7 @@ class HistoryCollector:
 
                         self.logger.info(
                             f"  💾 Processed {messages_processed:,}/{total_to_process:,} "
-                            f"({messages_processed/total_to_process*100:.1f}%) - {speed:.1f} msg/s"
+                            f"({messages_processed / total_to_process * 100:.1f}%) - {speed:.1f} msg/s"
                         )
 
                         # Log detailed processing progress
@@ -587,7 +598,10 @@ class HistoryCollector:
         return peer_stats
 
     async def collect_channel_history(
-        self, channel_username: str, limit: int = 100, offset_date: datetime | None = None
+        self,
+        channel_username: str,
+        limit: int = 100,
+        offset_date: datetime | None = None,
     ) -> list[dict[str, Any]]:
         """Legacy method for backward compatibility.
 

@@ -60,7 +60,10 @@ async def get_user_bot_repository() -> IUserBotRepository:
     response_model=BotCreatedResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid bot token or user already has a bot"},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid bot token or user already has a bot",
+        },
         429: {"description": "Too many bot creation attempts"},
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
@@ -99,19 +102,23 @@ async def create_user_bot(
             # Return specific error based on validation status
             if validation_result.status == TokenValidationStatus.INVALID_FORMAT:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail=validation_result.message
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=validation_result.message,
                 )
             elif validation_result.status == TokenValidationStatus.UNAUTHORIZED:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail=validation_result.message
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=validation_result.message,
                 )
             elif validation_result.status == TokenValidationStatus.REVOKED:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail=validation_result.message
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=validation_result.message,
                 )
             elif validation_result.status == TokenValidationStatus.TIMEOUT:
                 raise HTTPException(
-                    status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=validation_result.message
+                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                    detail=validation_result.message,
                 )
             elif validation_result.status == TokenValidationStatus.NETWORK_ERROR:
                 raise HTTPException(
@@ -120,7 +127,8 @@ async def create_user_bot(
                 )
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail=validation_result.message
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=validation_result.message,
                 )
 
         logger.info(

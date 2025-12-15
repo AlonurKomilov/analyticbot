@@ -32,5 +32,10 @@ __microservice__ = {
     "version": "1.0.0",
     "description": "Core analytics processing with single responsibility",
     "responsibility": "Analytics calculations and processing only",
-    "components": ["AnalyticsCoreService", "DataProcessor", "MetricsProcessor", "AnalyticsEngine"],
+    "components": [
+        "AnalyticsCoreService",
+        "DataProcessor",
+        "MetricsProcessor",
+        "AnalyticsEngine",
+    ],
 }

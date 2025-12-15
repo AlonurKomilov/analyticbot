@@ -186,12 +186,11 @@ class UserBotInstance:
             """Echo any other message back to user."""
             if message.text:
                 await message.answer(
-                    f"📢 <b>Echo:</b>\n\n{message.text}\n\n"
-                    "💡 Use /help to see available commands."
+                    f"📢 <b>Echo:</b>\n\n{message.text}\n\n💡 Use /help to see available commands."
                 )
             else:
                 await message.answer(
-                    "I can only echo text messages for now. " "Try /help to see what I can do!"
+                    "I can only echo text messages for now. Try /help to see what I can do!"
                 )
 
     async def _initialize_mtproto(self) -> None:

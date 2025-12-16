@@ -55,7 +55,8 @@ async def login(
         user_data = await user_repo.get_user_by_email(login_data.email)
         if not user_data:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
             )
 
         # Create User object for SecurityManager - Updated for new role system
@@ -87,7 +88,8 @@ async def login(
         if not password_valid:
             logger.warning(f"Password verification FAILED for {user.email}")
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
             )
 
         logger.info(f"Password verified successfully for {user.email}")
@@ -123,7 +125,7 @@ async def login(
         await user_repo.update_user(int(user.id), last_login=datetime.utcnow())
 
         logger.info(
-            f"Successful login for user: {user.username} " f"(remember_me={login_data.remember_me})"
+            f"Successful login for user: {user.username} (remember_me={login_data.remember_me})"
         )
 
         # 🔒 SECURITY: Set httpOnly cookies for admin panel requests
@@ -163,7 +165,9 @@ async def login(
                 "username": user.username,
                 "full_name": user.full_name,
                 "role": user.role,  # role is now a string, no .value needed
-                "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
+                "status": (
+                    user.status.value if isinstance(user.status, UserStatus) else user.status
+                ),
                 "credit_balance": float(
                     user_data.get("credit_balance", 0)
                 ),  # Include credit balance
@@ -294,7 +298,8 @@ async def verify_telegram(
     except Exception as e:
         logger.error(f"Telegram verification error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to verify account"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to verify account",
         )
 
 

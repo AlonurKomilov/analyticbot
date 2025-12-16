@@ -976,7 +976,7 @@ class CreditRepository:
             return {
                 "referral_code": code,
                 "total_referrals": stats["total_referrals"] if stats else 0,
-                "total_credits_earned": float(stats["total_credits_earned"] or 0) if stats else 0,
+                "total_credits_earned": (float(stats["total_credits_earned"] or 0) if stats else 0),
                 "recent_referrals": [dict(r) for r in recent],
             }
 
@@ -1154,11 +1154,11 @@ class CreditRepository:
                         "is_earned": is_earned,
                         "current_value": current_value,
                         "required_value": ach["requirement_value"],
-                        "progress_percent": min(
-                            100, int(current_value / ach["requirement_value"] * 100)
-                        )
-                        if ach["requirement_value"]
-                        else (100 if is_earned else 0),
+                        "progress_percent": (
+                            min(100, int(current_value / ach["requirement_value"] * 100))
+                            if ach["requirement_value"]
+                            else (100 if is_earned else 0)
+                        ),
                     }
                 )
 

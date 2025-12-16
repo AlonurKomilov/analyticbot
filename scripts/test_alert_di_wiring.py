@@ -72,7 +72,9 @@ async def test_alert_services_wiring():
                     if actual_class == expected_class:
                         print(f"✓ {service_name}: {actual_class}")
                     elif service is None:
-                        print(f"⚠ {service_name}: Provider returned None (expected if dependencies missing)")
+                        print(
+                            f"⚠ {service_name}: Provider returned None (expected if dependencies missing)"
+                        )
                     else:
                         print(f"✗ {service_name}: Expected {expected_class}, got {actual_class}")
                         all_passed = False
@@ -115,6 +117,7 @@ async def test_alert_services_wiring():
     except Exception as e:
         print(f"❌ CRITICAL ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -170,6 +173,7 @@ async def test_alert_service_dependencies():
     except Exception as e:
         print(f"❌ DEPENDENCY CHECK FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -189,11 +193,10 @@ async def test_middleware_injection():
         container = get_container()
 
         # Create middleware
-        middleware = DependencyMiddleware(container)
+        DependencyMiddleware(container)
         print("✓ DependencyMiddleware instantiated")
 
         # Simulate injection (without actual bot context)
-        data = {}
 
         # Test that container has the services
         print("\nChecking container.bot providers:")
@@ -219,6 +222,7 @@ async def test_middleware_injection():
     except Exception as e:
         print(f"❌ MIDDLEWARE INJECTION TEST FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

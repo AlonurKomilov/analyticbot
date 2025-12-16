@@ -294,16 +294,10 @@ class AIInsightsOrchestratorProtocol(Protocol):
 class AIInsightsData:
     """AI insights data model"""
 
-    pass
-
 
 class PatternAnalysisResult:
     """Pattern analysis result data model"""
 
-    pass
-
 
 class PredictionResult:
     """Prediction result data model"""
-
-    pass

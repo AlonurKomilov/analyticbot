@@ -542,14 +542,14 @@ class LearningStrategyService:
 
         return LearningResult(
             success=True,
-            final_loss=-episode_rewards[-1]
-            if episode_rewards
-            else float("inf"),  # Convert reward to loss
+            final_loss=(
+                -episode_rewards[-1] if episode_rewards else float("inf")
+            ),  # Convert reward to loss
             metrics={
                 "episode_rewards": episode_rewards,
-                "average_reward": sum(episode_rewards) / len(episode_rewards)
-                if episode_rewards
-                else 0,
+                "average_reward": (
+                    sum(episode_rewards) / len(episode_rewards) if episode_rewards else 0
+                ),
                 "rl_learning_rate": learning_rate,
             },
             epochs_completed=episodes,

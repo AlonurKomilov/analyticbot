@@ -85,6 +85,29 @@
     "sortByName": "Nom bo'yicha",
     "sortBySubscribers": "Obunachilar bo'yicha",
     "sortByViews": "Ko'rishlar bo'yicha",
-    "sortByRecent": "So'nggi faollik bo'yicha"
-  }
+    "sortByRecent": "So'nggi faollik bo'yicha"  },
+  "dialog": {
+    "addTitle": "Telegram kanal qo'shish",
+    "editTitle": "Kanalni tahrirlash",
+    "error": "Xato:",
+    "step1": "1-qadam: Kanal username kiriting",
+    "step2": "2-qadam: Kanal ma'lumotlarini tasdiqlang",
+    "channelUsername": "Kanal Username",
+    "usernamePlaceholder": "@mening_kanalom yoki mening_kanalom",
+    "usernameHelp": "Kanal username kiriting va ma'lumotlarni avtomatik olish uchun Qidirish tugmasini bosing",
+    "searchButton": "Kanalni qidirish",
+    "searching": "Qidirilmoqda...",
+    "subscribers": "obunachi",
+    "created": "Yaratilgan",
+    "adminSuccess": "✓ Bot admin huquqiga ega - Qo'shishga tayyor!",
+    "adminError": "Botga admin huquqi kerak. Avval botni admin sifatida qo'shing.",
+    "scamWarning": "⚠️ Bu kanal Telegram tomonidan potentsial firibgarlik sifatida belgilangan",
+    "notFound": "Kanal topilmadi",
+    "notFoundMessage": "Username bilan kanal topilmadi",
+    "checkTitle": "Iltimos, tekshiring:",
+    "checkUsername": "Username to'g'ri yozilgan",
+    "checkPublic": "Kanal ochiq (yopiq emas)",
+    "checkExists": "Kanal Telegramda mavjud",
+    "tip": "💡 Maslahat: Kanal username Telegram → Kanal sozlamalari → Kanal turi bo'limida topiladi",
+    "lookupError": "Iltimos, kanal username kiriting"  }
 }

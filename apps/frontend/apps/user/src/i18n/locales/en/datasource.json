@@ -1,0 +1,40 @@
+{
+  "title": "Data Source Settings",
+  "realApi": "Real API Data",
+  "realApiDesc": "Connect to live analytics data from your channels",
+  "demoData": "Demo Data",
+  "demoDataDesc": "Use professional demo data for testing and preview",
+  "currentSource": "Current Data Source",
+  "liveApiData": "Live API Data",
+  "liveApiDataDesc": "Real analytics from your Telegram channels",
+  "professionalDemo": "Professional Demo Data",
+  "professionalDemoDesc": "35K+ views, realistic engagement metrics",
+  "apiConnectionStatus": "API Connection Status",
+  "checking": "Checking...",
+  "checkAgain": "Check Again",
+  "apiAvailable": "API is available and ready to serve real data",
+  "apiUnavailable": "API is currently unavailable. Using demo data automatically.",
+  "liveData": {
+    "title": "Live API Data",
+    "description": "Real-time data from your channels",
+    "features": {
+      "realTime": "Real-time Analytics",
+      "liveEngagement": "Live Engagement Data",
+      "accurateMetrics": "100% Accurate Metrics",
+      "yourData": "Your Real Data"
+    }
+  },
+  "demoData": {
+    "title": "Professional Demo Data",
+    "description": "High-quality demo data for testing",
+    "features": {
+      "realistic": "Realistic Sample Data",
+      "fullFeatures": "All Features Available",
+      "noSetup": "No Setup Required",
+      "perfectTesting": "Perfect for Testing"
+    }
+  },
+  "autoSwitching": "Auto-switching to Demo Data",
+  "switchTo": "Switch to",
+  "currentMode": "Current Mode"
+}

@@ -6,3 +6,4 @@
 export { BotSetupWizard } from './BotSetupWizard';
 export { UserBotDashboard } from './UserBotDashboard';
 export { AdminBotPanel } from './AdminBotPanel';
+export { BotModerationDashboard } from './BotService';

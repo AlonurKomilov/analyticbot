@@ -53,6 +53,12 @@ class UserBotCredentialsORM(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
+    # Role - system vs user ownership
+    role: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="user", index=True,
+        comment="Bot role: 'system' for system-owned, 'user' for user-owned bots"
+    )
+
     # Webhook configuration
     webhook_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false", index=True

@@ -41,12 +41,13 @@ class IUserBotRepository(ABC):
         limit: int = 50,
         offset: int = 0,
         status: str | None = None,
+        role: str | None = None,
     ) -> list[UserBotCredentials]:
         """List all user bot credentials (admin function)"""
         pass
 
     @abstractmethod
-    async def count(self, status: str | None = None) -> int:
+    async def count(self, status: str | None = None, role: str | None = None) -> int:
         """Count total user bots"""
         pass
 

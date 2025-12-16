@@ -35,6 +35,10 @@ CSRF_EXEMPT_PATHS = {
     "/auth/login",
     "/auth/telegram/login",
     "/auth/telegram/callback",
+    "/auth/telegram/webapp",  # Telegram Web App has its own init_data validation
+    "/auth/telegram/bot-login/init",  # Bot-based login flow
+    "/auth/telegram/bot-login/confirm",  # Called by bot, has own validation
+    "/auth/telegram/bot-login/terminate-session",  # Called by bot callback
     "/auth/register",
     "/auth/csrf-token",
     "/auth/refresh",

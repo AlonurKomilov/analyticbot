@@ -403,8 +403,50 @@ case $SERVICE in
         sleep 1
 
         echo ""
-        echo -e "${BLUE}🚀 Starting frontend with updated tunnel URL...${NC}"
-        cd apps/frontend/apps/user && start_service "frontend" 'npm run dev' 11300 && cd ../../../..
+        echo -e "${BLUE}🚀 Starting all frontend applications...${NC}"
+
+        # Public Catalog Frontend (analyticbot.org) - Port 11320
+        echo -e "${BLUE}📦 Starting Public Catalog (port 11320)...${NC}"
+        cd apps/frontend/apps/public
+        if [ ! -d "node_modules" ]; then
+            echo -e "${BLUE}📦 Installing public frontend dependencies...${NC}"
+            npm install
+        fi
+        start_service "frontend_public" 'npm run dev' 11320
+        cd ../../../..
+        sleep 1
+
+        # User Dashboard Frontend (app.analyticbot.org) - Port 11300
+        echo -e "${BLUE}📦 Starting User Dashboard (port 11300)...${NC}"
+        cd apps/frontend/apps/user
+        if [ ! -d "node_modules" ]; then
+            echo -e "${BLUE}📦 Installing user frontend dependencies...${NC}"
+            npm install
+        fi
+        start_service "frontend_user" 'npm run dev' 11300
+        cd ../../../..
+        sleep 1
+
+        # Moderator Panel Frontend (moderator.analyticbot.org) - Port 11330
+        echo -e "${BLUE}📦 Starting Moderator Panel (port 11330)...${NC}"
+        cd apps/frontend/apps/moderator
+        if [ ! -d "node_modules" ]; then
+            echo -e "${BLUE}📦 Installing moderator frontend dependencies...${NC}"
+            npm install
+        fi
+        start_service "frontend_moderator" 'npm run dev' 11330
+        cd ../../../..
+        sleep 1
+
+        # Admin Panel Frontend (admin.analyticbot.org) - Port 11310
+        echo -e "${BLUE}📦 Starting Admin Panel (port 11310)...${NC}"
+        cd apps/frontend/apps/admin
+        if [ ! -d "node_modules" ]; then
+            echo -e "${BLUE}📦 Installing admin frontend dependencies...${NC}"
+            npm install
+        fi
+        start_service "frontend_admin" 'npm run dev' 11310
+        cd ../../../..
         ;;
     "stop")
         # Stop all development services
@@ -451,10 +493,18 @@ case $SERVICE in
             pkill -9 -f "analyticbot.*uvicorn" 2>/dev/null || true
         fi
 
-        # Check for npm/vite (Frontend) processes specifically
-        if pgrep -f "vite.*11300" > /dev/null; then
+        # Check for npm/vite (Frontend) processes specifically - ALL PORTS
+        for port in 11300 11310 11320 11330; do
+            if pgrep -f "vite.*${port}" > /dev/null; then
+                echo -e "${YELLOW}🔄 Stopping frontend on port ${port}${NC}"
+                pkill -f "vite.*${port}" || true
+            fi
+        done
+
+        # Also stop any vite processes from our apps
+        if pgrep -f "apps/frontend/apps" > /dev/null; then
             echo -e "${YELLOW}🔄 Stopping remaining frontend processes${NC}"
-            pkill -f "vite.*11300" || true
+            pkill -f "apps/frontend/apps" || true
         fi
 
         # Check for bot processes
@@ -529,12 +579,39 @@ case $SERVICE in
             echo -e "API (11400):        ${RED}❌ Stopped${NC}"
         fi
 
-        # Check Frontend - Development Environment Port 11300
-        if curl -s http://localhost:11300 >/dev/null 2>&1; then
-            echo -e "Frontend (11300):   ${GREEN}✅ Running${NC}"
+        echo ""
+        echo -e "${BLUE}🌐 Frontend Applications:${NC}"
+
+        # Check Public Catalog - Port 11320 (analyticbot.org)
+        if curl -s http://localhost:11320 >/dev/null 2>&1; then
+            echo -e "Public (11320):     ${GREEN}✅ Running${NC}  → analyticbot.org"
         else
-            echo -e "Frontend (11300):   ${RED}❌ Stopped${NC}"
+            echo -e "Public (11320):     ${RED}❌ Stopped${NC}   → analyticbot.org"
         fi
+
+        # Check User Dashboard - Port 11300 (app.analyticbot.org)
+        if curl -s http://localhost:11300 >/dev/null 2>&1; then
+            echo -e "User (11300):       ${GREEN}✅ Running${NC}  → app.analyticbot.org"
+        else
+            echo -e "User (11300):       ${RED}❌ Stopped${NC}   → app.analyticbot.org"
+        fi
+
+        # Check Moderator Panel - Port 11330 (moderator.analyticbot.org)
+        if curl -s http://localhost:11330 >/dev/null 2>&1; then
+            echo -e "Moderator (11330):  ${GREEN}✅ Running${NC}  → moderator.analyticbot.org"
+        else
+            echo -e "Moderator (11330):  ${RED}❌ Stopped${NC}   → moderator.analyticbot.org"
+        fi
+
+        # Check Admin Panel - Port 11310 (admin.analyticbot.org)
+        if curl -s http://localhost:11310 >/dev/null 2>&1; then
+            echo -e "Admin (11310):      ${GREEN}✅ Running${NC}  → admin.analyticbot.org"
+        else
+            echo -e "Admin (11310):      ${RED}❌ Stopped${NC}   → admin.analyticbot.org"
+        fi
+
+        echo ""
+        echo -e "${BLUE}🤖 Workers:${NC}"
 
         # Check Bot (by PID file)
         if [ -f "logs/dev_bot.pid" ] && kill -0 $(cat logs/dev_bot.pid) 2>/dev/null; then

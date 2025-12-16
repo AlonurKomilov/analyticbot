@@ -113,9 +113,11 @@ const AuditLogPage: React.FC = () => {
   const fetchActions = useCallback(async () => {
     try {
       const response = await apiClient.get<string[]>(`${API_ENDPOINTS.ADMIN.AUDIT_LOG}/actions`);
-      setActions(response.data);
-    } catch {
-      console.error('Failed to fetch action types');
+      const actionsData = Array.isArray(response.data) ? response.data : [];
+      setActions(actionsData);
+    } catch (err) {
+      console.error('Failed to fetch action types:', err);
+      setActions([]);
     }
   }, []);
 
@@ -144,11 +146,13 @@ const AuditLogPage: React.FC = () => {
       const response = await apiClient.get<AuditLogResponse>(
         `${API_ENDPOINTS.ADMIN.AUDIT_LOG}?${params.toString()}`
       );
-      setEntries(response.data.entries);
-      setTotal(response.data.total);
+      setEntries(response.data.entries || []);
+      setTotal(response.data.total || 0);
     } catch (err) {
       setError('Failed to load audit logs. Please try again.');
       console.error('Audit log fetch error:', err);
+      setEntries([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -228,7 +232,7 @@ const AuditLogPage: React.FC = () => {
                 }}
               >
                 <MenuItem value="">All Actions</MenuItem>
-                {actions.map((action) => (
+                {Array.isArray(actions) && actions.map((action) => (
                   <MenuItem key={action} value={action}>
                     {formatActionName(action)}
                   </MenuItem>
@@ -332,7 +336,7 @@ const AuditLogPage: React.FC = () => {
                     </Typography>
                   </TableCell>
                 </TableRow>
-              ) : entries.length === 0 ? (
+              ) : !entries || entries.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <AuditIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />

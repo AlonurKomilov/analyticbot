@@ -128,7 +128,7 @@ class ServiceHealthResponse(BaseModel):
 
 async def get_ai_insights_orchestrator():
     """Get AI insights orchestrator service instance"""
-    from core.services.ai_insights_fusion.orchestrator.ai_insights_orchestrator_service import (
+    from core.services.ai.insights.ai_insights_fusion.orchestrator.ai_insights_orchestrator_service import (
         AIInsightsOrchestratorService,
     )
 

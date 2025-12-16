@@ -8,7 +8,9 @@
     "reports": "Отчеты",
     "settings": "Настройки",
     "help": "Помощь",
-    "logout": "Выход"
+    "logout": "Выход",
+    "browseCatalog": "Каталог каналов",
+    "publicCatalog": "Публичный каталог"
   },
   "aiServices": "AI Сервисы",
   "myBot": "Мой бот",
@@ -18,6 +20,7 @@
   "payment": "Оплата",
   "workers": {
     "bot": "Бот воркер",
+    "botModeration": "Модерация бота",
     "mtproto": "MTProto воркер"
   },
   "header": {

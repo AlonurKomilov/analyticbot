@@ -28,6 +28,7 @@ from apps.api.routers.exports_router import router as exports_router
 from apps.api.routers.health_router import router as health_router
 from apps.api.routers.home_dashboard_router import router as home_dashboard_router
 from apps.api.routers.marketplace_router import router as marketplace_router  # 🏪 Marketplace
+from apps.api.routers.service_subscriptions_router import router as service_subscriptions_router  # 🛒 Service Subscriptions
 from apps.api.routers.media_router import router as media_router
 from apps.api.routers.ml_predictions_router import router as ml_predictions_router
 from apps.api.routers.mobile_router import router as mobile_router
@@ -493,6 +494,15 @@ app.include_router(admin_plans_router)  # Admin - Plans Management
 app.include_router(admin_system_router)  # Admin - System Management
 app.include_router(credits_router)  # 💰 Credit System - balance, transactions, packages
 app.include_router(marketplace_router)  # 🏪 Marketplace - items, purchases, gifts, bundles
+app.include_router(service_subscriptions_router)  # 🛒 Service Subscriptions - bot/MTProto features
+
+# 🌐 Public Catalog - No authentication required
+from apps.api.routers.public_catalog_router import router as public_catalog_router
+app.include_router(public_catalog_router)  # 📊 Public Analytics Catalog (analyticbot.org)
+
+# 🔧 Moderator Catalog - Requires moderator role
+from apps.api.routers.moderator_catalog_router import router as moderator_catalog_router
+app.include_router(moderator_catalog_router)  # 🔧 Moderator Catalog Management
 
 # ✅ PHASE 4: ANALYTICS DOMAIN REORGANIZATION (October 22, 2025)
 # Consolidated analytics domain architecture - all analytics under /analytics/*
@@ -597,6 +607,7 @@ from apps.api.routers.user_bot_router import router as user_bot_router
 from apps.api.routers.user_mtproto import router as user_mtproto_router
 from apps.api.routers.user_mtproto_monitoring_router import router as user_mtproto_monitoring_router
 from apps.api.routers.webhook_router import router as webhook_router
+from apps.api.routers.user_bot_service_router import router as user_bot_service_router
 
 app.include_router(user_bot_router, tags=["User Bot Management"])  # /api/user-bot/*
 app.include_router(admin_bot_router, tags=["Admin Bot Management"])  # /api/admin/bots/*
@@ -607,6 +618,9 @@ app.include_router(
 app.include_router(
     webhook_router, tags=["Telegram Webhooks"]
 )  # /webhook/* - Receive Telegram updates
+app.include_router(
+    user_bot_service_router, tags=["User Bot Service"]
+)  # /api/user-bot/service/* - Bot service features
 
 # ✅ PHASE 7: AI DOMAIN REORGANIZATION (October 22, 2025)
 # Consolidating all AI services under /ai/* for better organization

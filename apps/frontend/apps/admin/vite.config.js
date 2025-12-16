@@ -34,6 +34,15 @@ export default defineConfig({
     host: '0.0.0.0',
     cors: true,
     hmr: true,
+    proxy: {
+      // Proxy API requests to backend to avoid CORS/connection issues
+      '/api': {
+        target: 'http://localhost:11400',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        secure: false,
+      },
+    },
   },
 
   // Path resolution

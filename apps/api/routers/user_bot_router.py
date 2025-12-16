@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from apps.api.middleware.auth import get_current_user_id  # Use existing auth system
 from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
-from apps.api.services.bot_service_factory import create_user_bot_service
+from apps.api.services.bot_service_factory import create_admin_bot_service
 from apps.api.utils.error_messages import BotErrorMessages, get_user_friendly_error
 from apps.bot.multi_tenant.token_validator import (
     TokenValidationStatus,
@@ -128,7 +128,7 @@ async def create_user_bot(
             f"@{validation_result.bot_username} (ID: {validation_result.bot_id})"
         )
 
-        service = await create_user_bot_service(repository)
+        service = await create_admin_bot_service(repository)
 
         credentials = await service.create_user_bot(
             user_id=user_id,
@@ -238,9 +238,8 @@ async def get_bot_status(
     """
     try:
         logger.info(f"🔍 Getting bot status for user_id={user_id}")
-        service = await create_user_bot_service(repository)
-        logger.info("✅ Service created, calling get_user_bot_status...")
-        credentials = await service.get_user_bot_status(user_id)
+        service = await create_admin_bot_service(repository)
+        credentials = await repository.get_by_user_id(user_id)
         logger.info(f"📊 Credentials result: {credentials}")
 
         if not credentials:
@@ -308,7 +307,7 @@ async def verify_bot(
     - **test_chat_id**: Chat ID to send test message to (required if send_test_message=true)
     """
     try:
-        service = await create_user_bot_service(repository)
+        service = await create_admin_bot_service(repository)
 
         # Validate test message parameters
         if verify_request.send_test_message and not verify_request.test_chat_id:
@@ -368,7 +367,7 @@ async def remove_bot(
     - Remove all bot data
     """
     try:
-        service = await create_user_bot_service(repository)
+        service = await create_admin_bot_service(repository)
         success = await service.remove_user_bot(user_id)
 
         if not success:
@@ -412,7 +411,7 @@ async def update_rate_limits(
     - **max_concurrent_requests**: New concurrent request limit (1-50, optional)
     """
     try:
-        service = await create_user_bot_service(repository)
+        service = await create_admin_bot_service(repository)
 
         credentials = await service.update_rate_limits(
             user_id=user_id,

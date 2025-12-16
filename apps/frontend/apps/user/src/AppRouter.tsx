@@ -36,6 +36,7 @@ const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
 const CreditsPage = React.lazy(() => import('./pages/CreditsPage'));
 const RewardsPage = React.lazy(() => import('./pages/RewardsPage'));
 const MarketplacePage = React.lazy(() => import('./pages/MarketplacePage'));
+const MyServicesPage = React.lazy(() => import('./pages/MyServicesPage'));
 const SubscriptionPage = React.lazy(() => import('./pages/SubscriptionPage'));
 const PaymentHistoryPage = React.lazy(() => import('./pages/PaymentHistoryPage'));
 const InvoicesPage = React.lazy(() => import('./pages/InvoicesPage'));
@@ -52,6 +53,8 @@ const ServerErrorPage = React.lazy(() => import('./pages/ServerErrorPage'));
 // Workers Pages (Bot & MTProto unified)
 const WorkerBotPage = React.lazy(() => import('./pages/workers/WorkerBotPage'));
 const WorkerMTProtoPage = React.lazy(() => import('./pages/workers/WorkerMTProtoPage'));
+const BotModerationPage = React.lazy(() => import('./pages/BotModerationPage'));
+const ServiceConfigPage = React.lazy(() => import('./pages/services/ServiceConfigPage'));
 
 // Legacy pages removed - using redirects to /workers/* routes
 // AdminBotManagementPage - MOVED to admin.analyticbot.org
@@ -276,6 +279,26 @@ const AppRouter: React.FC = () => {
                                         </ProtectedRoute>
                                     }
                                 />
+                                <Route
+                                    path="/workers/bot/service"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <BotModerationPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/workers/bot/service/:serviceKey"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <ServiceConfigPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
 
                                 {/* Legacy Bot Routes - Redirect to Workers */}
                                 <Route path="/bot/setup" element={<Navigate to="/workers/bot" replace />} />
@@ -437,6 +460,16 @@ const AppRouter: React.FC = () => {
                                         <ProtectedRoute>
                                             <OptimizedSuspense skeletonType="dashboard">
                                                 <MarketplacePage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.MY_SERVICES}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <MyServicesPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }

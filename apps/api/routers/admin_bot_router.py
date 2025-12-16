@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from apps.api.middleware.auth import require_admin_user  # Use existing auth system
 from apps.api.services.bot_service_factory import create_admin_bot_service
 from apps.di import get_container
-from core.models.user_bot_domain import BotStatus
+from core.models.user_bot_domain import BotStatus, BotRole
 from core.ports.user_bot_repository import IUserBotRepository
 from core.schemas.user_bot_schemas import (
     AdminAccessResponse,
@@ -66,6 +66,7 @@ async def list_all_bots(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page"),
     status_filter: BotStatus | None = Query(None, description="Filter by status"),
+    role_filter: BotRole | None = Query(None, description="Filter by role (system/user)"),
 ):
     """
     List all user bots (admin only).
@@ -73,6 +74,7 @@ async def list_all_bots(
     - **page**: Page number (default: 1)
     - **page_size**: Items per page (1-100, default: 50)
     - **status_filter**: Filter by bot status (optional)
+    - **role_filter**: Filter by bot role - 'system' or 'user' (optional)
     """
     try:
         service = await create_admin_bot_service(repository)
@@ -81,6 +83,7 @@ async def list_all_bots(
             page=page,
             page_size=page_size,
             status_filter=status_filter,
+            role_filter=role_filter,
         )
 
         # Convert to response models (filter out bots with None IDs)
@@ -92,6 +95,7 @@ async def list_all_bots(
                 bot_id=bot.bot_id,
                 status=bot.status,
                 is_verified=bot.is_verified,
+                role=bot.role,
                 max_requests_per_second=int(bot.rate_limit_rps),
                 max_concurrent_requests=bot.max_concurrent_requests,
                 total_requests=bot.total_requests,

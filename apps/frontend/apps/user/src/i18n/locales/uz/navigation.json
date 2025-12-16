@@ -18,6 +18,7 @@
   "payment": "To'lov",
   "workers": {
     "bot": "Bot Worker",
+    "botModeration": "Bot Moderatsiyasi",
     "mtproto": "MTProto Worker"
   },
   "header": {

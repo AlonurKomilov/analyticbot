@@ -1,6 +1,26 @@
 """
 Framework-agnostic business services
 Contains core business logic without external dependencies
+
+Module Structure:
+- bot/        : Bot moderation, analytics, alerts, dashboard, reporting
+- mtproto/    : MTProto services, history access, media download
+- ai/         : AI/ML services, NLG, churn prediction, insights
+- system/     : System services, auth, cache, marketplace
+
+Usage:
+    # Bot services
+    from core.services.bot import BotFeaturesManager, AntiSpamService
+    from core.services.bot.analytics import AnalyticsBatchProcessor
+    
+    # MTProto services
+    from core.services.mtproto import MTProtoService, HistoryAccessService
+    
+    # AI services
+    from core.services.ai import AIChatService, StrategyGenerationService
+    
+    # System services
+    from core.services.system import MarketplaceService, FeatureGateService
 """
 
 import logging

@@ -67,5 +67,10 @@
     "502": "Bad gateway",
     "503": "Service temporarily unavailable",
     "504": "Gateway timeout"
+  },
+  "mtproto": {
+    "configureAccountError": "Failed to configure account",
+    "disconnectError": "Failed to disconnect session",
+    "removeError": "Failed to remove account configuration"
   }
 }

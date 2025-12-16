@@ -1,6 +1,8 @@
 // API Configuration for Admin Panel
+// Use relative /api path which nginx proxies to the backend
+// This avoids CORS issues and provides better security
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'https://api.analyticbot.org',
+  BASE_URL: '/api',
   TIMEOUT: 30000,
 };
 

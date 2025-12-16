@@ -85,6 +85,29 @@
     "sortByName": "Названию",
     "sortBySubscribers": "Подписчикам",
     "sortByViews": "Просмотрам",
-    "sortByRecent": "Недавней активности"
-  }
+    "sortByRecent": "Недавней активности"  },
+  "dialog": {
+    "addTitle": "Добавить Telegram канал",
+    "editTitle": "Редактировать канал",
+    "error": "Ошибка:",
+    "step1": "Шаг 1: Введите username вашего канала",
+    "step2": "Шаг 2: Подтвердите информацию о канале",
+    "channelUsername": "Username канала",
+    "usernamePlaceholder": "@мойканал или мойканал",
+    "usernameHelp": "Введите username канала и нажмите Поиск для автоматического получения информации",
+    "searchButton": "Найти канал",
+    "searching": "Поиск...",
+    "subscribers": "подписчиков",
+    "created": "Создан",
+    "adminSuccess": "✓ Бот имеет права администратора - Готов к добавлению!",
+    "adminError": "Боту нужны права администратора. Сначала добавьте бота как администратора.",
+    "scamWarning": "⚠️ Этот канал помечен Telegram как потенциальное мошенничество",
+    "notFound": "Канал не найден",
+    "notFoundMessage": "Мы не смогли найти канал с username",
+    "checkTitle": "Пожалуйста, проверьте:",
+    "checkUsername": "Username написан правильно",
+    "checkPublic": "Канал публичный (не приватный)",
+    "checkExists": "Канал существует в Telegram",
+    "tip": "💡 Подсказка: Username канала можно найти в Telegram → Настройки канала → Тип канала",
+    "lookupError": "Пожалуйста, введите username канала"  }
 }

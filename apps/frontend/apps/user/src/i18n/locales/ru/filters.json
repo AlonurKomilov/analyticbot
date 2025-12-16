@@ -1,0 +1,46 @@
+{
+  "filters": {
+    "title": "Фильтры",
+    "apply": "Применить фильтры",
+    "clear": "Очистить фильтры",
+    "reset": "Сбросить",
+    "timePeriod": "Временной период",
+    "analysisPeriod": "Период анализа",
+    "dateRange": "Диапазон дат",
+    "customRange": "Пользовательский диапазон"
+  },
+  "timePeriods": {
+    "lastHour": "Последний час",
+    "last6Hours": "Последние 6 часов",
+    "last24Hours": "Последние 24 часа",
+    "last7Days": "Последние 7 дней",
+    "last14Days": "Последние 14 дней",
+    "last30Days": "Последние 30 дней",
+    "last90Days": "Последние 90 дней",
+    "thisWeek": "Эта неделя",
+    "thisMonth": "Этот месяц",
+    "allTime": "Все время",
+    "custom": "Пользовательский"
+  },
+  "quickFilters": {
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "thisWeek": "Эта неделя",
+    "lastWeek": "Прошлая неделя",
+    "thisMonth": "Этот месяц",
+    "lastMonth": "Прошлый месяц"
+  },
+  "comparison": {
+    "title": "Сравнить с",
+    "previousPeriod": "Предыдущий период",
+    "previousYear": "Прошлый год",
+    "custom": "Пользовательский период",
+    "none": "Без сравнения"
+  },
+  "labels": {
+    "startDate": "Дата начала",
+    "endDate": "Дата окончания",
+    "selectDate": "Выберите дату",
+    "selectTime": "Выберите время"
+  }
+}

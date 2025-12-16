@@ -154,7 +154,7 @@ async def get_channel_overview_dashboard(
             return cached
         
         # Import here to avoid circular imports
-        from core.services.analytics_fusion.overview import AnalyticsOverviewService
+        from core.services.system.analytics.analytics_fusion.overview import AnalyticsOverviewService
         
         # Create service and get metrics with period
         service = AnalyticsOverviewService(pool)
@@ -198,7 +198,7 @@ async def get_channel_quick_stats(
         if cached:
             return cached
         
-        from core.services.analytics_fusion.overview import AnalyticsOverviewService
+        from core.services.system.analytics.analytics_fusion.overview import AnalyticsOverviewService
         
         service = AnalyticsOverviewService(pool)
         metrics = await service.get_channel_overview(channel_id)
@@ -248,7 +248,7 @@ async def get_channel_charts(
         if cached:
             return cached
         
-        from core.services.analytics_fusion.overview import AnalyticsOverviewService
+        from core.services.system.analytics.analytics_fusion.overview import AnalyticsOverviewService
         
         service = AnalyticsOverviewService(pool)
         
@@ -404,7 +404,7 @@ async def get_telegram_stats(
             raise HTTPException(status_code=401, detail="User ID not found")
         
         # Import and create the service
-        from core.services.analytics_fusion.overview import TelegramStatsService
+        from core.services.system.analytics.analytics_fusion.overview import TelegramStatsService
         from apps.di import get_container
         
         container = get_container()

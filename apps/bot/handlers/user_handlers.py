@@ -113,6 +113,190 @@ def _build_start_menu_kb(i18n: Any) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def _parse_user_agent(user_agent: str) -> str:
+    """Parse user agent string to extract browser and OS info."""
+    if not user_agent:
+        return "Unknown Browser"
+    
+    ua = user_agent.lower()
+    
+    # Detect browser
+    browser = "Unknown Browser"
+    if "edg/" in ua or "edge/" in ua:
+        browser = "Edge"
+    elif "chrome/" in ua and "safari/" in ua:
+        browser = "Chrome"
+    elif "firefox/" in ua:
+        browser = "Firefox"
+    elif "safari/" in ua and "chrome/" not in ua:
+        browser = "Safari"
+    elif "opera" in ua or "opr/" in ua:
+        browser = "Opera"
+    
+    # Try to get version
+    import re
+    version_match = None
+    if browser == "Chrome":
+        version_match = re.search(r'chrome/(\d+)', ua)
+    elif browser == "Firefox":
+        version_match = re.search(r'firefox/(\d+)', ua)
+    elif browser == "Safari":
+        version_match = re.search(r'version/(\d+)', ua)
+    elif browser == "Edge":
+        version_match = re.search(r'edg/(\d+)', ua)
+    
+    if version_match:
+        browser = f"{browser} {version_match.group(1)}"
+    
+    # Detect OS
+    os_name = "Unknown OS"
+    if "windows" in ua:
+        os_name = "Windows"
+    elif "mac os" in ua or "macintosh" in ua:
+        os_name = "macOS"
+    elif "linux" in ua:
+        if "android" in ua:
+            os_name = "Android"
+        else:
+            os_name = "Linux"
+    elif "iphone" in ua or "ipad" in ua:
+        os_name = "iOS"
+    
+    return f"{browser} on {os_name}"
+
+
+async def _handle_bot_login(
+    message: types.Message,
+    telegram_id: int | None,
+    username: str | None,
+    full_name: str | None,
+    login_code: str,
+    i18n: I18nContext,
+) -> None:
+    """Handle bot-based login from analyticbot.org website."""
+    import aiohttp
+
+    if telegram_id is None:
+        await message.answer(
+            "❌ Unable to identify your Telegram account. Please try again.",
+            parse_mode="HTML",
+        )
+        return
+
+    log.info(f"🔐 Processing bot login for telegram_id={telegram_id}, code={login_code}")
+
+    # Call the API to confirm the login
+    api_base_url = os.getenv("API_BASE_URL", "http://localhost:11400")
+    confirm_url = f"{api_base_url}/auth/telegram/bot-login/confirm"
+
+    # Get user's photo URL if available
+    photo_url = None
+    try:
+        if message.from_user:
+            photos = await message.bot.get_user_profile_photos(telegram_id, limit=1)
+            if photos.total_count > 0:
+                # Get the smallest photo (last in the list)
+                photo = photos.photos[0][-1]
+                file = await message.bot.get_file(photo.file_id)
+                if file.file_path:
+                    photo_url = f"https://api.telegram.org/file/bot{message.bot.token}/{file.file_path}"
+    except Exception as e:
+        log.warning(f"Failed to get user photo: {e}")
+
+    payload = {
+        "login_code": login_code,
+        "telegram_id": telegram_id,
+        "username": username,
+        "first_name": full_name.split()[0] if full_name else (username or "User"),
+        "last_name": " ".join(full_name.split()[1:]) if full_name and len(full_name.split()) > 1 else None,
+        "photo_url": photo_url,
+    }
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(confirm_url, json=payload) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    log.info(f"✅ Bot login confirmed for telegram_id={telegram_id}")
+
+                    # Parse client info for display
+                    client_info = result.get("client_info", {})
+                    client_ip = client_info.get("client_ip", "Unknown")
+                    user_agent = client_info.get("user_agent", "")
+                    session_token = result.get("session_token", "")
+                    
+                    # Parse browser and OS from user agent
+                    browser_info = _parse_user_agent(user_agent)
+                    
+                    # Build session info message
+                    session_info = f"""<b>🌐 Browser:</b> {browser_info}
+<b>📍 IP:</b> {client_ip}"""
+
+                    # Create terminate session keyboard
+                    terminate_kb = InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(
+                            text="🚫 Terminate session",
+                            callback_data=f"terminate_session:{session_token[:50]}"
+                        )]
+                    ]) if session_token else None
+
+                    # Send success message to user with session info
+                    await message.answer(
+                        f"""✅ <b>Login Successful!</b>
+
+🎉 Welcome, <b>{full_name or username or 'User'}</b>!
+
+You have successfully logged in to <b>AnalyticBot</b>.
+
+━━━━━━━━━━━━━━━━━━━━━
+{session_info}
+━━━━━━━━━━━━━━━━━━━━━
+
+🔄 <b>You can now close the Telegram tab</b> and return to the website - you should be automatically logged in.
+
+💡 Press 'Terminate session' to log out from this device.
+
+📊 <a href="https://analyticbot.org">Go to AnalyticBot.org</a>""",
+                        parse_mode="HTML",
+                        disable_web_page_preview=True,
+                        reply_markup=terminate_kb,
+                    )
+                elif response.status == 404:
+                    log.warning(f"❌ Login code expired or invalid: {login_code}")
+                    await message.answer(
+                        """❌ <b>Login Failed</b>
+
+The login link has expired or is invalid.
+
+Please go back to <b>analyticbot.org</b> and try again.
+
+━━━━━━━━━━━━━━━━━━━━━
+📊 <a href="https://analyticbot.org">Go to AnalyticBot.org</a>
+━━━━━━━━━━━━━━━━━━━━━""",
+                        parse_mode="HTML",
+                        disable_web_page_preview=True,
+                    )
+                else:
+                    error_text = await response.text()
+                    log.error(f"❌ Bot login API error: {response.status} - {error_text}")
+                    await message.answer(
+                        """❌ <b>Login Error</b>
+
+Something went wrong. Please try again later.
+
+If the problem persists, contact support.""",
+                        parse_mode="HTML",
+                    )
+    except Exception as e:
+        log.error(f"❌ Bot login request failed: {e}", exc_info=True)
+        await message.answer(
+            """❌ <b>Connection Error</b>
+
+Unable to connect to the server. Please try again later.""",
+            parse_mode="HTML",
+        )
+
+
 async def _set_webapp_menu_or_default(message: types.Message, i18n: Any) -> None:
     """
     Persistent menu tugmasi: HTTPS bo'lsa WebApp, bo'lmasa default.
@@ -155,6 +339,15 @@ async def cmd_start(message: types.Message, i18n: I18nContext):
         f"📥 /start command received from telegram_id={uid}, username={uname}, full_name={full_name}"
     )
     log.info(f"📝 Raw message text: {message.text}")
+
+    # Check for login deep link (format: /start login_CODE)
+    if message.text:
+        parts = message.text.split()
+        if len(parts) > 1 and parts[1].startswith("login_"):
+            login_code = parts[1][6:]  # Remove "login_" prefix
+            log.info(f"🔐 Login code detected from deep link: {login_code}")
+            await _handle_bot_login(message, uid, uname, full_name, login_code, i18n)
+            return
 
     # Extract referral code from deep link (format: /start ref_CODE)
     referral_code = None
@@ -487,6 +680,63 @@ async def callback_quick_commands(callback: CallbackQuery, i18n: I18nContext):
     if callback.message:
         await callback.message.answer(i18n.get("commands-list"))
     await callback.answer()
+
+
+@router.callback_query(F.data.startswith("terminate_session:"))
+async def callback_terminate_session(callback: CallbackQuery):
+    """Handle terminate session button click from bot login success message."""
+    import aiohttp
+    
+    if not callback.data or not callback.from_user:
+        await callback.answer("Unable to process request", show_alert=True)
+        return
+    
+    # Extract session token from callback data
+    session_token_partial = callback.data.replace("terminate_session:", "")
+    telegram_id = callback.from_user.id
+    
+    log.info(f"🔐 User {telegram_id} requested session termination")
+    
+    # Call the API to terminate the session
+    api_base_url = os.getenv("API_BASE_URL", "http://localhost:11400")
+    terminate_url = f"{api_base_url}/auth/telegram/bot-login/terminate-session"
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                terminate_url,
+                params={
+                    "telegram_id": telegram_id,
+                    "session_token": session_token_partial,
+                }
+            ) as response:
+                if response.status == 200:
+                    log.info(f"✅ Session terminated for user {telegram_id}")
+                    
+                    # Update the message to show session was terminated
+                    if callback.message:
+                        try:
+                            await callback.message.edit_text(
+                                """✅ <b>Session Terminated</b>
+
+Your login session has been successfully ended.
+
+If you want to log in again, visit:
+📊 <a href="https://analyticbot.org">AnalyticBot.org</a>""",
+                                parse_mode="HTML",
+                                disable_web_page_preview=True,
+                            )
+                        except Exception as edit_err:
+                            log.warning(f"Failed to edit message: {edit_err}")
+                    
+                    await callback.answer("✅ Session terminated", show_alert=True)
+                else:
+                    error_text = await response.text()
+                    log.error(f"❌ Session termination failed: {response.status} - {error_text}")
+                    await callback.answer("❌ Failed to terminate session", show_alert=True)
+    except Exception as e:
+        log.error(f"❌ Session termination request failed: {e}", exc_info=True)
+        await callback.answer("❌ Connection error", show_alert=True)
 
 
 @router.message(F.web_app_data)

@@ -40,8 +40,7 @@
     "shares": "Ulashishlar",
     "engagementRate": "Faollik darajasi",
     "viewsGrowth": "Ko'rishlar o'sishi"
-  },
-  "create": {
+  },  "top": "Top",  "create": {
     "title": "Post yaratish",
     "selectChannel": "Kanalni tanlang",
     "content": "Kontent",

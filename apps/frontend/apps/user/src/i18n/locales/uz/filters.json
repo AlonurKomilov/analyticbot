@@ -1,0 +1,46 @@
+{
+  "filters": {
+    "title": "Filterlar",
+    "apply": "Filterlarni qo'llash",
+    "clear": "Filterlarni tozalash",
+    "reset": "Qayta tiklash",
+    "timePeriod": "Vaqt davri",
+    "analysisPeriod": "Tahlil davri",
+    "dateRange": "Sana oralig'i",
+    "customRange": "Maxsus oraliq"
+  },
+  "timePeriods": {
+    "lastHour": "Oxirgi soat",
+    "last6Hours": "Oxirgi 6 soat",
+    "last24Hours": "Oxirgi 24 soat",
+    "last7Days": "Oxirgi 7 kun",
+    "last14Days": "Oxirgi 14 kun",
+    "last30Days": "Oxirgi 30 kun",
+    "last90Days": "Oxirgi 90 kun",
+    "thisWeek": "Shu hafta",
+    "thisMonth": "Shu oy",
+    "allTime": "Barcha vaqt",
+    "custom": "Maxsus"
+  },
+  "quickFilters": {
+    "today": "Bugun",
+    "yesterday": "Kecha",
+    "thisWeek": "Shu hafta",
+    "lastWeek": "O'tgan hafta",
+    "thisMonth": "Shu oy",
+    "lastMonth": "O'tgan oy"
+  },
+  "comparison": {
+    "title": "Taqqoslash",
+    "previousPeriod": "Oldingi davr",
+    "previousYear": "O'tgan yil",
+    "custom": "Maxsus davr",
+    "none": "Taqqoslashsiz"
+  },
+  "labels": {
+    "startDate": "Boshlanish sanasi",
+    "endDate": "Tugash sanasi",
+    "selectDate": "Sanani tanlang",
+    "selectTime": "Vaqtni tanlang"
+  }
+}

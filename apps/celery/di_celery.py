@@ -9,7 +9,7 @@ Tasks should depend on protocols, not concrete implementations.
 import logging
 
 from core.protocols import DeepLearningServiceProtocol
-from core.services.deep_learning import DLOrchestratorService
+from core.services.ai.deep_learning import DLOrchestratorService
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ async def cleanup_celery_services():
         # Try to stop the orchestrator service if it has the method
         try:
             # Cast to concrete type for cleanup (implementation detail)
-            from core.services.deep_learning import DLOrchestratorService
+            from core.services.ai.deep_learning import DLOrchestratorService
 
             if isinstance(_dl_service, DLOrchestratorService):
                 await _dl_service.stop_services()

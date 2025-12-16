@@ -27,6 +27,10 @@ import {
   Checkbox,
   Toolbar,
   CircularProgress,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -37,6 +41,9 @@ import {
   PlayArrow as ActivateIcon,
   Pause as SuspendIcon,
   Download as DownloadIcon,
+  MoreVert as MoreVertIcon,
+  SmartToy as BotIcon,
+  CloudQueue as MTProtoIcon,
 } from '@mui/icons-material';
 import { apiClient } from '@api/client';
 import { API_ENDPOINTS } from '@config/api';
@@ -57,6 +64,8 @@ interface Channel {
   last_activity: string | null;
   total_posts: number;
   total_views: number;
+  bot_connected: boolean;
+  mtproto_connected: boolean;
 }
 
 const ChannelsPage: React.FC = () => {
@@ -77,12 +86,26 @@ const ChannelsPage: React.FC = () => {
   const [deleteDialog, setDeleteDialog] = useState<Channel | null>(null);
   const [viewDialog, setViewDialog] = useState<Channel | null>(null);
 
+  // Menu state for actions
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuChannel, setMenuChannel] = useState<Channel | null>(null);
+
   // Stats
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
     suspended: 0,
   });
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, channel: Channel) => {
+    setMenuAnchorEl(event.currentTarget);
+    setMenuChannel(channel);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setMenuChannel(null);
+  };
 
   const fetchChannels = useCallback(async () => {
     setLoading(true);
@@ -426,6 +449,8 @@ const ChannelsPage: React.FC = () => {
               <TableCell>Owner ID</TableCell>
               <TableCell>Subscribers</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Bot</TableCell>
+              <TableCell>MTProto</TableCell>
               <TableCell>Created</TableCell>
               <TableCell>Last Activity</TableCell>
               <TableCell align="right">Actions</TableCell>
@@ -462,6 +487,30 @@ const ChannelsPage: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
+                    <Tooltip title={channel.bot_connected ? "Bot Connected" : "Bot Not Connected"}>
+                      <Chip
+                        icon={<BotIcon sx={{ fontSize: 14 }} />}
+                        label={channel.bot_connected ? "Connected" : "Not Connected"}
+                        size="small"
+                        color={channel.bot_connected ? "success" : "default"}
+                        variant={channel.bot_connected ? "filled" : "outlined"}
+                        sx={{ minWidth: 110 }}
+                      />
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip title={channel.mtproto_connected ? "MTProto Active" : "MTProto Not Connected"}>
+                      <Chip
+                        icon={<MTProtoIcon sx={{ fontSize: 14 }} />}
+                        label={channel.mtproto_connected ? "Active" : "Inactive"}
+                        size="small"
+                        color={channel.mtproto_connected ? "info" : "default"}
+                        variant={channel.mtproto_connected ? "filled" : "outlined"}
+                        sx={{ minWidth: 90 }}
+                      />
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell>
                     {channel.created_at
                       ? format(new Date(channel.created_at), 'MMM d, yyyy')
                       : '-'}
@@ -472,57 +521,13 @@ const ChannelsPage: React.FC = () => {
                       : 'Never'}
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="View Details">
-                      <IconButton
-                        size="small"
-                        onClick={() => setViewDialog(channel)}
-                      >
-                        <ViewIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Force Sync">
-                      <IconButton
-                        size="small"
-                        color="info"
-                        onClick={() => handleSync(channel)}
-                        disabled={actionLoading === channel.id}
-                      >
-                        <SyncIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    {channel.is_active ? (
-                      <Tooltip title="Suspend Channel">
-                        <IconButton
-                          size="small"
-                          color="warning"
-                          onClick={() => handleSuspend(channel)}
-                          disabled={actionLoading === channel.id}
-                        >
-                          <SuspendIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip title="Reactivate Channel">
-                        <IconButton
-                          size="small"
-                          color="success"
-                          onClick={() => handleUnsuspend(channel)}
-                          disabled={actionLoading === channel.id}
-                        >
-                          <ActivateIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                    <Tooltip title="Delete Channel">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => setDeleteDialog(channel)}
-                        disabled={actionLoading === channel.id}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleMenuOpen(e, channel)}
+                      disabled={actionLoading === channel.id}
+                    >
+                      <MoreVertIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
@@ -540,6 +545,49 @@ const ChannelsPage: React.FC = () => {
           }}
         />
       </TableContainer>
+
+      {/* Actions Menu */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <MenuItem onClick={() => { if (menuChannel) setViewDialog(menuChannel); handleMenuClose(); }}>
+          <ListItemIcon>
+            <ViewIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>View Details</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => { if (menuChannel) handleSync(menuChannel); handleMenuClose(); }}>
+          <ListItemIcon>
+            <SyncIcon fontSize="small" color="info" />
+          </ListItemIcon>
+          <ListItemText>Force Sync</ListItemText>
+        </MenuItem>
+        {menuChannel?.is_active ? (
+          <MenuItem onClick={() => { if (menuChannel) handleSuspend(menuChannel); handleMenuClose(); }}>
+            <ListItemIcon>
+              <SuspendIcon fontSize="small" color="warning" />
+            </ListItemIcon>
+            <ListItemText>Suspend Channel</ListItemText>
+          </MenuItem>
+        ) : (
+          <MenuItem onClick={() => { if (menuChannel) handleUnsuspend(menuChannel); handleMenuClose(); }}>
+            <ListItemIcon>
+              <ActivateIcon fontSize="small" color="success" />
+            </ListItemIcon>
+            <ListItemText>Reactivate Channel</ListItemText>
+          </MenuItem>
+        )}
+        <MenuItem onClick={() => { if (menuChannel) setDeleteDialog(menuChannel); handleMenuClose(); }} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText>Delete Channel</ListItemText>
+        </MenuItem>
+      </Menu>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteDialog} onClose={() => setDeleteDialog(null)}>

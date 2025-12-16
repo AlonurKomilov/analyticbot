@@ -1,10 +1,57 @@
 /**
  * UserBotDashboard Custom Hooks
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useUserBotStore, useChannelStore } from '@/store';
+import { apiClient } from '@/api/client';
 import toast from 'react-hot-toast';
 import { DialogState, TestMessageState, RateLimitState } from './types';
+import { ActiveService } from './ActiveServicesCard';
+import { AvailableService } from './AvailableUpgradesCard';
+
+// Hook for fetching user's active services and available upgrades
+export const useBotServices = () => {
+  const [activeServices, setActiveServices] = useState<ActiveService[]>([]);
+  const [availableServices, setAvailableServices] = useState<AvailableService[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchServices = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Fetch user's active subscriptions and available services in parallel
+      const [activeResponse, catalogResponse] = await Promise.all([
+        apiClient.get<{ subscriptions: ActiveService[] }>('/services/user/active').catch(() => ({ subscriptions: [] })),
+        apiClient.get<{ services: AvailableService[] }>('/services').catch(() => ({ services: [] })),
+      ]);
+
+      setActiveServices(activeResponse.subscriptions || []);
+      setAvailableServices(catalogResponse.services || []);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load services');
+      console.error('Failed to fetch bot services:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchServices();
+  }, [fetchServices]);
+
+  const activeServiceKeys = activeServices.map(s => s.service_key);
+
+  return {
+    activeServices,
+    availableServices,
+    activeServiceKeys,
+    isLoading,
+    error,
+    refetch: fetchServices,
+  };
+};
 
 export const useBotDashboard = () => {
   const {

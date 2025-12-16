@@ -19,6 +19,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box,
     FormControl,
@@ -40,6 +41,7 @@ const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
     title,
     showIcon = false
 }) => {
+    const { t } = useTranslation('filters');
     const handleTimeFrameChange = (event: SelectChangeEvent) => {
         setTimeFrame(event.target.value as TimeFrame);
     };
@@ -98,22 +100,22 @@ const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
 
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                 <FormControl size="small" sx={{ minWidth: 200 }}>
-                    <InputLabel id="timeframe-label">Analysis Period</InputLabel>
+                    <InputLabel id="timeframe-label">{t('filters.analysisPeriod')}</InputLabel>
                     <Select
                         labelId="timeframe-label"
                         value={timeFrame}
-                        label="Analysis Period"
+                        label={t('filters.analysisPeriod')}
                         onChange={handleTimeFrameChange}
                     >
-                        <MenuItem value="1h">Last Hour</MenuItem>
-                        <MenuItem value="6h">Last 6 Hours</MenuItem>
-                        <MenuItem value="24h">Last 24 Hours</MenuItem>
-                        <MenuItem value="7d">Last 7 Days</MenuItem>
-                        <MenuItem value="30d">Last 30 Days</MenuItem>
-                        <MenuItem value="90d">Last 90 Days</MenuItem>
-                        <MenuItem value="180d">Last 6 Months</MenuItem>
-                        <MenuItem value="1y">Last Year</MenuItem>
-                        <MenuItem value="all">All Time</MenuItem>
+                        <MenuItem value="1h">{t('timePeriods.lastHour')}</MenuItem>
+                        <MenuItem value="6h">{t('timePeriods.last6Hours')}</MenuItem>
+                        <MenuItem value="24h">{t('timePeriods.last24Hours')}</MenuItem>
+                        <MenuItem value="7d">{t('timePeriods.last7Days')}</MenuItem>
+                        <MenuItem value="30d">{t('timePeriods.last30Days')}</MenuItem>
+                        <MenuItem value="90d">{t('timePeriods.last90Days')}</MenuItem>
+                        <MenuItem value="180d">{t('common.last180Days')}</MenuItem>
+                        <MenuItem value="1y">{t('common.lastYear')}</MenuItem>
+                        <MenuItem value="all">{t('timePeriods.allTime')}</MenuItem>
                     </Select>
                 </FormControl>
 

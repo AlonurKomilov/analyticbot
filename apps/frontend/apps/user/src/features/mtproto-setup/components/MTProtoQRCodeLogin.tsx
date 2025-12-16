@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Paper,
@@ -27,6 +28,7 @@ interface MTProtoQRCodeLoginProps {
 export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
   onSuccess,
 }) => {
+  const { t } = useTranslation(['mtproto', 'common']);
   const { requestQRLogin, checkQRStatus, submitQR2FA, isVerifying } = useMTProtoStore();
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
 
     setIsRefreshing(true);
     setStatus('loading');
-    setStatusMessage('Generating QR code...');
+    setStatusMessage(t('mtproto:qrLogin.generating'));
 
     // Clear any existing intervals
     if (pollingRef.current) {
@@ -76,7 +78,7 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
         setQrCodeBase64(result.qr_code_base64);
         setExpiresIn(result.expires_in);
         setStatus('waiting');
-        setStatusMessage('Scan with Telegram app');
+        setStatusMessage(t('mtproto:qrLogin.scan'));
         setIsRefreshing(false); // Reset after successful load
 
         // Start countdown
@@ -86,7 +88,7 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
               if (countdownRef.current) clearInterval(countdownRef.current);
               if (pollingRef.current) clearInterval(pollingRef.current);
               setStatus('error');
-              setStatusMessage('QR code expired. Click refresh to get a new one.');
+              setStatusMessage(t('mtproto:qrLogin.expired'));
               return 0;
             }
             return prev - 1;
@@ -104,7 +106,7 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
                 if (pollingRef.current) clearInterval(pollingRef.current);
                 if (countdownRef.current) clearInterval(countdownRef.current);
                 setStatus('success');
-                setStatusMessage('Login successful!');
+                setStatusMessage(t('mtproto:qrLogin.success'));
                 setTimeout(() => {
                   onSuccess();
                 }, 1500);
@@ -113,13 +115,13 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
                 if (pollingRef.current) clearInterval(pollingRef.current);
                 if (countdownRef.current) clearInterval(countdownRef.current);
                 setStatus('error');
-                setStatusMessage('QR code expired. Click refresh to get a new one.');
+                setStatusMessage(t('mtproto:qrLogin.expired'));
               } else if (statusResult.status === '2fa_required') {
                 // 2FA needed - show password form
                 if (pollingRef.current) clearInterval(pollingRef.current);
                 if (countdownRef.current) clearInterval(countdownRef.current);
                 setStatus('2fa');
-                setStatusMessage('Two-factor authentication required');
+                setStatusMessage(t('mtproto:qrLogin.twoFactor'));
               }
               // Otherwise keep polling (status === 'pending')
             }
@@ -182,9 +184,9 @@ export const MTProtoQRCodeLogin: React.FC<MTProtoQRCodeLoginProps> = ({
       <Box>
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
-            <strong>🔐 Two-Factor Authentication Required</strong>
+            <strong>{t('mtproto:qrLogin.twoFactor')}</strong>
             <br />
-            Your Telegram account has 2FA enabled. Please enter your password to complete login.
+            {t('mtproto:qrLogin.enterPassword')}
           </Typography>
         </Alert>
 

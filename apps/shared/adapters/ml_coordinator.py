@@ -23,9 +23,9 @@ from datetime import datetime
 from typing import Any, Protocol
 
 # Core service imports (the real implementations)
-from core.services.ai_insights_fusion import create_ai_insights_orchestrator
-from core.services.optimization_fusion import create_optimization_orchestrator
-from core.services.predictive_intelligence import create_predictive_orchestrator
+from core.services.ai.insights.ai_insights_fusion import create_ai_insights_orchestrator
+from core.services.system.optimization.optimization_fusion import create_optimization_orchestrator
+from core.services.ai.predictive.predictive_intelligence import create_predictive_orchestrator
 
 logger = logging.getLogger(__name__)
 

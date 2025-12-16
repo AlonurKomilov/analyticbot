@@ -57,7 +57,7 @@ async def analyze_contextual_intelligence(
         )
 
         # Map string contexts to IntelligenceContext enum
-        from core.services.predictive_intelligence.protocols.predictive_protocols import (
+        from core.services.ai.predictive.predictive_intelligence.protocols.predictive_protocols import (
             IntelligenceContext,
         )
 
@@ -288,7 +288,7 @@ async def get_prediction_narrative(
         }
 
         # Use PredictiveOrchestratorService for enhanced prediction with narrative
-        from core.services.predictive_intelligence.protocols.predictive_protocols import (
+        from core.services.ai.predictive.predictive_intelligence.protocols.predictive_protocols import (
             IntelligenceContext,
         )
 

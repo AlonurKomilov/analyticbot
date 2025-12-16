@@ -1,0 +1,115 @@
+{
+  "title": "Bot Moderation",
+  "description": "Manage bot moderation features and settings",
+  "tabs": {
+    "settings": "Settings",
+    "welcome": "Welcome Messages",
+    "inviteTracking": "Invite Tracking",
+    "log": "Moderation Log"
+  },
+  "settings": {
+    "title": "Moderation Settings",
+    "subtitle": "Configure bot moderation features for your group",
+    "optInNotice": "All features are opt-in.",
+    "cleanJoinMessages": {
+      "title": "Clean Join Messages",
+      "description": "Automatically delete system messages when users join",
+      "enable": "Enable join message cleanup",
+      "delay": "Delete after (seconds)",
+      "delayHelp": "How long to wait before deleting the message"
+    },
+    "cleanLeaveMessages": {
+      "title": "Clean Leave Messages",
+      "description": "Automatically delete system messages when users leave",
+      "enable": "Enable leave message cleanup",
+      "delay": "Delete after (seconds)"
+    },
+    "welcomeMessages": {
+      "title": "Welcome Messages",
+      "description": "Send custom welcome messages to new members",
+      "enable": "Enable welcome messages",
+      "customizeButton": "Customize Messages"
+    },
+    "inviteTracking": {
+      "title": "Invite Tracking",
+      "description": "Track who invited new members to your group",
+      "enable": "Enable invite tracking",
+      "viewStats": "View Statistics"
+    },
+    "saveButton": "Save Settings",
+    "saving": "Saving...",
+    "saveSuccess": "Settings saved successfully",
+    "saveError": "Failed to save settings"
+  },
+  "welcome": {
+    "title": "Welcome Message Configuration",
+    "disabled": "Welcome Messages feature is disabled.",
+    "enableFirst": "Enable it in the Settings tab first.",
+    "message": {
+      "label": "Welcome Message",
+      "placeholder": "Enter your welcome message here...",
+      "help": "Use {{mention}} for user mention, {{username}} for username"
+    },
+    "parseMode": {
+      "label": "Parse Mode",
+      "none": "None",
+      "markdown": "Markdown",
+      "markdownV2": "MarkdownV2",
+      "html": "HTML"
+    },
+    "buttons": {
+      "title": "Inline Buttons",
+      "add": "Add Button",
+      "text": "Button Text",
+      "url": "Button URL",
+      "remove": "Remove"
+    },
+    "preview": {
+      "title": "Preview",
+      "noPreview": "Configure a message to see preview"
+    },
+    "save": "Save Message",
+    "saving": "Saving...",
+    "success": "Welcome message saved successfully",
+    "error": "Failed to save welcome message"
+  },
+  "inviteTracking": {
+    "title": "Invite Tracking",
+    "disabled": "Invite Tracking is disabled.",
+    "enableFirst": "Enable it in the Settings tab first.",
+    "statistics": {
+      "title": "Invite Tracking Statistics",
+      "totalInvites": "Total Invites",
+      "activeInviters": "Active Inviters",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month"
+    },
+    "leaderboard": {
+      "title": "Invite Leaderboard",
+      "rank": "Rank",
+      "user": "User",
+      "invites": "Invites",
+      "thisWeek": "This Week",
+      "allTime": "All Time"
+    },
+    "noData": "No invite data available yet"
+  },
+  "log": {
+    "title": "Moderation Log",
+    "description": "View recent moderation actions",
+    "columns": {
+      "time": "Time",
+      "action": "Action",
+      "user": "User",
+      "details": "Details"
+    },
+    "actions": {
+      "joinMessageDeleted": "Join message deleted",
+      "leaveMessageDeleted": "Leave message deleted",
+      "welcomeSent": "Welcome message sent",
+      "inviteRecorded": "Invite recorded"
+    },
+    "empty": "No moderation actions recorded yet",
+    "refresh": "Refresh"
+  }
+}

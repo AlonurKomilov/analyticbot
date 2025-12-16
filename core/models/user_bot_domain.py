@@ -19,6 +19,13 @@ class BotStatus(str, Enum):
     ERROR = "error"  # Configuration error
 
 
+class BotRole(str, Enum):
+    """Bot ownership role - distinguishes system vs user bots"""
+
+    SYSTEM = "system"  # System-owned bot, configured via environment variables
+    USER = "user"  # User-owned bot in multi-tenant system (default)
+
+
 @dataclass
 class UserBotCredentials:
     """Domain model for user's bot credentials"""
@@ -44,6 +51,9 @@ class UserBotCredentials:
     # Status
     status: BotStatus = BotStatus.PENDING
     is_verified: bool = False
+
+    # Role - system vs user ownership
+    role: BotRole = BotRole.USER
 
     # Webhook configuration
     webhook_enabled: bool = False

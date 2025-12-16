@@ -336,3 +336,15 @@ class BotContainer(containers.DeclarativeContainer):
         ),
         user_bot_repo=database.user_bot_repo,
     )
+
+    # ============================================================================
+    # USER BOT MODERATION SERVICE (Multi-tenant moderation features)
+    # ============================================================================
+
+    moderation_service = providers.Factory(
+        lambda moderation_repo: __import__(
+            "core.services.user_bot_service",
+            fromlist=["UserBotService"],
+        ).UserBotService(repository=moderation_repo),
+        moderation_repo=database.user_bot_service_repo,
+    )

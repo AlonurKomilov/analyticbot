@@ -46,6 +46,7 @@ import {
     EmojiEvents as TrophyIcon,
     Store as StoreIcon,
     Memory as MTProtoIcon,
+    Explore as ExploreIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@config/routes';
@@ -176,13 +177,13 @@ const NavigationBar: React.FC = () => {
     };
 
     const drawerContent = (
-        <Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <Toolbar>
                 <Typography variant="h6" noWrap component="div">
                     {tCommon('appName')}
                 </Typography>
             </Toolbar>
-            <List>
+            <List sx={{ flexGrow: 1 }}>
                 {NAV_ITEMS.map((item, index) => (
                     <React.Fragment key={item.path}>
                         {/* Show divider before this item if specified */}
@@ -216,6 +217,34 @@ const NavigationBar: React.FC = () => {
                     </React.Fragment>
                 ))}
             </List>
+
+            {/* Browse Public Catalog Link */}
+            <Box sx={{ mt: 'auto', mb: 2 }}>
+                <Divider sx={{ mb: 1 }} />
+                <ListItem disablePadding>
+                    <ListItemButton
+                        component="a"
+                        href="https://analyticbot.org"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{
+                            color: 'primary.main',
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText',
+                            },
+                        }}
+                    >
+                        <ListItemIcon>
+                            <ExploreIcon color="primary" />
+                        </ListItemIcon>
+                        <ListItemText 
+                            primary={t('sidebar.browseCatalog', 'Browse Channels')}
+                            secondary={t('sidebar.publicCatalog', 'Public catalog')}
+                        />
+                    </ListItemButton>
+                </ListItem>
+            </Box>
         </Box>
     );
 
@@ -348,11 +377,25 @@ const NavigationBar: React.FC = () => {
                                 </Typography>
                             </Box>
                         </MenuItem>
+                        <MenuItem onClick={() => handleProfileNavigate(ROUTES.MY_SERVICES)}>
+                            <ListItemIcon>
+                                <BotIcon fontSize="small" sx={{ color: '#2196F3' }} />
+                            </ListItemIcon>
+                            {t('userMenu.myServices', 'My Services')}
+                        </MenuItem>
                         <MenuItem onClick={() => handleProfileNavigate(ROUTES.SETTINGS)}>
                             <ListItemIcon>
                                 <SettingsIcon fontSize="small" />
                             </ListItemIcon>
                             {t('userMenu.settings')}
+                        </MenuItem>
+                        <Divider />
+                        {/* Go to Public Catalog */}
+                        <MenuItem onClick={() => window.location.href = 'https://analyticbot.org'}>
+                            <ListItemIcon>
+                                <ExploreIcon fontSize="small" />
+                            </ListItemIcon>
+                            {t('userMenu.browseCatalog', 'Browse Catalog')}
                         </MenuItem>
                         <Divider />
                         <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>

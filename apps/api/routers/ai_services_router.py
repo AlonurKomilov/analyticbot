@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from apps.api.middleware.auth import get_current_user_id
 from apps.shared.adapters import create_bot_ml_facade
 from apps.shared.cache import cache_result
-from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
+from core.services.ai.churn.churn_intelligence import ChurnIntelligenceOrchestratorService
 
 logger = logging.getLogger(__name__)
 

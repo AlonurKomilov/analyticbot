@@ -229,5 +229,27 @@ export type {
 
 export { BotStatus } from './userBot';
 
+// User Bot Moderation Types
+export type {
+  ChatType,
+  ModerationAction,
+  MessageType,
+  ChatSettings,
+  ChatSettingsUpdate,
+  BannedWord,
+  BannedWordCreate,
+  WelcomeMessage,
+  MessageButton,
+  WelcomeMessageUpsert,
+  InviteRecord,
+  InviteStats,
+  InviterStats,
+  ModerationLogEntry,
+  ModerationLogResponse,
+  Warning,
+  UserWarningsResponse,
+  ModerationChatItem,
+} from './userBotModeration';
+
 // Note: All types are exported above via re-exports
 // No need for convenience re-exports to avoid duplicates

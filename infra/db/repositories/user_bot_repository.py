@@ -5,7 +5,7 @@ User Bot Credentials Repository Implementation
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.models.user_bot_domain import AdminBotAction, BotStatus, UserBotCredentials
+from core.models.user_bot_domain import AdminBotAction, BotStatus, BotRole, UserBotCredentials
 from core.ports.user_bot_repository import IUserBotRepository
 from infra.db.models.user_bot_orm import AdminBotActionORM, UserBotCredentialsORM
 
@@ -32,6 +32,7 @@ class UserBotRepository(IUserBotRepository):
             mtproto_enabled=credentials.mtproto_enabled,  # ✅ Include mtproto toggle state
             status=credentials.status.value,
             is_verified=credentials.is_verified,
+            role=credentials.role.value,  # ✅ Include role
             rate_limit_rps=credentials.rate_limit_rps,
             max_concurrent_requests=credentials.max_concurrent_requests,
         )
@@ -78,6 +79,7 @@ class UserBotRepository(IUserBotRepository):
         orm.mtproto_enabled = credentials.mtproto_enabled
         orm.status = credentials.status.value
         orm.is_verified = credentials.is_verified
+        orm.role = credentials.role.value  # ✅ Include role
         orm.rate_limit_rps = credentials.rate_limit_rps
         orm.max_concurrent_requests = credentials.max_concurrent_requests
         orm.last_used_at = credentials.last_used_at
@@ -102,13 +104,16 @@ class UserBotRepository(IUserBotRepository):
         return False
 
     async def list_all(
-        self, limit: int = 50, offset: int = 0, status: str | None = None
+        self, limit: int = 50, offset: int = 0, status: str | None = None, role: str | None = None
     ) -> list[UserBotCredentials]:
         """List all user bot credentials"""
         query = select(UserBotCredentialsORM)
 
         if status:
             query = query.where(UserBotCredentialsORM.status == status)
+
+        if role:
+            query = query.where(UserBotCredentialsORM.role == role)
 
         query = query.limit(limit).offset(offset).order_by(UserBotCredentialsORM.created_at.desc())
 
@@ -117,12 +122,15 @@ class UserBotRepository(IUserBotRepository):
 
         return [self._to_domain(orm) for orm in orms]
 
-    async def count(self, status: str | None = None) -> int:
+    async def count(self, status: str | None = None, role: str | None = None) -> int:
         """Count total user bots"""
         query = select(func.count(UserBotCredentialsORM.id))
 
         if status:
             query = query.where(UserBotCredentialsORM.status == status)
+
+        if role:
+            query = query.where(UserBotCredentialsORM.role == role)
 
         result = await self.session.execute(query)
         return result.scalar_one()
@@ -234,6 +242,7 @@ class UserBotRepository(IUserBotRepository):
             mtproto_enabled=orm.mtproto_enabled,  # ✅ CRITICAL FIX: Include this field!
             status=BotStatus(orm.status),
             is_verified=orm.is_verified,
+            role=BotRole(orm.role) if orm.role else BotRole.USER,  # ✅ Include role
             rate_limit_rps=orm.rate_limit_rps,
             max_concurrent_requests=orm.max_concurrent_requests,
             created_at=orm.created_at,

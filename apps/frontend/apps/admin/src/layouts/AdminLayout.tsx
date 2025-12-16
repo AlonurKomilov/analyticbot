@@ -51,6 +51,7 @@ const navItems: NavItem[] = [
   { title: 'Bots', path: ROUTES.BOTS, icon: <BotsIcon /> },
   { title: 'MTProto', path: ROUTES.MTPROTO, icon: <TelegramIcon /> },
   { title: 'Plans', path: ROUTES.PLANS, icon: <SpeedIcon /> },
+
   { title: 'System Health', path: ROUTES.SYSTEM_HEALTH, icon: <HealthIcon /> },
   { title: 'Audit Log', path: ROUTES.AUDIT_LOG, icon: <AuditIcon /> },
   { title: 'Settings', path: ROUTES.SETTINGS, icon: <SettingsIcon /> },

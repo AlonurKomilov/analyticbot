@@ -3,6 +3,7 @@
  * Displays automatic collection worker status
  */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -24,37 +25,39 @@ interface WorkerStatusCardProps {
 }
 
 export const WorkerStatusCard: React.FC<WorkerStatusCardProps> = ({ workerStatus }) => {
+  const { t } = useTranslation(['mtproto', 'common']);
+  
   return (
     <Card sx={{ mb: 3 }}>
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} mb={2}>
           <Schedule color="primary" />
-          <Typography variant="h6">Automatic Worker Status</Typography>
+          <Typography variant="h6">{t('mtproto:worker.automatic')}</Typography>
         </Box>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Background collection service information
+          {t('mtproto:worker.description')}
         </Typography>
         <Divider sx={{ my: 2 }} />
 
         {/* Active Collection Progress */}
         {workerStatus.currently_collecting && (
           <Alert severity="info" sx={{ mb: 3 }}>
-            <AlertTitle>Collection in Progress</AlertTitle>
+            <AlertTitle>{t('mtproto:worker.collectionInProgress')}</AlertTitle>
             <Box>
               {workerStatus.current_channel && (
                 <Typography variant="body2" gutterBottom>
-                  Currently collecting: <strong>{workerStatus.current_channel}</strong>
+                  {t('mtproto:worker.currentlyCollecting')}: <strong>{workerStatus.current_channel}</strong>
                 </Typography>
               )}
               {workerStatus.collection_start_time && (
                 <Typography variant="body2" gutterBottom>
-                  Running for: <strong>{formatTimeAgo(workerStatus.collection_start_time)}</strong>
+                  {t('mtproto:worker.runningFor')}: <strong>{formatTimeAgo(workerStatus.collection_start_time)}</strong>
                 </Typography>
               )}
               {workerStatus.channels_total > 0 ? (
                 <>
                   <Typography variant="body2" gutterBottom>
-                    Progress: <strong>{workerStatus.channels_processed || 0} / {workerStatus.channels_total}</strong> channels
+                    {t('mtproto:monitoring.progress')}: <strong>{workerStatus.channels_processed || 0} / {workerStatus.channels_total}</strong> {t('common:channels')}
                     {' '}({((workerStatus.channels_processed || 0) / workerStatus.channels_total * 100).toFixed(0)}%)
                   </Typography>
                   <LinearProgress
@@ -66,16 +69,16 @@ export const WorkerStatusCard: React.FC<WorkerStatusCardProps> = ({ workerStatus
               ) : (
                 <>
                   <Typography variant="body2" gutterBottom color="text.secondary">
-                    Progress: <strong>Initializing...</strong>
+                    {t('mtproto:monitoring.progress')}: <strong>{t('mtproto:worker.initializing')}</strong>
                   </Typography>
                   <LinearProgress sx={{ my: 1, height: 6, borderRadius: 1 }} />
                 </>
               )}
               <Typography variant="body2">
-                Messages collected: <strong>{workerStatus.messages_collected_current_run}</strong>
+                {t('mtproto:worker.messagesCollected')}: <strong>{workerStatus.messages_collected_current_run}</strong>
                 {workerStatus.errors_current_run > 0 && (
                   <span style={{ color: '#f44336', marginLeft: 8 }}>
-                    Errors: {workerStatus.errors_current_run}
+                    {t('common:errors')}: {workerStatus.errors_current_run}
                   </span>
                 )}
               </Typography>
@@ -86,17 +89,17 @@ export const WorkerStatusCard: React.FC<WorkerStatusCardProps> = ({ workerStatus
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
             <Box>
-              <Typography variant="body2" color="text.secondary">Worker Status</Typography>
+              <Typography variant="body2" color="text.secondary">{t('mtproto:worker.title')}</Typography>
               <Box display="flex" alignItems="center" gap={1} mt={1}>
                 {workerStatus.worker_running ? (
                   <>
                     <CheckCircle color="success" />
-                    <Typography variant="h6">Running</Typography>
+                    <Typography variant="h6">{t('mtproto:worker.running')}</Typography>
                   </>
                 ) : (
                   <>
                     <Cancel color="error" />
-                    <Typography variant="h6">Stopped</Typography>
+                    <Typography variant="h6">{t('mtproto:worker.stopped')}</Typography>
                   </>
                 )}
               </Box>
@@ -105,7 +108,7 @@ export const WorkerStatusCard: React.FC<WorkerStatusCardProps> = ({ workerStatus
 
           <Grid item xs={12} sm={6} md={3}>
             <Box>
-              <Typography variant="body2" color="text.secondary">Collection Interval</Typography>
+              <Typography variant="body2" color="text.secondary">{t('mtproto:monitoring.interval')}</Typography>
               <Box display="flex" alignItems="baseline" gap={1} mt={1}>
                 <Typography variant="h4">{workerStatus.worker_interval_minutes}min</Typography>
                 <Chip
@@ -119,28 +122,28 @@ export const WorkerStatusCard: React.FC<WorkerStatusCardProps> = ({ workerStatus
                   sx={{ textTransform: 'capitalize' }}
                 />
               </Box>
-              <Typography variant="caption" color="text.secondary">Between runs</Typography>
+              <Typography variant="caption" color="text.secondary">{t('mtproto:worker.betweenRuns')}</Typography>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <Box>
-              <Typography variant="body2" color="text.secondary">Runs Today</Typography>
+              <Typography variant="body2" color="text.secondary">{t('mtproto:worker.runsToday')}</Typography>
               <Typography variant="h4" mt={1}>{workerStatus.runs_today}</Typography>
               <Typography variant="caption" color="error.main">
-                Errors: {workerStatus.errors_today}
+                {t('common:errors')}: {workerStatus.errors_today}
               </Typography>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <Box>
-              <Typography variant="body2" color="text.secondary">Next Run</Typography>
+              <Typography variant="body2" color="text.secondary">{t('mtproto:worker.nextRun')}</Typography>
               <Typography variant="body1" fontWeight="medium" mt={1}>
                 {formatTimeAgo(workerStatus.next_run)}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Last: {formatTimeAgo(workerStatus.last_run)}
+                {t('mtproto:worker.last')}: {formatTimeAgo(workerStatus.last_run)}
               </Typography>
             </Box>
           </Grid>

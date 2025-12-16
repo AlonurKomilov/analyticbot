@@ -1,0 +1,115 @@
+{
+  "title": "Bot moderatsiyasi",
+  "description": "Bot moderatsiya funksiyalari va sozlamalarini boshqarish",
+  "tabs": {
+    "settings": "Sozlamalar",
+    "welcome": "Xush kelibsiz xabarlari",
+    "inviteTracking": "Takliflarni kuzatish",
+    "log": "Moderatsiya jurnali"
+  },
+  "settings": {
+    "title": "Moderatsiya sozlamalari",
+    "subtitle": "Guruhingiz uchun bot moderatsiya funksiyalarini sozlang",
+    "optInNotice": "Barcha funksiyalar ixtiyoriy.",
+    "cleanJoinMessages": {
+      "title": "Qo'shilish xabarlarini tozalash",
+      "description": "Foydalanuvchilar qo'shilganda tizim xabarlarini avtomatik o'chirish",
+      "enable": "Qo'shilish xabarlarini tozalashni yoqish",
+      "delay": "Keyinroq o'chirish (soniyalar)",
+      "delayHelp": "Xabarni o'chirishdan oldin qancha kutish kerak"
+    },
+    "cleanLeaveMessages": {
+      "title": "Chiqish xabarlarini tozalash",
+      "description": "Foydalanuvchilar chiqib ketganda tizim xabarlarini avtomatik o'chirish",
+      "enable": "Chiqish xabarlarini tozalashni yoqish",
+      "delay": "Keyinroq o'chirish (soniyalar)"
+    },
+    "welcomeMessages": {
+      "title": "Xush kelibsiz xabarlari",
+      "description": "Yangi a'zolarga maxsus xush kelibsiz xabarlarini yuborish",
+      "enable": "Xush kelibsiz xabarlarini yoqish",
+      "customizeButton": "Xabarlarni sozlash"
+    },
+    "inviteTracking": {
+      "title": "Takliflarni kuzatish",
+      "description": "Guruhingizga yangi a'zolarni kim taklif qilganini kuzatish",
+      "enable": "Takliflarni kuzatishni yoqish",
+      "viewStats": "Statistikani ko'rish"
+    },
+    "saveButton": "Sozlamalarni saqlash",
+    "saving": "Saqlanmoqda...",
+    "saveSuccess": "Sozlamalar muvaffaqiyatli saqlandi",
+    "saveError": "Sozlamalarni saqlash amalga oshmadi"
+  },
+  "welcome": {
+    "title": "Xush kelibsiz xabari sozlamalari",
+    "disabled": "Xush kelibsiz xabarlari funksiyasi o'chirilgan.",
+    "enableFirst": "Avval uni Sozlamalar bo'limida yoqing.",
+    "message": {
+      "label": "Xush kelibsiz xabari",
+      "placeholder": "Xush kelibsiz xabaringizni bu yerga kiriting...",
+      "help": "Foydalanuvchini eslatish uchun {{mention}}, foydalanuvchi nomi uchun {{username}} ishlating"
+    },
+    "parseMode": {
+      "label": "Formatlash rejimi",
+      "none": "Yo'q",
+      "markdown": "Markdown",
+      "markdownV2": "MarkdownV2",
+      "html": "HTML"
+    },
+    "buttons": {
+      "title": "Ichki tugmalar",
+      "add": "Tugma qo'shish",
+      "text": "Tugma matni",
+      "url": "Tugma URL",
+      "remove": "O'chirish"
+    },
+    "preview": {
+      "title": "Ko'rib chiqish",
+      "noPreview": "Ko'rish uchun xabarni sozlang"
+    },
+    "save": "Xabarni saqlash",
+    "saving": "Saqlanmoqda...",
+    "success": "Xush kelibsiz xabari muvaffaqiyatli saqlandi",
+    "error": "Xush kelibsiz xabarini saqlash amalga oshmadi"
+  },
+  "inviteTracking": {
+    "title": "Takliflarni kuzatish",
+    "disabled": "Takliflarni kuzatish o'chirilgan.",
+    "enableFirst": "Avval uni Sozlamalar bo'limida yoqing.",
+    "statistics": {
+      "title": "Takliflar statistikasi",
+      "totalInvites": "Jami takliflar",
+      "activeInviters": "Faol taklif qiluvchilar",
+      "thisWeek": "Shu hafta",
+      "thisMonth": "Shu oy"
+    },
+    "leaderboard": {
+      "title": "Takliflar reytingi",
+      "rank": "O'rin",
+      "user": "Foydalanuvchi",
+      "invites": "Takliflar",
+      "thisWeek": "Shu hafta",
+      "allTime": "Barcha vaqt"
+    },
+    "noData": "Taklif ma'lumotlari hali mavjud emas"
+  },
+  "log": {
+    "title": "Moderatsiya jurnali",
+    "description": "So'nggi moderatsiya harakatlarini ko'rish",
+    "columns": {
+      "time": "Vaqt",
+      "action": "Harakat",
+      "user": "Foydalanuvchi",
+      "details": "Tafsilotlar"
+    },
+    "actions": {
+      "joinMessageDeleted": "Qo'shilish xabari o'chirildi",
+      "leaveMessageDeleted": "Chiqish xabari o'chirildi",
+      "welcomeSent": "Xush kelibsiz xabari yuborildi",
+      "inviteRecorded": "Taklif yozib olindi"
+    },
+    "empty": "Moderatsiya harakatlari hali yozilmagan",
+    "refresh": "Yangilash"
+  }
+}

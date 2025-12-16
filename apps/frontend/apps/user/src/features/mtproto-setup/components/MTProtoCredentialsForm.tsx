@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   TextField,
@@ -31,6 +32,7 @@ export const MTProtoCredentialsForm: React.FC<MTProtoCredentialsFormProps> = ({
   onBack,
   phone,
 }) => {
+  const { t } = useTranslation(['mtproto', 'common']);
   const { setup, isSettingUp } = useMTProtoStore();
   const [showApiHash, setShowApiHash] = useState(false);
   const [formData, setFormData] = useState<MTProtoSetupRequest>({
@@ -95,7 +97,7 @@ export const MTProtoCredentialsForm: React.FC<MTProtoCredentialsFormProps> = ({
     <Box component="form" onSubmit={handleSubmit}>
       <Alert severity="info" sx={{ mb: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          <strong>Get your Telegram API credentials:</strong>
+          <strong>{t('mtproto:credentials.getCredentials')}</strong>
         </Typography>
         <ol style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
           <li>
@@ -156,11 +158,11 @@ export const MTProtoCredentialsForm: React.FC<MTProtoCredentialsFormProps> = ({
       {/* Phone number info - using phone from simple form above */}
       {phone ? (
         <Alert severity="success" sx={{ mt: 2 }}>
-          Using phone number: <strong>{phone}</strong>
+          {t('mtproto:credentials.usingPhone')}: <strong>{phone}</strong>
         </Alert>
       ) : (
         <Alert severity="warning" sx={{ mt: 2 }}>
-          Please enter your phone number in the "Quick Setup" form above first
+          {t('mtproto:credentials.enterPhoneFirst')}
         </Alert>
       )}
 
@@ -173,7 +175,7 @@ export const MTProtoCredentialsForm: React.FC<MTProtoCredentialsFormProps> = ({
       <Box display="flex" justifyContent="space-between" mt={3}>
         {onBack && (
           <Button onClick={onBack} disabled={isSettingUp}>
-            Back
+            {t('common:back')}
           </Button>
         )}
         <Button
@@ -183,7 +185,7 @@ export const MTProtoCredentialsForm: React.FC<MTProtoCredentialsFormProps> = ({
           startIcon={isSettingUp && <CircularProgress size={20} />}
           sx={{ ml: 'auto' }}
         >
-          {isSettingUp ? 'Sending Code...' : 'Send Verification Code'}
+          {isSettingUp ? t('mtproto:credentials.sendingCode') : t('mtproto:credentials.sendCode')}
         </Button>
       </Box>
     </Box>

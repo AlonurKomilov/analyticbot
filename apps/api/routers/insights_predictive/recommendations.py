@@ -115,7 +115,7 @@ async def generate_predictions(
         }
 
         # Generate predictions using predictive orchestrator
-        from core.services.predictive_intelligence.protocols.predictive_protocols import (
+        from core.services.ai.predictive.predictive_intelligence.protocols.predictive_protocols import (
             IntelligenceContext,
         )
 

@@ -25,11 +25,3 @@ export const ROUTES = {
   PLANS: '/plans',
 
   // System
-  SYSTEM_HEALTH: '/system/health',
-  AUDIT_LOG: '/system/audit',
-  SETTINGS: '/settings',
-
-  // Analytics
-  ANALYTICS: '/analytics',
-  REPORTS: '/reports',
-};

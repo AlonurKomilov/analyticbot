@@ -44,6 +44,8 @@ class AdminChannelInfo(BaseModel):
     last_activity: datetime | None = None
     total_posts: int = 0
     total_views: int = 0
+    bot_connected: bool = False
+    mtproto_connected: bool = False
 
 
 # === ADMIN CHANNEL ENDPOINTS ===
@@ -89,7 +91,9 @@ async def get_all_channels(
                     c.created_at,
                     c.updated_at as last_activity,
                     COALESCE(post_stats.total_posts, 0) as total_posts,
-                    COALESCE(post_stats.total_views, 0) as total_views
+                    COALESCE(post_stats.total_views, 0) as total_views,
+                    CASE WHEN c.id IS NOT NULL THEN true ELSE false END as bot_connected,
+                    CASE WHEN mtproto.has_session IS NOT NULL THEN true ELSE false END as mtproto_connected
                 FROM channels c
                 LEFT JOIN users u ON c.user_id = u.id
                 LEFT JOIN (
@@ -100,6 +104,12 @@ async def get_all_channels(
                     FROM scheduled_posts
                     GROUP BY channel_id
                 ) post_stats ON c.id = post_stats.channel_id
+                LEFT JOIN (
+                    SELECT 
+                        user_id,
+                        CASE WHEN session_string IS NOT NULL AND session_string != '' THEN true ELSE NULL END as has_session
+                    FROM user_bot_credentials
+                ) mtproto ON c.user_id = mtproto.user_id
                 ORDER BY c.created_at DESC
                 LIMIT $1 OFFSET $2
             """, limit, offset)
@@ -117,6 +127,8 @@ async def get_all_channels(
                     last_activity=channel["last_activity"],
                     total_posts=channel["total_posts"],
                     total_views=channel["total_views"],
+                    bot_connected=channel["bot_connected"] or False,
+                    mtproto_connected=channel["mtproto_connected"] or False,
                 )
                 for channel in channels
             ]

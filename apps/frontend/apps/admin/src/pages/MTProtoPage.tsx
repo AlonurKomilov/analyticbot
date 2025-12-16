@@ -64,6 +64,7 @@ interface MTProtoSession {
   channel_username: string | null;
   mtproto_enabled: boolean;  // User toggle
   session_active: boolean;  // Actually has working session
+  role: 'system' | 'user';  // Role: system or user
   created_at: string;
   updated_at: string;
 }
@@ -425,6 +426,7 @@ const MTProtoPage: React.FC = () => {
               <TableRow>
                 <TableCell>MTProto</TableCell>
                 <TableCell>User</TableCell>
+                <TableCell>Role</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Updated</TableCell>
                 <TableCell>Created</TableCell>
@@ -434,7 +436,7 @@ const MTProtoPage: React.FC = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <CircularProgress size={32} />
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                       Loading sessions...
@@ -443,7 +445,7 @@ const MTProtoPage: React.FC = () => {
                 </TableRow>
               ) : sessions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <TelegramIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
                     <Typography color="text.secondary">No MTProto sessions found</Typography>
                   </TableCell>
@@ -476,6 +478,14 @@ const MTProtoPage: React.FC = () => {
                           </Typography>
                         </Box>
                       </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={session.role || 'user'}
+                        size="small"
+                        color={session.role === 'system' ? 'primary' : 'secondary'}
+                        variant={session.role === 'system' ? 'filled' : 'outlined'}
+                      />
                     </TableCell>
                     <TableCell>
                       <Chip

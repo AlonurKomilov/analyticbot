@@ -1,0 +1,46 @@
+{
+  "filters": {
+    "title": "Filters",
+    "apply": "Apply Filters",
+    "clear": "Clear Filters",
+    "reset": "Reset",
+    "timePeriod": "Time Period",
+    "analysislPeriod": "Analysis Period",
+    "dateRange": "Date Range",
+    "customRange": "Custom Range"
+  },
+  "timePeriods": {
+    "lastHour": "Last Hour",
+    "last6Hours": "Last 6 Hours",
+    "last24Hours": "Last 24 Hours",
+    "last7Days": "Last 7 Days",
+    "last14Days": "Last 14 Days",
+    "last30Days": "Last 30 Days",
+    "last90Days": "Last 90 Days",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "allTime": "All Time",
+    "custom": "Custom"
+  },
+  "quickFilters": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "lastWeek": "Last Week",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month"
+  },
+  "comparison": {
+    "title": "Compare With",
+    "previousPeriod": "Previous Period",
+    "previousYear": "Previous Year",
+    "custom": "Custom Period",
+    "none": "No Comparison"
+  },
+  "labels": {
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "selectDate": "Select Date",
+    "selectTime": "Select Time"
+  }
+}

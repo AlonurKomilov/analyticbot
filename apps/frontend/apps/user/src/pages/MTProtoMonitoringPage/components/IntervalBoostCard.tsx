@@ -3,6 +3,7 @@
  * Allows users to purchase faster collection intervals using credits
  */
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -48,6 +49,7 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
   planName,
   onBoostPurchased,
 }) => {
+  const { t } = useTranslation(['mtproto', 'common']);
   const [boostInfo, setBoostInfo] = useState<BoostInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -106,7 +108,7 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
         onBoostPurchased();
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to purchase boost');
+      setError(err.response?.data?.detail || t('mtproto:boost.purchaseFailed'));
     } finally {
       setPurchasing(false);
     }
@@ -118,7 +120,7 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
         <CardContent>
           <Box display="flex" alignItems="center" justifyContent="center" py={3}>
             <CircularProgress size={24} />
-            <Typography sx={{ ml: 2 }}>Loading boost options...</Typography>
+            <Typography sx={{ ml: 2 }}>{t('mtproto:boost.loadingOptions')}</Typography>
           </Box>
         </CardContent>
       </Card>
@@ -144,9 +146,9 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} mb={2}>
           <SpeedIcon color="primary" />
-          <Typography variant="h6">Speed Up Collection</Typography>
+          <Typography variant="h6">{t('mtproto:boost.title')}</Typography>
           <Chip
-            label={`${boostInfo.credits_balance} credits`}
+            label={`${boostInfo.credits_balance} ${t('mtproto:boost.credits')}`}
             size="small"
             icon={<CreditIcon />}
             color="primary"
@@ -154,7 +156,7 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
           />
         </Box>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Purchase interval boosts to collect data more frequently
+          {t('mtproto:boost.description')}
         </Typography>
         <Divider sx={{ my: 2 }} />
 
@@ -173,18 +175,16 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
         {/* Plan doesn't allow boosting */}
         {!boostInfo.can_purchase_boost && (
           <Alert severity="info" sx={{ mb: 2 }}>
-            <AlertTitle>Boost Not Available</AlertTitle>
-            Your current plan ({planName}) does not support interval boosts.
-            Upgrade your plan to unlock this feature.
+            <AlertTitle>{t('mtproto:boost.notAvailable')}</AlertTitle>
+            {t('mtproto:boost.notAvailableDesc', { plan: planName })}
           </Alert>
         )}
 
         {/* Already at minimum */}
         {isAtMinimum && boostInfo.can_purchase_boost && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            <AlertTitle>Maximum Speed Reached!</AlertTitle>
-            Your collection interval is already at the minimum ({boostInfo.min_interval}min)
-            for your {planName} plan.
+            <AlertTitle>{t('mtproto:boost.maxSpeedReached')}</AlertTitle>
+            {t('mtproto:boost.maxSpeedDesc', { minInterval: boostInfo.min_interval, plan: planName })}
           </Alert>
         )}
 
@@ -193,7 +193,7 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
           <>
             <Stack direction="row" spacing={4} sx={{ mb: 3 }}>
               <Box textAlign="center">
-                <Typography variant="body2" color="text.secondary">Current</Typography>
+                <Typography variant="body2" color="text.secondary">{t('mtproto:boost.current')}</Typography>
                 <Typography variant="h4" color="text.secondary">
                   {boostInfo.current_interval}min
                 </Typography>
@@ -202,13 +202,13 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
                 <Typography variant="h5" color="primary">→</Typography>
               </Box>
               <Box textAlign="center">
-                <Typography variant="body2" color="text.secondary">After Boost</Typography>
+                <Typography variant="body2" color="text.secondary">{t('mtproto:boost.afterBoost')}</Typography>
                 <Typography variant="h4" color="success.main">
                   {newInterval}min
                 </Typography>
               </Box>
               <Box textAlign="center">
-                <Typography variant="body2" color="text.secondary">Minimum</Typography>
+                <Typography variant="body2" color="text.secondary">{t('mtproto:boost.minimum')}</Typography>
                 <Typography variant="h4" color="text.disabled">
                   {boostInfo.min_interval}min
                 </Typography>
@@ -219,7 +219,7 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
             {maxBoosts > 1 && (
               <Box sx={{ px: 2, mb: 3 }}>
                 <Typography variant="body2" gutterBottom>
-                  Number of boosts: <strong>{boostCount}</strong>
+                  {t('mtproto:boost.numberOfBoosts')}: <strong>{boostCount}</strong>
                 </Typography>
                 <Slider
                   value={boostCount}
@@ -254,14 +254,14 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
             >
               <Box>
                 <Typography variant="body1">
-                  <strong>{boostCount}</strong> boost(s) × {boostInfo.credits_per_boost} credits
+                  <strong>{boostCount}</strong> {t('mtproto:boost.boosts')} × {boostInfo.credits_per_boost} {t('mtproto:boost.credits')}
                 </Typography>
                 <Typography variant="h5" color="primary.main">
-                  Total: {totalCost} credits
+                  {t('common:total')}: {totalCost} {t('mtproto:boost.credits')}
                 </Typography>
                 {!canAfford && (
                   <Typography variant="caption" color="error">
-                    Insufficient credits (need {totalCost - boostInfo.credits_balance} more)
+                    {t('mtproto:boost.insufficientCredits', { need: totalCost - boostInfo.credits_balance })}
                   </Typography>
                 )}
               </Box>
@@ -272,14 +272,14 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
                 onClick={handlePurchase}
                 disabled={purchasing || !canAfford || boostCount === 0}
               >
-                {purchasing ? 'Purchasing...' : 'Purchase Boost'}
+                {purchasing ? t('mtproto:boost.purchasing') : t('mtproto:boost.purchaseButton')}
               </Button>
             </Box>
 
             {/* Active boost info */}
             {boostInfo.active_boost_minutes > 0 && (
               <Alert severity="info" icon={<TimerIcon />} sx={{ mt: 2 }}>
-                You have {boostInfo.active_boost_minutes}min of active boost reduction.
+                {t('mtproto:boost.activeBoost', { minutes: boostInfo.active_boost_minutes })}
               </Alert>
             )}
           </>

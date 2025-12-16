@@ -4,6 +4,7 @@ Each user gets their own dedicated bot and MTProto client instance
 """
 
 import asyncio
+import logging
 import warnings
 from datetime import datetime
 from typing import Any, Protocol
@@ -24,6 +25,8 @@ from apps.bot.multi_tenant.retry_logic import get_retry_statistics, retry_with_b
 from apps.bot.multi_tenant.session_pool import SharedAiogramSession
 from core.models.user_bot_domain import UserBotCredentials
 from core.services.encryption_service import get_encryption_service
+
+logger = logging.getLogger(__name__)
 
 
 class MTProtoClient(Protocol):
@@ -88,6 +91,13 @@ class UserBotInstance:
         # Circuit breaker (per-user protection)
         breaker_registry = get_circuit_breaker_registry()
         self.circuit_breaker = breaker_registry.get_breaker(self.user_id)
+        
+        # Moderation service (lazy initialized)
+        self._service = None
+        self._moderation_enabled = True  # Can be toggled off
+        
+        # Bot features manager (marketplace services - lazy initialized)
+        self._bot_features_manager = None
 
     async def initialize(self) -> None:
         """
@@ -111,10 +121,13 @@ class UserBotInstance:
 
             # ✅ Register default message handlers for webhook support
             self._register_handlers()
+            
+            # ✅ Register moderation handlers (join/leave cleaning, banned words, etc.)
+            await self._register_moderation_handlers()
 
             # Verify bot token works
             me = await self.bot.get_me()
-            print(f"✅ Bot initialized for user {self.user_id}: @{me.username}")
+            logger.info(f"✅ Bot initialized for user {self.user_id}: @{me.username}")
 
             # Initialize Pyrogram MTProto client (optional, lazy load)
             # Only initialize if user has MTProto credentials
@@ -125,7 +138,7 @@ class UserBotInstance:
             self.last_activity = datetime.now()
 
         except Exception as e:
-            print(f"❌ Failed to initialize bot for user {self.user_id}: {e}")
+            logger.error(f"❌ Failed to initialize bot for user {self.user_id}: {e}")
             raise
 
     def _register_handlers(self) -> None:
@@ -193,6 +206,104 @@ class UserBotInstance:
                 await message.answer(
                     "I can only echo text messages for now. " "Try /help to see what I can do!"
                 )
+
+    async def _register_moderation_handlers(self) -> None:
+        """
+        Register moderation handlers for user bot features.
+        
+        Includes:
+        - Join/leave message cleaning
+        - Banned words filter
+        - Anti-spam protection
+        - Welcome messages
+        - Invite tracking
+        - Admin commands
+        """
+        if not self.dp or not self.bot or not self._moderation_enabled:
+            return
+        
+        try:
+            # Import moderation components
+            from apps.bot.handlers.user_bot_service.router import create_service_router
+            from core.services.user_bot_service import UserBotService
+            from infra.db.repositories.user_bot_service_repository import UserBotServiceRepository
+            
+            # Get database session from DI
+            from apps.di import get_container
+            container = get_container()
+            session = await container.database.session()
+            
+            # Create repository and service
+            repository = UserBotServiceRepository(session)
+            self._service = UserBotService(repository)
+            
+            # Initialize marketplace services integration
+            await self._initialize_bot_features()
+            
+            # Create and include moderation router
+            moderation_router = create_service_router(
+                bot=self.bot,
+                user_id=self.user_id,
+                moderation_service=self._service,
+                bot_features_manager=self._bot_features_manager,  # Pass features manager
+            )
+            
+            # Include router in dispatcher (before default handlers)
+            self.dp.include_router(moderation_router)
+            
+            logger.info(f"✅ Moderation handlers registered for user {self.user_id}")
+            
+        except ImportError as e:
+            logger.warning(f"⚠️ Moderation handlers not available: {e}")
+        except Exception as e:
+            logger.error(f"❌ Failed to register moderation handlers for user {self.user_id}: {e}")
+
+    async def _initialize_bot_features(self) -> None:
+        """
+        Initialize marketplace bot services integration.
+        
+        Sets up:
+        - Feature gate service
+        - Marketplace repository
+        - Bot features manager
+        """
+        if not self.bot or not self._service:
+            return
+        
+        try:
+            from apps.di import get_container
+            from core.services.bot_features.bot_features_manager import BotFeaturesManager
+            from core.services.feature_gate_service import FeatureGateService
+            from infra.db.repositories.marketplace_service_repository import (
+                MarketplaceServiceRepository,
+            )
+            
+            container = get_container()
+            
+            # Get database pool for repositories
+            pool = container.database.asyncpg_pool()
+            
+            # Create marketplace repository
+            marketplace_repo = MarketplaceServiceRepository(pool)
+            
+            # Create feature gate service
+            feature_gate_service = FeatureGateService(marketplace_repo)
+            
+            # Create bot features manager
+            self._bot_features_manager = BotFeaturesManager(
+                user_id=self.user_id,
+                bot=self.bot,
+                moderation_service=self._service,
+                feature_gate_service=feature_gate_service,
+                marketplace_repo=marketplace_repo,
+            )
+            
+            logger.info(f"✅ Marketplace bot services initialized for user {self.user_id}")
+            
+        except ImportError as e:
+            logger.warning(f"⚠️ Marketplace services not available: {e}")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize marketplace services for user {self.user_id}: {e}")
 
     async def _initialize_mtproto(self) -> None:
         """

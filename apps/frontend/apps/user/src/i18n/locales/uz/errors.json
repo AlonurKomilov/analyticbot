@@ -66,6 +66,9 @@
     "500": "Ichki server xatosi",
     "502": "Gateway xatosi",
     "503": "Xizmat vaqtincha mavjud emas",
-    "504": "Gateway vaqti tugadi"
-  }
+    "504": "Gateway vaqti tugadi"  },
+  "mtproto": {
+    "configureAccountError": "Hisobni sozlab bo'lmadi",
+    "disconnectError": "Sessiyani uzib bo'lmadi",
+    "removeError": "Hisob konfiguratsiyasini o'chirib bo'lmadi"  }
 }

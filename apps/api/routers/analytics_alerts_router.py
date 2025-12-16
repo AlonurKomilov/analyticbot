@@ -477,7 +477,7 @@ async def get_smart_alert_rules(
     - Rules marked as 'personalized': true
     """
     try:
-        from core.services.alerts_fusion.alerts.smart_rules_generator import (
+        from core.services.system.alerts.alerts_fusion.alerts.smart_rules_generator import (
             SmartRulesGenerator,
         )
 

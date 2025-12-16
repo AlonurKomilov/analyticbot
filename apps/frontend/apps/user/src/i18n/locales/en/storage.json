@@ -1,0 +1,42 @@
+{
+  "title": "Storage & Files",
+  "channelManager": {
+    "title": "Storage Channel Manager",
+    "description": "Configure Telegram channel for file storage",
+    "setupInstructions": "Setup Instructions:",
+    "step1": "Create a Telegram channel (you as owner)",
+    "step2": "Make sure YOU are a member of the channel",
+    "step3": "Add your personal bot as admin with \"Post Messages\" permission",
+    "step4": "Enter the channel username below",
+    "botAdmin": "Bot Admin",
+    "channelUsername": "Channel Username",
+    "channelUsernamePlaceholder": "@storage_channel",
+    "saveChannel": "Save Channel",
+    "testConnection": "Test Connection"
+  },
+  "fileBrowser": {
+    "title": "File Browser",
+    "filterByType": "Filter by type",
+    "allFiles": "All Files",
+    "images": "Images",
+    "videos": "Videos",
+    "documents": "Documents",
+    "noFiles": "No files found",
+    "uploadFile": "Upload File",
+    "deleteFile": "Delete File",
+    "downloadFile": "Download File",
+    "fileSize": "File Size",
+    "uploadDate": "Upload Date",
+    "debugInfo": "Debug info:"
+  },
+  "upload": {
+    "title": "Upload Files",
+    "dragDrop": "Drag & drop files here",
+    "orClick": "or click to select",
+    "uploading": "Uploading...",
+    "uploadSuccess": "File uploaded successfully",
+    "uploadError": "Failed to upload file",
+    "maxSize": "Max file size: {{size}}",
+    "allowedTypes": "Allowed types: {{types}}"
+  }
+}

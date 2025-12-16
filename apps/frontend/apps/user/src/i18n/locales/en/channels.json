@@ -86,5 +86,30 @@
     "sortBySubscribers": "Subscribers",
     "sortByViews": "Views",
     "sortByRecent": "Recent Activity"
+  },
+  "dialog": {
+    "addTitle": "Add Telegram Channel",
+    "editTitle": "Edit Channel",
+    "error": "Error:",
+    "step1": "Step 1: Enter your channel username",
+    "step2": "Step 2: Confirm channel info",
+    "channelUsername": "Channel Username",
+    "usernamePlaceholder": "@mychannel or mychannel",
+    "usernameHelp": "Enter the channel username and click Search to fetch info automatically",
+    "searchButton": "Search Channel",
+    "searching": "Looking up...",
+    "subscribers": "subscribers",
+    "created": "Created",
+    "adminSuccess": "✓ Bot has admin access - Ready to add!",
+    "adminError": "Bot needs admin access. Add your bot as admin first.",
+    "scamWarning": "⚠️ This channel is flagged as potential scam by Telegram",
+    "notFound": "Channel not found",
+    "notFoundMessage": "We couldn't find a channel with username",
+    "checkTitle": "Please check:",
+    "checkUsername": "The username is spelled correctly",
+    "checkPublic": "The channel is public (not private)",
+    "checkExists": "The channel exists on Telegram",
+    "tip": "💡 Tip: You can find your channel username in Telegram → Channel Settings → Channel Type",
+    "lookupError": "Please enter a channel username"
   }
 }

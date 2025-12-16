@@ -74,11 +74,11 @@ def train_growth_model(
         logger.info(f"Starting growth model training for channel {channel_id}")
 
         # Import here to avoid loading heavy libraries at startup
-        from core.services.deep_learning.growth_forecaster.growth_forecaster_service import (
+        from core.services.ai.deep_learning.growth_forecaster.growth_forecaster_service import (
             GrowthForecasterService,
         )
-        from core.services.deep_learning.infrastructure.gpu_config import GPUConfigService
-        from core.services.deep_learning.infrastructure.model_loader import ModelLoader
+        from core.services.ai.deep_learning.infrastructure.gpu_config import GPUConfigService
+        from core.services.ai.deep_learning.infrastructure.model_loader import ModelLoader
 
         # Initialize required services
         gpu_config = GPUConfigService()
@@ -173,7 +173,7 @@ def process_content_analysis(
         )
 
         # TODO: ContentAnalyzer service not yet implemented
-        # from core.services.deep_learning.content.content_analyzer import ContentAnalyzer
+        # from core.services.ai.deep_learning.content.content_analyzer import ContentAnalyzer
 
         logger.warning(
             f"Content analysis requested for post {post_id} but service not implemented yet"

@@ -13,8 +13,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "0045_mtproto_interval"
-down_revision = "0044_unique_phone_and_bot_constraints"
+revision = "0045_mtproto_interval_config"
+down_revision = "0044_unique_phone_bot"
 branch_labels = None
 depends_on = None
 

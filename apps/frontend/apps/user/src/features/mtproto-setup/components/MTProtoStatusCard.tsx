@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   CardContent,
@@ -33,6 +34,7 @@ import { uiLogger, logger } from '@/utils/logger';
 import { toggleGlobalMTProto, connectMTProto } from '../api';
 
 export const MTProtoStatusCard: React.FC = () => {
+  const { t } = useTranslation(['mtproto', 'common', 'errors']);
   const { status, isLoading, isDisconnecting, isRemoving, error, disconnect, remove, fetchStatus } = useMTProtoStore();
 
   // Debug: Log the status to see what we're receiving
@@ -131,14 +133,14 @@ export const MTProtoStatusCard: React.FC = () => {
         try {
           await connectMTProto();
           uiLogger.debug('Auto-connect succeeded');
-          setToggleSuccess('MTProto enabled and connected automatically!');
+          setToggleSuccess(t('mtproto:messages.enabledAndConnected'));
         } catch (connectErr: any) {
           uiLogger.warn('Auto-connect failed', { error: connectErr });
           // Don't fail the whole operation if connect fails - session will connect lazily
-          setToggleSuccess('MTProto enabled globally (will connect automatically when needed)');
+          setToggleSuccess(t('mtproto:messages.enabledWillConnect'));
         }
       } else {
-        setToggleSuccess('MTProto disabled globally - per-channel settings still apply');
+        setToggleSuccess(t('mtproto:messages.disabledGlobally'));
       }
 
       logger.log(`Global MTProto toggled: ${newValue}`);
@@ -153,7 +155,7 @@ export const MTProtoStatusCard: React.FC = () => {
 
     } catch (err: any) {
       logger.error('Failed to toggle global MTProto:', err);
-      setToggleError(err.message || 'Failed to toggle MTProto');
+      setToggleError(err.message || t('mtproto:messages.toggleFailed'));
       // Revert on error
       setGlobalEnabled(!newValue);
     } finally {
@@ -180,7 +182,7 @@ export const MTProtoStatusCard: React.FC = () => {
       <Card>
         <CardContent>
           <Alert severity="error">
-            Failed to load MTProto status: {error}
+            {t('mtproto:messages.loadStatusFailed')}: {error}
           </Alert>
         </CardContent>
       </Card>
@@ -195,7 +197,7 @@ export const MTProtoStatusCard: React.FC = () => {
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          MTProto Configuration Status
+          {t('mtproto:status.configuration')}
         </Typography>
 
         {/* GLOBAL MTPROTO TOGGLE - PROMINENT AND CLEAR */}
@@ -210,12 +212,12 @@ export const MTProtoStatusCard: React.FC = () => {
                 )}
                 <Box>
                   <Typography variant="subtitle1" fontWeight={600}>
-                    MTProto Feature Control
+                    {t('mtproto:status.featureControl')}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {globalEnabled
-                      ? 'Feature enabled - can read channel history'
-                      : 'Feature disabled - bot API only'
+                      ? t('mtproto:status.featureEnabledDesc')
+                      : t('mtproto:status.featureDisabledDesc')
                     }
                   </Typography>
                 </Box>
@@ -261,7 +263,7 @@ export const MTProtoStatusCard: React.FC = () => {
               <Cancel color="error" />
             )}
             <Typography>
-              <strong>Configured:</strong> {status.configured ? 'Yes' : 'No'}
+              <strong>{t('mtproto:status.configured')}:</strong> {status.configured ? t('common:yes') : t('common:no')}
             </Typography>
           </Box>
 
@@ -273,7 +275,7 @@ export const MTProtoStatusCard: React.FC = () => {
               <Cancel color="error" />
             )}
             <Typography>
-              <strong>Verified:</strong> {status.verified ? 'Yes' : 'No'}
+              <strong>{t('mtproto:status.verified')}:</strong> {status.verified ? t('common:yes') : t('common:no')}
             </Typography>
           </Box>
 
@@ -282,7 +284,7 @@ export const MTProtoStatusCard: React.FC = () => {
             <Box display="flex" alignItems="center" gap={1}>
               <PhoneAndroid color="action" />
               <Typography>
-                <strong>Phone:</strong> {status.phone}
+                <strong>{t('mtproto:status.phone')}:</strong> {status.phone}
               </Typography>
             </Box>
           )}
@@ -292,7 +294,7 @@ export const MTProtoStatusCard: React.FC = () => {
             <Box display="flex" alignItems="center" gap={1}>
               <AccountCircle color="action" />
               <Typography>
-                <strong>API ID:</strong> {status.api_id}
+                <strong>{t('mtproto:credentials.apiId')}:</strong> {status.api_id}
               </Typography>
             </Box>
           )}
@@ -307,26 +309,26 @@ export const MTProtoStatusCard: React.FC = () => {
               <CloudOff color="disabled" />
             )}
             <Typography>
-              <strong>Session Status:</strong>{' '}
+              <strong>{t('mtproto:status.sessionStatus')}:</strong>{' '}
               {status.actively_connected
-                ? 'Connected'
+                ? t('mtproto:status.connected')
                 : status.connected
-                ? 'Ready'
-                : 'Not Ready'}
+                ? t('common:ready')
+                : t('mtproto:status.notReady')}
             </Typography>
           </Box>
 
           {/* Status-specific message and actions */}
           {status.actively_connected && (
             <Typography variant="caption" color="success.main" sx={{ ml: 4, display: 'block' }}>
-              ✅ Active connection - reading channel history in real-time
+              ✅ {t('mtproto:status.activeConnection')}
             </Typography>
           )}
 
           {status.connected && !status.actively_connected && (
             <Box sx={{ ml: 4 }}>
               <Typography variant="caption" color="info.main" sx={{ display: 'block' }}>
-                🔌 Session ready - connecting automatically...
+                🔌 {t('mtproto:status.sessionReady')}
               </Typography>
             </Box>
           )}
@@ -334,7 +336,7 @@ export const MTProtoStatusCard: React.FC = () => {
           {/* Last Used */}
           {status.last_used && (
             <Typography variant="body2" color="text.secondary">
-              <strong>Last used:</strong>{' '}
+              <strong>{t('mtproto:accountInfo.lastSync')}:</strong>{' '}
               {new Date(status.last_used).toLocaleString()}
             </Typography>
           )}
@@ -342,7 +344,7 @@ export const MTProtoStatusCard: React.FC = () => {
           {/* Can Read History Badge */}
           <Box>
             <Chip
-              label={status.can_read_history ? 'Can read channel history' : 'Cannot read channel history'}
+              label={status.can_read_history ? t('mtproto:status.canReadHistory') : t('mtproto:status.cannotReadHistory')}
               color={status.can_read_history ? 'success' : 'default'}
               size="small"
             />
@@ -358,20 +360,20 @@ export const MTProtoStatusCard: React.FC = () => {
                 onClick={() => disconnect()}
                 disabled={isDisconnecting}
               >
-                {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+                {isDisconnecting ? t('common:disconnecting') : t('common:disconnect')}
               </Button>
               <Button
                 variant="outlined"
                 color="error"
                 size="small"
                 onClick={() => {
-                  if (window.confirm('Are you sure you want to remove all MTProto configuration?')) {
+                  if (window.confirm(t('mtproto:messages.confirmRemoveAll'))) {
                     remove();
                   }
                 }}
                 disabled={isRemoving}
               >
-                {isRemoving ? 'Removing...' : 'Remove Configuration'}
+                {isRemoving ? t('common:removing') : t('common:removeConfig')}
               </Button>
             </Stack>
           )}

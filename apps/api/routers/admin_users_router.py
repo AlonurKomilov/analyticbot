@@ -74,6 +74,21 @@ class AdminUserInfo(BaseModel):
     last_login: datetime | None = None
     channels_count: int = 0
     auth_provider: str = "local"
+    credit_balance: float = 0
+
+
+class ServiceSubscription(BaseModel):
+    """User's active service subscription"""
+    id: int
+    service_id: int
+    service_name: str
+    service_type: str
+    billing_cycle: str
+    price_paid: int
+    status: str
+    started_at: datetime
+    expires_at: datetime
+    auto_renew: bool
 
 
 class AdminUserDetail(BaseModel):
@@ -92,6 +107,7 @@ class AdminUserDetail(BaseModel):
     total_views: int = 0
     subscription_tier: str | None = None
     auth_provider: str = "local"  # 'local' (email/password), 'telegram', 'google', etc.
+    active_services: list[ServiceSubscription] = Field(default_factory=list)
 
 
 class UserStatusUpdate(BaseModel):
@@ -166,10 +182,12 @@ async def get_all_users(
                     u.created_at,
                     u.last_login,
                     u.auth_provider,
+                    COALESCE(uc.balance, 0) as credit_balance,
                     COUNT(c.id) as channels_count
                 FROM users u
                 LEFT JOIN channels c ON u.id = c.user_id
-                GROUP BY u.id, u.email, u.username, u.role, u.status, u.created_at, u.last_login, u.auth_provider
+                LEFT JOIN user_credits uc ON u.id = uc.user_id
+                GROUP BY u.id, u.email, u.username, u.role, u.status, u.created_at, u.last_login, u.auth_provider, uc.balance
                 ORDER BY u.created_at DESC
                 LIMIT $1 OFFSET $2
             """,
@@ -188,6 +206,7 @@ async def get_all_users(
                     last_login=user["last_login"],
                     channels_count=user["channels_count"],
                     auth_provider=user["auth_provider"] or "local",
+                    credit_balance=float(user["credit_balance"] or 0),
                 )
                 for user in users
             ]
@@ -262,6 +281,28 @@ async def get_user_detail(
                 user_id,
             )
 
+            # Get active service subscriptions
+            active_services = await conn.fetch(
+                """
+                SELECT
+                    uss.id,
+                    uss.service_id,
+                    ms.name as service_name,
+                    ms.category as service_type,
+                    uss.billing_cycle,
+                    uss.price_paid,
+                    uss.status,
+                    uss.started_at,
+                    uss.expires_at,
+                    uss.auto_renew
+                FROM user_service_subscriptions uss
+                INNER JOIN marketplace_services ms ON uss.service_id = ms.id
+                WHERE uss.user_id = $1 AND uss.status = 'active'
+                ORDER BY uss.started_at DESC
+            """,
+                user_id,
+            )
+
             return AdminUserDetail(
                 id=user["id"],
                 email=user["email"] or "",
@@ -275,6 +316,21 @@ async def get_user_detail(
                 total_posts=stats["total_posts"] if stats else 0,
                 total_views=int(stats["total_views"] or 0) if stats else 0,
                 auth_provider=user["auth_provider"] or "local",
+                active_services=[
+                    ServiceSubscription(
+                        id=service["id"],
+                        service_id=service["service_id"],
+                        service_name=service["service_name"],
+                        service_type=service["service_type"],
+                        billing_cycle=service["billing_cycle"],
+                        price_paid=service["price_paid"],
+                        status=service["status"],
+                        started_at=service["started_at"],
+                        expires_at=service["expires_at"],
+                        auto_renew=service["auto_renew"],
+                    )
+                    for service in active_services
+                ],
             )
     except HTTPException:
         raise
@@ -731,7 +787,7 @@ async def adjust_user_credits(
 
             await conn.execute(
                 """
-                INSERT INTO credit_transactions (user_id, amount, transaction_type, description, balance_after)
+                INSERT INTO credit_transactions (user_id, amount, type, description, balance_after)
                 VALUES ($1, $2, $3, $4, $5)
             """,
                 user_id,

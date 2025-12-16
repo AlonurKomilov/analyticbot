@@ -68,17 +68,18 @@ class UserBotRepositoryFactory(IUserBotRepository):
         limit: int = 50,
         offset: int = 0,
         status: str | None = None,
+        role: str | None = None,
     ) -> list[UserBotCredentials]:
         """List all user bot credentials (admin function)"""
         async with self.session_factory() as session:
             repo = UserBotRepository(session)
-            return await repo.list_all(limit, offset, status)
+            return await repo.list_all(limit, offset, status, role)
 
-    async def count(self, status: str | None = None) -> int:
+    async def count(self, status: str | None = None, role: str | None = None) -> int:
         """Count total user bots"""
         async with self.session_factory() as session:
             repo = UserBotRepository(session)
-            return await repo.count(status)
+            return await repo.count(status, role)
 
     async def log_admin_action(self, action: AdminBotAction) -> None:
         """Log admin action"""

@@ -223,8 +223,8 @@ const DashboardPage: React.FC = () => {
             <Typography variant="h6" fontWeight={600} gutterBottom>
               Channel Status Distribution
             </Typography>
-            <Box sx={{ width: '100%', height: 200, display: 'flex', justifyContent: 'center' }}>
-              <ResponsiveContainer>
+            <Box sx={{ width: '100%', height: 200, display: 'flex', justifyContent: 'center', minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={[
@@ -266,8 +266,8 @@ const DashboardPage: React.FC = () => {
             <Typography variant="h6" fontWeight={600} gutterBottom>
               Resource Overview
             </Typography>
-            <Box sx={{ width: '100%', height: 200 }}>
-              <ResponsiveContainer>
+            <Box sx={{ width: '100%', height: 200, minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={[
                     { name: 'Users', value: stats?.total_users || 0, fill: theme.palette.primary.main },
@@ -315,13 +315,14 @@ const DashboardPage: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText
                   primary="System Health"
-                  secondary={
-                    <Chip
-                      size="small"
-                      label={stats?.system_health || 'Unknown'}
-                      color={stats?.system_health === 'Healthy' ? 'success' : stats?.system_health === 'Warning' ? 'warning' : 'error'}
-                    />
-                  }
+                  secondary={stats?.system_health || 'Unknown'}
+                  secondaryTypographyProps={{
+                    component: 'span',
+                    sx: {
+                      color: stats?.system_health === 'Healthy' ? 'success.main' : stats?.system_health === 'Warning' ? 'warning.main' : 'error.main',
+                      fontWeight: 600,
+                    }
+                  }}
                 />
               </ListItem>
               <Divider />

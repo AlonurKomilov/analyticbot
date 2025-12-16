@@ -21,6 +21,8 @@ export const ROUTES = {
 
   // Workers Routes (Bot & MTProto)
   WORKERS_BOT: '/workers/bot',
+  WORKERS_BOT_SERVICE: '/workers/bot/service',
+  WORKERS_BOT_SERVICE_CONFIG: '/workers/bot/service/:serviceKey',
   WORKERS_MTPROTO: '/workers/mtproto',
 
   // Admin Routes
@@ -56,6 +58,7 @@ export const ROUTES = {
   CREDITS: '/credits',
   REWARDS: '/rewards',
   MARKETPLACE: '/marketplace',
+  MY_SERVICES: '/services/my-services',
   SUBSCRIPTION: '/payment/subscription',
   PAYMENT_HISTORY: '/payment/history',
   INVOICES: '/payment/invoices',

@@ -46,6 +46,9 @@ from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
 from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
 from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
 from infra.db.repositories.user_repository import AsyncpgUserRepository
+from infra.db.repositories.user_bot_service_repository_factory import UserBotServiceRepositoryFactory
+from infra.db.repositories.credit_repository import CreditRepository
+from infra.db.repositories.marketplace_service_repository import MarketplaceServiceRepository
 
 logger = logging.getLogger(__name__)
 
@@ -305,6 +308,24 @@ class DatabaseContainer(containers.DeclarativeContainer):
     # Shared reports repository
     shared_reports_repo = providers.Factory(
         SharedReportsRepository,
+        pool=asyncpg_pool,
+    )
+
+    # User Bot Service Repository (for chat settings, banned words, etc.)
+    user_bot_service_repo = providers.Singleton(
+        UserBotServiceRepositoryFactory,
+        session_factory=async_session_maker,
+    )
+
+    # Credit System Repository
+    credit_repo = providers.Factory(
+        CreditRepository,
+        pool=asyncpg_pool,
+    )
+
+    # Marketplace Services Repository (for service subscriptions)
+    marketplace_service_repo = providers.Factory(
+        MarketplaceServiceRepository,
         pool=asyncpg_pool,
     )
 

@@ -155,7 +155,7 @@ async def get_strategy_service():
         post_repo = await container.post_repository()
 
         # Get NLG service
-        from core.services.nlg import NLGOrchestrator
+        from core.services.ai.nlg import NLGOrchestrator
 
         nlg_service = NLGOrchestrator()
 
@@ -228,7 +228,7 @@ async def generate_strategy_narrative(
         )
 
         # Convert narrative_style string to enum if needed
-        from core.services.nlg import NarrativeStyle
+        from core.services.ai.nlg import NarrativeStyle
 
         style_map = {
             "analytical": NarrativeStyle.ANALYTICAL,

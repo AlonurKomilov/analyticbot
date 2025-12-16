@@ -13,8 +13,8 @@ Create Date: 2025-12-09
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "0044"
-down_revision = "0043"
+revision = "0044_unique_phone_bot"
+down_revision = "0043_fix_achievements_for_tiers"
 branch_labels = None
 depends_on = None
 

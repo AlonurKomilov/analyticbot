@@ -14,6 +14,7 @@ export { useTelegramStorageStore } from './slices/storage/useTelegramStorageStor
 export { useUIStore } from './slices/ui/useUIStore';
 export { useUserBotStore, useBot, useAllBots, useBotLoading, useBotError } from './slices/userBot/useUserBotStore';
 export { useMTProtoStore, useMTProtoStatus, useMTProtoLoading, useMTProtoError } from './slices/mtproto/useMTProtoStore';
+export { useModerationStore } from './slices/moderation/useModerationStore';
 
 // Re-export types from @/types for convenience
 export type {

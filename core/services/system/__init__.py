@@ -1,0 +1,44 @@
+"""
+System Services Module
+======================
+
+Core system services for infrastructure, authentication, caching, and utilities:
+- analytics: Analytics fusion, statistical analysis, trend analysis
+- alerts: Alert fusion, live monitoring, competitive intelligence
+- optimization: Performance optimization and recommendations
+- auth: Authentication service
+- cache: Public cache, catalog, materialized views
+
+Usage:
+    from core.services.system import BackupService, EncryptionService
+    from core.services.system.analytics import StatisticalAnalysisService
+    from core.services.system.alerts import LiveMonitoringService
+"""
+
+# Core system services (at root of system/)
+from core.services.system.backup_service import BackupService
+from core.services.system.encryption_service import EncryptionService, get_encryption_service
+from core.services.system.feature_gate_service import FeatureGateService
+from core.services.system.marketplace_service import MarketplaceService
+from core.services.system.channel_service import ChannelService, ChannelData
+from core.services.system.owner_service import OwnerService
+from core.services.system.admin_bot_service import AdminBotService, get_admin_bot_service
+from core.services.system.user_bot_service import UserBotService, get_user_bot_service
+from core.services.system.enhanced_delivery_service import EnhancedDeliveryService
+
+__all__ = [
+    "BackupService",
+    "EncryptionService",
+    "get_encryption_service",
+    "FeatureGateService",
+    "MarketplaceService",
+    "ChannelService",
+    "ChannelData",
+    "OwnerService",
+    "AdminBotService",
+    "get_admin_bot_service",
+    "UserBotService",
+    "get_user_bot_service",
+    "EnhancedDeliveryService",
+]
+

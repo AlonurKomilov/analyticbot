@@ -1463,6 +1463,7 @@ class MTProtoSessionInfo(BaseModel):
     channel_username: str | None = None
     mtproto_enabled: bool  # User toggle - wants to use MTProto
     session_active: bool = False  # Actually has working session
+    role: str = "user"  # system or user
     created_at: datetime
     updated_at: datetime
 
@@ -1569,6 +1570,7 @@ async def list_mtproto_sessions(
                     c.username as channel_username,
                     cms.mtproto_enabled,
                     (ubc.session_string IS NOT NULL AND ubc.is_verified = true) as session_active,
+                    COALESCE(ubc.role, 'user') as role,
                     cms.created_at,
                     cms.updated_at
                 FROM channel_mtproto_settings cms
@@ -1597,6 +1599,7 @@ async def list_mtproto_sessions(
                     channel_username=row["channel_username"],
                     mtproto_enabled=row["mtproto_enabled"],
                     session_active=row["session_active"] or False,
+                    role=row["role"] or "user",
                     created_at=row["created_at"],
                     updated_at=row["updated_at"],
                 )

@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box,
     Dialog,
@@ -83,6 +84,7 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
     onFormDataChange,
     onClearError
 }) => {
+    const { t } = useTranslation('channels');
     const [lookupResult, setLookupResult] = useState<ChannelLookupResult | null>(null);
     const [isLookingUp, setIsLookingUp] = useState(false);
     const [lookupError, setLookupError] = useState<string | null>(null);
@@ -99,7 +101,7 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
     const handleLookup = useCallback(async () => {
         const username = formData.username.trim();
         if (!username) {
-            setLookupError('Please enter a channel username');
+            setLookupError(t('dialog.lookupError'));
             return;
         }
 
@@ -123,10 +125,10 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
             }
 
             if (!result.is_valid) {
-                setLookupError(result.error_message || 'Channel not found');
+                setLookupError(result.error_message || t('dialog.notFound'));
             }
         } catch (error: any) {
-            setLookupError(error.message || 'Failed to lookup channel');
+            setLookupError(error.message || t('errors.generic'));
         } finally {
             setIsLookingUp(false);
         }
@@ -167,25 +169,25 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
             <DialogTitle>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <AddIcon />
-                    Add Telegram Channel
+                    {t('dialog.addTitle')}
                 </Box>
             </DialogTitle>
             <DialogContent>
                 {formError && (
                     <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
-                        <strong>Error:</strong> {formError}
+                        <strong>{t('dialog.error')}</strong> {formError}
                     </Alert>
                 )}
 
                 {/* Step 1: Enter Username */}
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                    Step 1: Enter your channel username
+                    {t('dialog.step1')}
                 </Typography>
 
                 <TextField
                     autoFocus
                     margin="dense"
-                    label="Channel Username"
+                    label={t('dialog.channelUsername')}
                     type="text"
                     fullWidth
                     variant="outlined"
@@ -194,8 +196,8 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
                     onKeyDown={handleUsernameKeyDown}
                     disabled={submitting || isLookingUp}
                     required
-                    placeholder="@mychannel or mychannel"
-                    helperText="Enter the channel username and click Search to fetch info automatically"
+                    placeholder={t('dialog.usernamePlaceholder')}
+                    helperText={t('dialog.usernameHelp')}
                     sx={{ mb: 2 }}
                     InputProps={{
                         endAdornment: (
@@ -220,7 +222,7 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
                     fullWidth
                     sx={{ mb: 2 }}
                 >
-                    {isLookingUp ? 'Looking up...' : 'Search Channel'}
+                    {isLookingUp ? t('dialog.searching') : t('dialog.searchButton')}
                 </Button>
 
                 {lookupError && !lookupResult && (
@@ -239,7 +241,7 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
                 {lookupResult && (
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                            Step 2: Confirm channel info
+                            {t('dialog.step2')}
                         </Typography>
 
                         <Box
@@ -288,13 +290,13 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
                                     <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                                         <Chip
                                             icon={<GroupIcon />}
-                                            label={`${formatSubscribers(lookupResult.subscriber_count)} subscribers`}
+                                            label={`${formatSubscribers(lookupResult.subscriber_count)} ${t('dialog.subscribers')}`}
                                             size="small"
                                             variant="outlined"
                                         />
                                         <Chip
                                             icon={<CalendarIcon />}
-                                            label={`Created ${formatDate(lookupResult.telegram_created_at)}`}
+                                            label={`${t('dialog.created')} ${formatDate(lookupResult.telegram_created_at)}`}
                                             size="small"
                                             variant="outlined"
                                         />
@@ -308,14 +310,14 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
                                             <>
                                                 <CheckCircleIcon color="success" fontSize="small" />
                                                 <Typography variant="body2" color="success.main">
-                                                    ✓ Bot has admin access - Ready to add!
+                                                    {t('dialog.adminSuccess')}
                                                 </Typography>
                                             </>
                                         ) : (
                                             <>
                                                 <ErrorIcon color="error" fontSize="small" />
                                                 <Typography variant="body2" color="error.main">
-                                                    Bot needs admin access. Add your bot as admin first.
+                                                    {t('dialog.adminError')}
                                                 </Typography>
                                             </>
                                         )}
@@ -323,7 +325,7 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
 
                                     {lookupResult.is_scam && (
                                         <Alert severity="warning" sx={{ mt: 1 }}>
-                                            ⚠️ This channel is flagged as potential scam by Telegram
+                                            {t('dialog.scamWarning')}
                                         </Alert>
                                     )}
                                 </>
@@ -332,22 +334,22 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
                                         <ErrorIcon sx={{ color: '#ff6b6b' }} />
                                         <Typography sx={{ color: '#fff', fontWeight: 600 }}>
-                                            Channel not found
+                                            {t('dialog.notFound')}
                                         </Typography>
                                     </Box>
                                     <Typography sx={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.9rem', mb: 1.5 }}>
-                                        We couldn't find a channel with username "<strong>{formData.username.replace('@', '')}</strong>"
+                                        {t('dialog.notFoundMessage')} "<strong>{formData.username.replace('@', '')}</strong>"
                                     </Typography>
                                     <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem' }}>
-                                        <strong>Please check:</strong>
+                                        <strong>{t('dialog.checkTitle')}</strong>
                                     </Typography>
                                     <Box component="ul" sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', m: 0, pl: 2.5, mt: 0.5 }}>
-                                        <li>The username is spelled correctly</li>
-                                        <li>The channel is public (not private)</li>
-                                        <li>The channel exists on Telegram</li>
+                                        <li>{t('dialog.checkUsername')}</li>
+                                        <li>{t('dialog.checkPublic')}</li>
+                                        <li>{t('dialog.checkExists')}</li>
                                     </Box>
                                     <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', mt: 1.5, fontStyle: 'italic' }}>
-                                        💡 Tip: You can find your channel username in Telegram → Channel Settings → Channel Type
+                                        {t('dialog.tip')}
                                     </Typography>
                                 </Box>
                             )}

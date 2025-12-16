@@ -229,6 +229,27 @@ async def require_admin_user(
     return current_user
 
 
+async def require_moderator_user(
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """
+    Require user to have moderator role or higher (moderator, admin, owner)
+
+    Args:
+        current_user: Current authenticated user
+
+    Returns:
+        User dictionary if moderator role or higher
+
+    Raises:
+        HTTPException: If user is not a moderator or higher
+    """
+    user_role = current_user.get("role", "user")
+    if user_role not in ["moderator", "admin", "owner"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Moderator access required")
+    return current_user
+
+
 def require_permission(permission: Permission):
     """
     Create a dependency that requires a specific permission

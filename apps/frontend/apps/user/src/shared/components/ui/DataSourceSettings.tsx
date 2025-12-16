@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   CardContent,
@@ -27,6 +28,7 @@ interface DataSourceSettingsProps {
 type ApiStatus = 'unknown' | 'online' | 'offline';
 
 const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceChange }) => {
+  const { t } = useTranslation(['datasource', 'common']);
   const [useRealAPI, setUseRealAPI] = useState<boolean>(() => {
     // If user has token, they're using real API
     const token = localStorage.getItem('token');
@@ -208,12 +210,12 @@ const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceCha
             label={
               <Box>
                 <Typography variant="body1" fontWeight="medium">
-                  {useRealAPI ? 'Real API Data' : 'Demo Data'}
+                  {useRealAPI ? t('datasource:realApi') : t('datasource:demoData')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {useRealAPI
-                    ? 'Connect to live analytics data from your channels'
-                    : 'Use professional demo data for testing and preview'
+                    ? t('datasource:realApiDesc')
+                    : t('datasource:demoDataDesc')
                   }
                 </Typography>
               </Box>
@@ -225,7 +227,7 @@ const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceCha
         <Stack spacing={2}>
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              Current Data Source:
+              {t('datasource:currentSource')}:
             </Typography>
             <Alert
               severity={useRealAPI ? 'info' : 'success'}
@@ -235,11 +237,11 @@ const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceCha
               <Typography variant="body2">
                 {useRealAPI ? (
                   <>
-                    <strong>Live API Data</strong> - Real analytics from your Telegram channels
+                    <strong>{t('datasource:liveApiData')}</strong> - {t('datasource:liveApiDataDesc')}
                   </>
                 ) : (
                   <>
-                    <strong>Professional Demo Data</strong> - 35K+ views, realistic engagement metrics
+                    <strong>{t('datasource:professionalDemo')}</strong> - {t('datasource:professionalDemoDesc')}
                   </>
                 )}
               </Typography>
@@ -250,7 +252,7 @@ const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceCha
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="subtitle2">
-                API Connection Status:
+                {t('datasource:apiConnectionStatus')}:
               </Typography>
               <Button
                 size="small"
@@ -258,16 +260,16 @@ const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceCha
                 onClick={checkAPIStatus}
                 disabled={isChecking}
               >
-                {isChecking ? 'Checking...' : 'Check Again'}
+                {isChecking ? t('datasource:checking') : t('datasource:checkAgain')}
               </Button>
             </Box>
 
             <Alert severity={apiStatus === 'online' ? 'success' : 'warning'}>
               <Typography variant="body2">
                 {apiStatus === 'online' ? (
-                  'API is available and ready to serve real data'
+                  t('datasource:apiAvailable')
                 ) : apiStatus === 'offline' ? (
-                  'API is currently unavailable. Using demo data automatically.'
+                  t('datasource:apiUnavailable')
                 ) : (
                   'Checking API availability...'
                 )}

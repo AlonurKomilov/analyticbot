@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 
 from apps.celery.celery_app import celery_app
 from core.protocols import DeepLearningServiceProtocol
-from core.services.deep_learning import DLOrchestratorService
+from core.services.ai.deep_learning import DLOrchestratorService
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,9 @@
     "reports": "Reports",
     "settings": "Settings",
     "help": "Help",
-    "logout": "Logout"
+    "logout": "Logout",
+    "browseCatalog": "Browse Channels",
+    "publicCatalog": "Public catalog"
   },
   "aiServices": "AI Services",
   "myBot": "My Bot",
@@ -18,6 +20,7 @@
   "payment": "Payment",
   "workers": {
     "bot": "Bot Worker",
+    "botModeration": "Bot Moderation",
     "mtproto": "MTProto Worker"
   },
   "header": {

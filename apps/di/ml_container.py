@@ -30,7 +30,7 @@ def _create_ml_service(service_name: str) -> Any | None:
 
             return create_bot_ml_facade()
         elif service_name == "ChurnPredictor":
-            from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
+            from core.services.ai.churn.churn_intelligence import ChurnIntelligenceOrchestratorService
 
             try:
                 return ChurnIntelligenceOrchestratorService()

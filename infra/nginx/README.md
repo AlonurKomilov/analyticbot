@@ -1,42 +1,134 @@
 # Nginx Configuration Files
 
-**Last Cleaned:** November 20, 2025
+**Last Updated:** December 15, 2025
 
 ## Active Configuration Files
 
-### 1. `api.analyticbot.conf` (191 lines) ✅ PRODUCTION
-**Domain:** api.analyticbot.org
-**Purpose:** API subdomain with Cloudflare proxy
-**Status:** Currently deployed to `/etc/nginx/sites-available/`
-**Features:**
-- Enterprise security headers
-- SSL session caching
-- Gzip compression
-- Rate limiting ready (zones need nginx.conf)
-- Health check optimization
-- Separate auth/api routing
+### Production Configs (per subdomain)
 
-**Deploy:**
+| Config File | Domain | Port | Purpose |
+|-------------|--------|------|---------|
+| `api.analyticbot.conf` | api.analyticbot.org | 11400 | API backend |
+| `public.analyticbot.conf` | analyticbot.org | 11320 | Public analytics catalog |
+| `app.analyticbot.conf` | app.analyticbot.org | 11300 | User dashboard |
+| `moderator.analyticbot.conf` | moderator.analyticbot.org | 11330 | Moderator dashboard |
+| `admin.analyticbot.conf` | admin.analyticbot.org | 11310 | Admin panel |
+
+### Alternative/Reference Configs
+
+| Config File | Purpose |
+|-------------|---------|
+| `frontend.analyticbot.conf` | Generic frontend serving (legacy) |
+| `analyticbot.prod.conf` | Full-stack single domain config |
+| `analyticbot.cloudflare.conf` | Combined Cloudflare config (all domains) |
+
+---
+
+## Quick Deploy Guide
+
+### Deploy Individual Config
+
 ```bash
-sudo cp api.analyticbot.conf /etc/nginx/sites-available/
+# Example: Deploy public catalog config
+sudo cp public.analyticbot.conf /etc/nginx/sites-available/
+sudo ln -sf /etc/nginx/sites-available/public.analyticbot.conf /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### Deploy All Configs
+
+```bash
+cd /home/abcdev/projects/analyticbot/infra/nginx
+
+# Copy all configs
+for conf in api public app moderator admin; do
+    sudo cp ${conf}.analyticbot.conf /etc/nginx/sites-available/
+done
+
+# Test and reload
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
 ---
 
-### 2. `frontend.analyticbot.conf` (176 lines)
-**Domain:** www.analyticbot.org
-**Purpose:** React SPA serving with proper routing
-**Status:** Alternative frontend config
-**Use Case:** When frontend is on separate subdomain
+## Configuration Details
+
+### 1. `api.analyticbot.conf` ✅ PRODUCTION
+- **Domain:** api.analyticbot.org
+- **Backend:** 127.0.0.1:11400
+- **Features:** Rate limiting, auth endpoints, health checks
+
+### 2. `public.analyticbot.conf` 🆕
+- **Domain:** analyticbot.org, www.analyticbot.org
+- **Backend:** 127.0.0.1:11320
+- **Purpose:** Public analytics catalog (TGStat-like)
+- **Features:** SEO-friendly, Telegram widgets allowed
+
+### 3. `app.analyticbot.conf` 🆕
+- **Domain:** app.analyticbot.org
+- **Backend:** 127.0.0.1:11300
+- **Purpose:** Authenticated user dashboard
+- **Features:** Telegram Login support
+
+### 4. `moderator.analyticbot.conf` 🆕
+- **Domain:** moderator.analyticbot.org
+- **Backend:** 127.0.0.1:11330
+- **Purpose:** Channel moderation interface
+- **Features:** Strict CSP, no external frames
+
+### 5. `admin.analyticbot.conf`
+- **Domain:** admin.analyticbot.org
+- **Backend:** 127.0.0.1:11310
+- **Purpose:** System administration
+- **Features:** Strictest security headers
 
 ---
 
-### 3. `analyticbot.prod.conf` (290 lines)
-**Domain:** www.analyticbot.org
-**Purpose:** Full production config (frontend + API on same domain)
-**Status:** Alternative architecture reference
-**Use Case:** When frontend and API share the same domain with path routing
+## Development vs Production
+
+Each config has two modes:
+
+**Development Mode** (Vite dev server):
+- Uncomment the proxy section
+- Comment out the static files section
+- Uses WebSocket for HMR
+
+**Production Mode** (static files):
+- Comment out the proxy section
+- Uncomment the static files section
+- Serves from `/var/www/analyticbot/{app}`
+
+---
+
+## Directory Structure (Production)
+
+```
+/var/www/analyticbot/
+├── public/      # Public catalog (analyticbot.org)
+├── app/         # User dashboard (app.analyticbot.org)
+├── moderator/   # Moderator panel (moderator.analyticbot.org)
+├── admin/       # Admin panel (admin.analyticbot.org)
+└── api/         # API (if static docs needed)
+```
+
+---
+
+## Quick Commands
+
+```bash
+# Test config
+sudo nginx -t
+
+# Reload (zero downtime)
+sudo systemctl reload nginx
+
+# View logs
+tail -f /var/log/nginx/public.analyticbot.org.access.log
+tail -f /var/log/nginx/moderator.analyticbot.org.error.log
+
+# Check active server blocks
+sudo nginx -T | grep "server_name"
+```
 
 ---
 
@@ -44,69 +136,17 @@ sudo nginx -t && sudo systemctl reload nginx
 
 **Location:** `../archive/nginx_cleanup_20251120/`
 
-Files moved to archive (no longer needed):
-- ❌ `api.analyticbot.conf.broken` - Had undefined rate limiting zones
-- ❌ `api.analyticbot.simple.conf` - Too minimal, missing security
-- ❌ `nginx.prod.conf` - Old generic config
-
----
-
-## Quick Commands
-
-**Test current config:**
-```bash
-sudo nginx -t
-```
-
-**Reload nginx (zero downtime):**
-```bash
-sudo systemctl reload nginx
-```
-
-**Check active config:**
-```bash
-sudo nginx -T | grep -A5 "server_name api.analyticbot.org"
-```
-
-**View logs:**
-```bash
-tail -f /var/log/nginx/api.analyticbot.org.access.log
-tail -f /var/log/nginx/api.analyticbot.org.error.log
-```
-
----
-
-## Configuration Philosophy
-
-**Clean & Organized:**
-- One primary config per purpose
-- Clear naming: `{domain}.conf`
-- Archive old/broken files (don't delete - keep history)
-- Production configs have full documentation
-
-**Security First:**
-- All configs include security headers
-- Modern TLS only (1.2, 1.3)
-- File blocking (.env, .git, etc.)
-- Rate limiting support
-
-**Performance Optimized:**
-- SSL session caching
-- Gzip compression
-- Endpoint-specific timeouts
-- Health check optimization
+Old/deprecated configs moved to archive for reference.
 
 ---
 
 ## File Naming Convention
 
-- `api.analyticbot.conf` - Main API config (production)
-- `frontend.analyticbot.conf` - Frontend serving config
-- `analyticbot.prod.conf` - Alternative full-stack config
-- `*.backup` - Temporary backups (auto-generated)
-- Archive old files - don't accumulate in main folder
+- `{subdomain}.analyticbot.conf` - Per-subdomain config
+- `analyticbot.{type}.conf` - Combined/alternative configs
+- `*.backup` - Temporary backups
 
 ---
 
 **Maintained by:** DevOps / Infrastructure Team
-**Last Audit:** November 20, 2025
+**Last Audit:** December 15, 2025

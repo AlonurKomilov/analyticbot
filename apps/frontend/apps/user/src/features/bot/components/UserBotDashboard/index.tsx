@@ -24,12 +24,15 @@ import {
   RateLimitDialog,
   TestMessageDialog,
 } from '../dialogs';
-import { useBotDashboard } from './hooks';
+import { useBotDashboard, useBotServices } from './hooks';
 import { BotInfoCard } from './BotInfoCard';
 import { BotStatsCard } from './BotStatsCard';
 import { BotTimelineCard } from './BotTimelineCard';
 import { BotActionsCard } from './BotActionsCard';
+import { ActiveServicesCard } from './ActiveServicesCard';
+import { AvailableUpgradesCard } from './AvailableUpgradesCard';
 import { convertChannelToChatId } from './utils';
+import { ROUTES } from '@config/routes';
 
 export const UserBotDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -56,9 +59,18 @@ export const UserBotDashboard: React.FC = () => {
     setRateLimitState,
   } = useBotDashboard();
 
+  // Fetch user's active services and available upgrades
+  const {
+    activeServices,
+    availableServices,
+    activeServiceKeys,
+    isLoading: isLoadingServices,
+    refetch: refetchServices,
+  } = useBotServices();
+
   const handleRefresh = async () => {
     try {
-      await fetchBotStatus();
+      await Promise.all([fetchBotStatus(), refetchServices()]);
       toast.success('✅ Bot status updated');
     } catch (err) {
       toast.error('Failed to refresh bot status');
@@ -201,6 +213,7 @@ export const UserBotDashboard: React.FC = () => {
       )}
 
       <Grid container spacing={3}>
+        {/* Bot Info & Stats Row */}
         <Grid item xs={12} md={6}>
           {bot && <BotInfoCard bot={bot} />}
         </Grid>
@@ -209,10 +222,29 @@ export const UserBotDashboard: React.FC = () => {
           {bot && <BotStatsCard bot={bot} />}
         </Grid>
 
+        {/* Active Power-Ups Section */}
+        <Grid item xs={12}>
+          <ActiveServicesCard
+            services={activeServices}
+            isLoading={isLoadingServices}
+          />
+        </Grid>
+
+        {/* Available Upgrades Section */}
+        <Grid item xs={12}>
+          <AvailableUpgradesCard
+            services={availableServices}
+            activeServiceKeys={activeServiceKeys}
+            isLoading={isLoadingServices}
+          />
+        </Grid>
+
+        {/* Timeline */}
         <Grid item xs={12}>
           {bot && <BotTimelineCard bot={bot} />}
         </Grid>
 
+        {/* Quick Actions */}
         <Grid item xs={12}>
           <BotActionsCard
             onSendTestMessage={() => openDialog('showTestMessageDialog')}

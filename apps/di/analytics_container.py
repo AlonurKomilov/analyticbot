@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING, Union
 from unittest.mock import AsyncMock
 
 from core.protocols import AnalyticsFusionServiceProtocol
-from core.services.analytics_fusion import AnalyticsOrchestratorService
+from core.services.system.analytics.analytics_fusion import AnalyticsOrchestratorService
 
 # DI Container infrastructure imports (acceptable - this IS a DI container)
 from infra.cache.redis_cache import create_cache_adapter
@@ -281,7 +281,7 @@ async def init_analytics_fusion_service() -> AnalyticsOrchestratorService:
             cache_adapter = None
 
         # Create Repository Manager and Data Access Service for new architecture
-        from core.services.analytics_fusion.infrastructure.data_access import (
+        from core.services.system.analytics.analytics_fusion.infrastructure.data_access import (
             DataAccessConfig,
             DataAccessService,
             RepositoryManager,
@@ -300,7 +300,7 @@ async def init_analytics_fusion_service() -> AnalyticsOrchestratorService:
         )
 
         # Create posting time recommendation service with db_pool
-        from core.services.analytics_fusion.recommendations.posting_time_service import (
+        from core.services.system.analytics.analytics_fusion.recommendations.posting_time_service import (
             PostingTimeRecommendationService,
         )
 

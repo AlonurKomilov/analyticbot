@@ -1,0 +1,40 @@
+{
+  "title": "Ma'lumot manbai sozlamalari",
+  "realApi": "Haqiqiy API ma'lumotlari",
+  "realApiDesc": "Kanallaringizdan jonli analitik ma'lumotlarga ulanish",
+  "demoData": "Demo ma'lumotlar",
+  "demoDataDesc": "Sinov va ko'rib chiqish uchun professional demo ma'lumotlardan foydalanish",
+  "currentSource": "Joriy ma'lumot manbai",
+  "liveApiData": "Jonli API ma'lumotlari",
+  "liveApiDataDesc": "Telegram kanallaringizdan haqiqiy analitika",
+  "professionalDemo": "Professional demo ma'lumotlari",
+  "professionalDemoDesc": "35K+ ko'rishlar, real tortishish ko'rsatkichlari",
+  "apiConnectionStatus": "API ulanish holati",
+  "checking": "Tekshirilmoqda...",
+  "checkAgain": "Qaytadan tekshirish",
+  "apiAvailable": "API mavjud va haqiqiy ma'lumotlarni taqdim etishga tayyor",
+  "apiUnavailable": "API hozirda mavjud emas. Demo ma'lumotlar avtomatik ravishda ishlatiladi.",
+  "liveData": {
+    "title": "Jonli API ma'lumotlari",
+    "description": "Kanallaringizdan real vaqtdagi ma'lumotlar",
+    "features": {
+      "realTime": "Real vaqtdagi analitika",
+      "liveEngagement": "Jonli faollik ma'lumotlari",
+      "accurateMetrics": "100% aniq ko'rsatkichlar",
+      "yourData": "Sizning haqiqiy ma'lumotlaringiz"
+    }
+  },
+  "demoData": {
+    "title": "Professional demo ma'lumotlar",
+    "description": "Test uchun yuqori sifatli demo ma'lumotlar",
+    "features": {
+      "realistic": "Realistik namuna ma'lumotlar",
+      "fullFeatures": "Barcha funksiyalar mavjud",
+      "noSetup": "Sozlash talab qilinmaydi",
+      "perfectTesting": "Test uchun mukammal"
+    }
+  },
+  "autoSwitching": "Demo ma'lumotlarga avto-o'tish",
+  "switchTo": "O'tish",
+  "currentMode": "Joriy rejim"
+}

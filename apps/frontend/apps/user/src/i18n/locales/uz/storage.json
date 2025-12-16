@@ -1,0 +1,42 @@
+{
+  "title": "Saqlash va fayllar",
+  "channelManager": {
+    "title": "Saqlash kanali menejeri",
+    "description": "Fayllarni saqlash uchun Telegram kanalini sozlash",
+    "setupInstructions": "Sozlash ko'rsatmalari:",
+    "step1": "Telegram kanal yarating (siz egasi sifatida)",
+    "step2": "SIZ kanal a'zosi ekanligingizga ishonch hosil qiling",
+    "step3": "Shaxsiy botingizni \"Xabar yuborish\" ruxsati bilan admin qilib qo'shing",
+    "step4": "Quyida kanal foydalanuvchi nomini kiriting",
+    "botAdmin": "Bot admin",
+    "channelUsername": "Kanal foydalanuvchi nomi",
+    "channelUsernamePlaceholder": "@storage_channel",
+    "saveChannel": "Kanalni saqlash",
+    "testConnection": "Ulanishni tekshirish"
+  },
+  "fileBrowser": {
+    "title": "Fayl brauzer",
+    "filterByType": "Tur bo'yicha filterlash",
+    "allFiles": "Barcha fayllar",
+    "images": "Rasmlar",
+    "videos": "Videolar",
+    "documents": "Hujjatlar",
+    "noFiles": "Fayllar topilmadi",
+    "uploadFile": "Fayl yuklash",
+    "deleteFile": "Faylni o'chirish",
+    "downloadFile": "Faylni yuklab olish",
+    "fileSize": "Fayl hajmi",
+    "uploadDate": "Yuklangan sana",
+    "debugInfo": "Debug ma'lumot:"
+  },
+  "upload": {
+    "title": "Fayllarni yuklash",
+    "dragDrop": "Fayllarni bu yerga sudrab tashlang",
+    "orClick": "yoki tanlash uchun bosing",
+    "uploading": "Yuklanmoqda...",
+    "uploadSuccess": "Fayl muvaffaqiyatli yuklandi",
+    "uploadError": "Faylni yuklashda xatolik",
+    "maxSize": "Maksimal hajm: {{size}}",
+    "allowedTypes": "Ruxsat etilgan turlar: {{types}}"
+  }
+}

@@ -66,6 +66,19 @@ interface User {
   credit_balance?: number;
 }
 
+interface ServiceSubscription {
+  id: number;
+  service_id: number;
+  service_name: string;
+  service_type: string;
+  billing_cycle: string;
+  price_paid: number;
+  status: string;
+  started_at: string;
+  expires_at: string;
+  auto_renew: boolean;
+}
+
 interface UserDetail {
   id: number;
   email: string;
@@ -79,6 +92,7 @@ interface UserDetail {
   total_posts: number;
   total_views: number;
   auth_provider: string;
+  active_services: ServiceSubscription[];
 }
 
 const UsersPage: React.FC = () => {
@@ -762,6 +776,42 @@ const UsersPage: React.FC = () => {
               <Typography variant="body1">
                 {userDetail.last_login ? format(new Date(userDetail.last_login), 'PPpp') : 'Never'}
               </Typography>
+
+              {/* Active Services Section */}
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>Active Services</Typography>
+              {userDetail.active_services && userDetail.active_services.length > 0 ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {userDetail.active_services.map((service) => (
+                    <Paper key={service.id} sx={{ p: 1.5, bgcolor: 'rgba(33, 150, 243, 0.08)' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {service.service_name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {service.service_type} • {service.billing_cycle}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'right' }}>
+                          <Typography variant="body2" sx={{ color: '#FFD700' }}>
+                            {service.price_paid} credits
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Expires: {format(new Date(service.expires_at), 'MMM d, yyyy')}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      {service.auto_renew && (
+                        <Chip label="Auto-Renew" size="small" color="success" sx={{ mt: 0.5, height: 20 }} />
+                      )}
+                    </Paper>
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  No active subscriptions
+                </Typography>
+              )}
             </Box>
           ) : (
             <Typography>No user data available</Typography>

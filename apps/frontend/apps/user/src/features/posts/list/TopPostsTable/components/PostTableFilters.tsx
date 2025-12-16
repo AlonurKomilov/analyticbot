@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box,
     FormControl,
@@ -53,6 +54,8 @@ const PostTableFilters: React.FC<PostTableFiltersProps> = ({
     limit,
     setLimit
 }) => {
+    const { t } = useTranslation('filters');
+    
     const handleTimeFilterChange = (event: SelectChangeEvent) => {
         setTimeFilter(event.target.value as TimeFilter);
     };
@@ -76,48 +79,48 @@ const PostTableFilters: React.FC<PostTableFiltersProps> = ({
             }}
         >
             <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="time-filter-label">Time Period</InputLabel>
+                <InputLabel id="time-filter-label">{t('filters.timePeriod')}</InputLabel>
                 <Select
                     labelId="time-filter-label"
                     id="time-filter"
                     value={timeFilter}
-                    label="Time Period"
+                    label={t('filters.timePeriod')}
                     onChange={handleTimeFilterChange}
                 >
-                    <MenuItem value="1h">Last Hour</MenuItem>
-                    <MenuItem value="6h">Last 6 Hours</MenuItem>
-                    <MenuItem value="24h">Last 24 Hours</MenuItem>
-                    <MenuItem value="7d">Last 7 Days</MenuItem>
-                    <MenuItem value="30d">Last 30 Days</MenuItem>
-                    <MenuItem value="90d">Last 90 Days</MenuItem>
-                    <MenuItem value="all">All Time</MenuItem>
+                    <MenuItem value="1h">{t('timePeriods.lastHour')}</MenuItem>
+                    <MenuItem value="6h">{t('timePeriods.last6Hours')}</MenuItem>
+                    <MenuItem value="24h">{t('timePeriods.last24Hours')}</MenuItem>
+                    <MenuItem value="7d">{t('timePeriods.last7Days')}</MenuItem>
+                    <MenuItem value="30d">{t('timePeriods.last30Days')}</MenuItem>
+                    <MenuItem value="90d">{t('timePeriods.last90Days')}</MenuItem>
+                    <MenuItem value="all">{t('timePeriods.allTime')}</MenuItem>
                 </Select>
             </FormControl>
 
             <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="sort-by-label">Sort By</InputLabel>
+                <InputLabel id="sort-by-label">{t('common.sortBy')}</InputLabel>
                 <Select
                     labelId="sort-by-label"
                     id="sort-by"
                     value={sortBy}
-                    label="Sort By"
+                    label={t('common.sortBy')}
                     onChange={handleSortByChange}
                 >
-                    <MenuItem value="views">Views</MenuItem>
-                    <MenuItem value="reactions">Reactions</MenuItem>
-                    <MenuItem value="shares">Shares</MenuItem>
-                    <MenuItem value="comments">Comments</MenuItem>
-                    <MenuItem value="engagement">Engagement Rate</MenuItem>
+                    <MenuItem value="views">{t('common.views')}</MenuItem>
+                    <MenuItem value="reactions">{t('common.reactions')}</MenuItem>
+                    <MenuItem value="shares">{t('common.shares')}</MenuItem>
+                    <MenuItem value="comments">{t('common.comments')}</MenuItem>
+                    <MenuItem value="engagement">{t('posts.engagementRate')}</MenuItem>
                 </Select>
             </FormControl>
 
             <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="limit-label">Top</InputLabel>
+                <InputLabel id="limit-label">{t('posts.top')}</InputLabel>
                 <Select
                     labelId="limit-label"
                     id="limit"
                     value={limit.toString()}
-                    label="Top"
+                    label={t('posts.top')}
                     onChange={handleLimitChange}
                 >
                     <MenuItem value="10">10 Posts</MenuItem>

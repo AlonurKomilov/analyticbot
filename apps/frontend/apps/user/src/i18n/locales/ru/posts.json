@@ -40,8 +40,7 @@
     "shares": "Репосты",
     "engagementRate": "Уровень вовлечённости",
     "viewsGrowth": "Рост просмотров"
-  },
-  "create": {
+  },  "top": "Топ",  "create": {
     "title": "Создать пост",
     "selectChannel": "Выберите канал",
     "content": "Содержание",

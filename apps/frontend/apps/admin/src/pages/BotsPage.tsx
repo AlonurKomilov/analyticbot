@@ -55,6 +55,7 @@ interface BotInfo {
   bot_id: number;
   status: 'active' | 'suspended' | 'inactive';
   is_verified: boolean;
+  role: 'system' | 'user';
   max_requests_per_second: number;
   max_concurrent_requests: number;
   total_requests: number;
@@ -77,6 +78,11 @@ const STATUS_COLORS: Record<string, 'success' | 'error' | 'warning' | 'default'>
   inactive: 'warning',
 };
 
+const ROLE_COLORS: Record<string, 'primary' | 'secondary' | 'default'> = {
+  system: 'primary',
+  user: 'secondary',
+};
+
 const formatDate = (dateString: string | null): string => {
   if (!dateString) return 'Never';
   const date = new Date(dateString);
@@ -97,6 +103,7 @@ const BotsPage: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [roleFilter, setRoleFilter] = useState<string>('');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   // Dialogs
@@ -142,6 +149,10 @@ const BotsPage: React.FC = () => {
         params.append('status_filter', statusFilter);
       }
 
+      if (roleFilter) {
+        params.append('role_filter', roleFilter);
+      }
+
       const response = await apiClient.get<BotListResponse>(
         `${API_ENDPOINTS.BOTS.LIST}/list?${params.toString()}`
       );
@@ -166,7 +177,7 @@ const BotsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, statusFilter]);
+  }, [page, rowsPerPage, statusFilter, roleFilter]);
 
   useEffect(() => {
     fetchBots();
@@ -277,9 +288,11 @@ const BotsPage: React.FC = () => {
           </Typography>
         </Box>
         <Tooltip title="Refresh">
-          <IconButton onClick={fetchBots} disabled={loading}>
-            <RefreshIcon />
-          </IconButton>
+          <span>
+            <IconButton onClick={fetchBots} disabled={loading}>
+              <RefreshIcon />
+            </IconButton>
+          </span>
         </Tooltip>
       </Box>
 
@@ -336,7 +349,7 @@ const BotsPage: React.FC = () => {
       </Grid>
 
       {/* Filters */}
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper sx={{ p: 2, mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         <FormControl size="small" sx={{ minWidth: 200 }}>
           <InputLabel>Status Filter</InputLabel>
           <Select
@@ -351,6 +364,21 @@ const BotsPage: React.FC = () => {
             <MenuItem value="active">Active</MenuItem>
             <MenuItem value="suspended">Suspended</MenuItem>
             <MenuItem value="inactive">Inactive</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel>Role Filter</InputLabel>
+          <Select
+            value={roleFilter}
+            label="Role Filter"
+            onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setPage(0);
+            }}
+          >
+            <MenuItem value="">All Roles</MenuItem>
+            <MenuItem value="system">System</MenuItem>
+            <MenuItem value="user">User</MenuItem>
           </Select>
         </FormControl>
       </Paper>
@@ -368,6 +396,7 @@ const BotsPage: React.FC = () => {
               <TableRow>
                 <TableCell>Bot</TableCell>
                 <TableCell>User ID</TableCell>
+                <TableCell>Role</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Verified</TableCell>
                 <TableCell>Rate Limits</TableCell>
@@ -379,7 +408,7 @@ const BotsPage: React.FC = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
                     <CircularProgress size={32} />
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                       Loading bots...
@@ -388,7 +417,7 @@ const BotsPage: React.FC = () => {
                 </TableRow>
               ) : bots.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
                     <BotsIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
                     <Typography color="text.secondary">No bots found</Typography>
                   </TableCell>
@@ -411,6 +440,14 @@ const BotsPage: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">{bot.user_id}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={bot.role || 'user'}
+                        size="small"
+                        color={ROLE_COLORS[bot.role] || 'default'}
+                        variant={bot.role === 'system' ? 'filled' : 'outlined'}
+                      />
                     </TableCell>
                     <TableCell>
                       {/* Show "Not Setup" for placeholder bots */}

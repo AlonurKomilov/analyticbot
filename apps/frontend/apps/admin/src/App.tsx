@@ -20,6 +20,7 @@ import SystemHealthPage from './pages/SystemHealthPage';
 import AuditLogPage from './pages/AuditLogPage';
 import SettingsPage from './pages/SettingsPage';
 
+
 // Protected Route wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -60,6 +61,7 @@ const App: React.FC = () => {
                     <Route path="/bots" element={<BotsPage />} />
                     <Route path="/mtproto" element={<MTProtoPage />} />
                     <Route path="/plans" element={<PlansPage />} />
+
                     <Route path="/system/health" element={<SystemHealthPage />} />
                     <Route path="/system/audit" element={<AuditLogPage />} />
                     <Route path="/settings" element={<SettingsPage />} />

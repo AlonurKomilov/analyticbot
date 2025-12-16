@@ -9,7 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
-from core.models.user_bot_domain import BotStatus
+from core.models.user_bot_domain import BotStatus, BotRole
 
 # ==================== Request Models ====================
 
@@ -104,6 +104,7 @@ class BotStatusResponse(BaseModel):
     bot_id: int | None
     status: BotStatus
     is_verified: bool
+    role: BotRole = BotRole.USER
     max_requests_per_second: int
     max_concurrent_requests: int
     total_requests: int

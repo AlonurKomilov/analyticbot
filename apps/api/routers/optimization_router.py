@@ -151,7 +151,7 @@ class ServiceHealthResponse(BaseModel):
 
 async def get_optimization_orchestrator():
     """Get optimization orchestrator service instance"""
-    from core.services.optimization_fusion.orchestrator.optimization_orchestrator_service import (
+    from core.services.system.optimization.optimization_fusion.orchestrator.optimization_orchestrator_service import (
         OptimizationOrchestratorService,
     )
 

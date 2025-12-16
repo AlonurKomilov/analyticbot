@@ -3,6 +3,7 @@
  * Shows user's MTProto configuration details and management actions
  */
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -58,6 +59,7 @@ interface AccountInfoCardProps {
 }
 
 export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange }) => {
+  const { t } = useTranslation(['mtproto', 'common']);
   const [status, setStatus] = useState<MTProtoStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -160,7 +162,7 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
         <CardContent>
           <Box display="flex" alignItems="center" justifyContent="center" py={3}>
             <CircularProgress size={24} />
-            <Typography sx={{ ml: 2 }}>Loading account info...</Typography>
+            <Typography sx={{ ml: 2 }}>{t('mtproto:accountInfo.loading')}</Typography>
           </Box>
         </CardContent>
       </Card>
@@ -173,17 +175,17 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
         <CardContent>
           <Box display="flex" alignItems="center" gap={1} mb={2}>
             <SettingsIcon color="action" />
-            <Typography variant="h6">MTProto Configuration</Typography>
+            <Typography variant="h6">{t('mtproto:status.configuration')}</Typography>
           </Box>
           <Alert severity="info">
-            MTProto is not configured yet. Go to MTProto Setup to connect your Telegram account.
+            {t('mtproto:setup.needAccount')}
           </Alert>
           <Button
             variant="contained"
             href="/mtproto-setup"
             sx={{ mt: 2 }}
           >
-            Configure MTProto
+            {t('mtproto:setup.title')}
           </Button>
         </CardContent>
       </Card>
@@ -195,7 +197,7 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} mb={2}>
           <AccountCircle color="primary" />
-          <Typography variant="h6">MTProto Account</Typography>
+          <Typography variant="h6">{t('mtproto:status.account')}</Typography>
           <Box flexGrow={1} />
           {/* Global Enable/Disable Toggle */}
           <FormControlLabel
@@ -209,13 +211,13 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
             }
             label={
               <Typography variant="body2" color={status.mtproto_enabled ? 'success.main' : 'text.secondary'}>
-                {status.mtproto_enabled ? 'Enabled' : 'Disabled'}
+                {status.mtproto_enabled ? t('common:enabled') : t('common:disabled')}
               </Typography>
             }
           />
         </Box>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Your Telegram MTProto configuration and management
+          {t('mtproto:description')}
         </Typography>
         <Divider sx={{ my: 2 }} />
 
@@ -235,7 +237,7 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
           {/* Phone Number */}
           <Grid item xs={12} sm={6} md={3}>
             <Box>
-              <Typography variant="body2" color="text.secondary">Phone Number</Typography>
+              <Typography variant="body2" color="text.secondary">{t('mtproto:accountInfo.phoneNumber')}</Typography>
               <Box display="flex" alignItems="center" gap={1} mt={1}>
                 <PhoneIcon fontSize="small" color="action" />
                 <Typography variant="body1" fontFamily="monospace">
@@ -260,7 +262,7 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
           {/* API ID */}
           <Grid item xs={12} sm={6} md={3}>
             <Box>
-              <Typography variant="body2" color="text.secondary">API ID</Typography>
+              <Typography variant="body2" color="text.secondary">{t('mtproto:accountInfo.apiId')}</Typography>
               <Box display="flex" alignItems="center" gap={1} mt={1}>
                 <KeyIcon fontSize="small" color="action" />
                 <Typography variant="body1" fontFamily="monospace">
@@ -273,17 +275,17 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
           {/* Verification Status */}
           <Grid item xs={12} sm={6} md={3}>
             <Box>
-              <Typography variant="body2" color="text.secondary">Verification</Typography>
+              <Typography variant="body2" color="text.secondary">{t('common:status')}</Typography>
               <Box display="flex" alignItems="center" gap={1} mt={1}>
                 {status.verified ? (
                   <>
                     <CheckCircle color="success" fontSize="small" />
-                    <Chip label="Verified" size="small" color="success" />
+                    <Chip label={t('mtproto:status.verified')} size="small" color="success" />
                   </>
                 ) : (
                   <>
                     <Cancel color="error" fontSize="small" />
-                    <Chip label="Not Verified" size="small" color="error" />
+                    <Chip label={t('errors:notVerified')} size="small" color="error" />
                   </>
                 )}
               </Box>
@@ -293,10 +295,10 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
           {/* Can Read History */}
           <Grid item xs={12} sm={6} md={3}>
             <Box>
-              <Typography variant="body2" color="text.secondary">Permissions</Typography>
+              <Typography variant="body2" color="text.secondary">{t('common:permissions')}</Typography>
               <Box display="flex" alignItems="center" gap={1} mt={1}>
                 <Chip
-                  label={status.can_read_history ? 'Can read history' : 'Limited access'}
+                  label={status.can_read_history ? t('common:readHistory') : t('common:limitedAccess')}
                   size="small"
                   color={status.can_read_history ? 'success' : 'default'}
                   variant={status.can_read_history ? 'filled' : 'outlined'}
@@ -327,7 +329,7 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
             onClick={handleDisconnect}
             disabled={isDisconnecting || !status.connected}
           >
-            {isDisconnecting ? 'Disconnecting...' : 'Disconnect Session'}
+            {isDisconnecting ? t('common:disconnecting') : t('common:disconnect')}
           </Button>
 
           <Button
@@ -338,7 +340,7 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
             onClick={() => setRemoveDialogOpen(true)}
             disabled={isRemoving}
           >
-            Remove MTProto
+            {t('common:remove')}
           </Button>
 
           <Button
@@ -346,7 +348,7 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
             size="small"
             href="/mtproto-setup"
           >
-            Go to Setup Page
+            {t('mtproto:setup.title')}
           </Button>
         </Stack>
 
@@ -361,20 +363,14 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
 
       {/* Remove Confirmation Dialog */}
       <Dialog open={removeDialogOpen} onClose={() => setRemoveDialogOpen(false)}>
-        <DialogTitle>Remove MTProto Configuration?</DialogTitle>
+        <DialogTitle>{t('common:confirmRemove')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This will permanently remove your MTProto configuration including:
-            <ul>
-              <li>Phone number and API credentials</li>
-              <li>Session file (you'll need to verify again)</li>
-              <li>Per-channel MTProto settings</li>
-            </ul>
-            Your collected posts and analytics data will NOT be deleted.
+            {t('common:removeWarning')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRemoveDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setRemoveDialogOpen(false)}>{t('common:cancel')}</Button>
           <Button
             onClick={handleRemove}
             color="error"
@@ -382,7 +378,7 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
             disabled={isRemoving}
             startIcon={isRemoving ? <CircularProgress size={16} /> : <DeleteIcon />}
           >
-            {isRemoving ? 'Removing...' : 'Remove Configuration'}
+            {isRemoving ? t('common:removing') : t('common:removeConfig')}
           </Button>
         </DialogActions>
       </Dialog>

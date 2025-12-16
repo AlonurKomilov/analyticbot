@@ -99,10 +99,15 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Clear token and redirect to login
+      // Clear token
       localStorage.removeItem('admin_token');
       csrfToken = null;
-      window.location.href = '/login';
+      // Only redirect if not already on login page and not a login/auth request
+      const isAuthRequest = error.config?.url?.includes('/auth/');
+      const isOnLoginPage = window.location.pathname === '/login' || window.location.pathname === '/';
+      if (!isAuthRequest && !isOnLoginPage) {
+        window.location.href = '/login';
+      }
     }
 
     // Handle CSRF errors - refresh token and retry

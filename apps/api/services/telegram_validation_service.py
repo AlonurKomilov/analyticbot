@@ -65,38 +65,122 @@ class TelegramValidationService:
         Returns:
             ChannelValidationResult with validation status and metadata
         """
+        # Clean username
+        clean_username = username.strip()
+        if clean_username.startswith("@"):
+            clean_username = clean_username[1:]
+
+        if not clean_username:
+            return ChannelValidationResult(
+                is_valid=False, error_message="Username cannot be empty"
+            )
+
+        # Try MTProto first (best results)
+        try:
+            if self.client._started and self.client._client is not None:
+                return await self._validate_via_mtproto(clean_username)
+        except Exception as e:
+            self.logger.warning(f"MTProto validation failed for @{clean_username}: {e}")
+
+        # Fallback to Bot API for public channels
+        try:
+            return await self._validate_via_bot_api(clean_username)
+        except Exception as e:
+            self.logger.warning(f"Bot API validation failed for @{clean_username}: {e}")
+            return ChannelValidationResult(
+                is_valid=False,
+                username=clean_username,
+                error_message=f"Channel not found or not accessible",
+            )
+
+    async def _validate_via_bot_api(self, clean_username: str) -> ChannelValidationResult:
+        """Validate channel using Bot API (limited info for public channels)"""
+        import aiohttp
+        import os
+
+        # Get bot token from environment
+        bot_token = os.getenv("TELEGRAM_BOT_TOKEN") or os.getenv("BOT_TOKEN")
+        if not bot_token:
+            return ChannelValidationResult(
+                is_valid=False,
+                username=clean_username,
+                error_message="Telegram service temporarily unavailable",
+            )
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                # Try to get chat info
+                url = f"https://api.telegram.org/bot{bot_token}/getChat"
+                async with session.post(url, json={"chat_id": f"@{clean_username}"}) as response:
+                    data = await response.json()
+                    
+                    if not data.get("ok"):
+                        error_desc = data.get("description", "Unknown error")
+                        # Common errors
+                        if "chat not found" in error_desc.lower():
+                            return ChannelValidationResult(
+                                is_valid=False,
+                                username=clean_username,
+                                error_message="Channel not found",
+                            )
+                        return ChannelValidationResult(
+                            is_valid=False,
+                            username=clean_username,
+                            error_message=error_desc,
+                        )
+
+                    chat = data.get("result", {})
+                    chat_type = chat.get("type")
+                    
+                    # Only accept channels
+                    if chat_type not in ["channel", "supergroup"]:
+                        return ChannelValidationResult(
+                            is_valid=False,
+                            username=clean_username,
+                            error_message=f"Entity is not a channel (type: {chat_type})",
+                        )
+
+                    telegram_id = chat.get("id")
+                    # Format telegram_id with 100 prefix
+                    if telegram_id:
+                        raw_id = abs(telegram_id)
+                        id_str = str(raw_id)
+                        if not id_str.startswith("100"):
+                            telegram_id = int(f"100{raw_id}")
+
+                    return ChannelValidationResult(
+                        is_valid=True,
+                        telegram_id=telegram_id,
+                        username=chat.get("username", clean_username),
+                        title=chat.get("title"),
+                        description=chat.get("description"),
+                        subscriber_count=None,  # Bot API doesn't provide this
+                    )
+
+        except Exception as e:
+            self.logger.error(f"Bot API error for @{clean_username}: {e}")
+            return ChannelValidationResult(
+                is_valid=False,
+                username=clean_username,
+                error_message="Failed to validate channel",
+            )
+
+    async def _validate_via_mtproto(self, clean_username: str) -> ChannelValidationResult:
+        """Validate channel using MTProto (full info)"""
         try:
             # Ensure client is started
             if not self.client._started:
                 await self.client.start()
 
-            # Clean username
-            clean_username = username.strip()
-            if clean_username.startswith("@"):
-                clean_username = clean_username[1:]
-
-            if not clean_username:
-                return ChannelValidationResult(
-                    is_valid=False, error_message="Username cannot be empty"
-                )
-
             # Get entity from Telegram
             try:
                 if self.client._client is None:
-                    return ChannelValidationResult(
-                        is_valid=False,
-                        username=clean_username,
-                        error_message="Telegram client not initialized",
-                    )
+                    raise RuntimeError("Telegram client not initialized")
 
                 entity = await self.client._client.get_entity(clean_username)  # type: ignore
             except Exception as e:
                 self.logger.warning(f"Failed to get entity for @{clean_username}: {e}")
-                return ChannelValidationResult(
-                    is_valid=False,
-                    username=clean_username,
-                    error_message=f"Channel not found or not accessible: {str(e)}",
-                )
+                raise
 
             # Check if it's a channel
             entity_type = type(entity).__name__

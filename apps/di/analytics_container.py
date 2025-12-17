@@ -468,7 +468,7 @@ async def get_telegram_validation_service():
 async def get_channel_management_service():
     """Get channel management service with proper dependencies including Telegram validation"""
     from apps.api.services.channel_management_service import ChannelManagementService
-    from core.services.channel_service import ChannelService
+    from core.services.system.channel_service import ChannelService
 
     # Get database pool
     pool = await get_database_pool()

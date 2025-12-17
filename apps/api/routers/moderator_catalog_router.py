@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.api.middleware.auth import get_current_user, require_moderator_user
 from apps.di import get_db_session
 from config import settings
-from core.services.public_catalog_service import PublicCatalogService
+from core.services.system.cache.public_catalog_service import PublicCatalogService
 
 logger = logging.getLogger(__name__)
 

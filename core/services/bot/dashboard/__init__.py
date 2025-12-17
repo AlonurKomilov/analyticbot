@@ -12,11 +12,22 @@ Real-time analytics dashboards with:
 from core.services.bot.dashboard.dashboard_service import (
     DashboardFactory,
     RealTimeDashboard,
+    RealTimeDashboard as DashboardService,  # Alias for common import
     VisualizationEngine,
     create_dashboard,
     create_visualization_engine,
     health_check,
 )
+
+__all__ = [
+    "DashboardFactory",
+    "RealTimeDashboard",
+    "DashboardService",
+    "VisualizationEngine",
+    "create_dashboard",
+    "create_visualization_engine",
+    "health_check",
+]
 
 __all__ = [
     "VisualizationEngine",

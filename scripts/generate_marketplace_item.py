@@ -212,7 +212,7 @@ This handler processes events for the {name} service.
 """
 
 from typing import Optional, Any
-from core.services.feature_gate_service import FeatureGateService
+from core.services.system.feature_gate_service import FeatureGateService
 import logging
 
 logger = logging.getLogger(__name__)

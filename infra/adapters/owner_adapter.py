@@ -274,7 +274,7 @@ def create_owner_service_with_adapter(db: AsyncSession):
     This maintains backward compatibility while improving architecture.
     """
     # Import the clean core service
-    from core.services.owner_service import OwnerService
+    from core.services.system.owner_service import OwnerService
 
     # Create repository adapter
     admin_repo = SQLAlchemyAdminRepository(db)

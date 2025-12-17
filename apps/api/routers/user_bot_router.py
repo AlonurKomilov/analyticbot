@@ -466,7 +466,7 @@ async def refresh_bot_info(
     try:
         from aiogram import Bot
 
-        from core.services.encryption_service import get_encryption_service
+        from core.services.system.encryption_service import get_encryption_service
 
         # Get existing credentials
         credentials = await repository.get_by_user_id(user_id)

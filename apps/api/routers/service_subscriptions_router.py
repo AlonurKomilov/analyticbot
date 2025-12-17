@@ -18,8 +18,8 @@ from pydantic import BaseModel, Field, field_validator
 
 from apps.api.middleware.auth import get_current_user_id
 from apps.di import get_container
-from core.services.feature_gate_service import FeatureGateService
-from core.services.marketplace_service import MarketplaceService
+from core.services.system.feature_gate_service import FeatureGateService
+from core.services.system.marketplace_service import MarketplaceService
 from infra.db.repositories.credit_repository import CreditRepository
 from infra.db.repositories.marketplace_service_repository import (
     MarketplaceServiceRepository,

@@ -24,7 +24,7 @@ from apps.bot.multi_tenant.global_rate_limiter import GlobalRateLimiter
 from apps.bot.multi_tenant.retry_logic import get_retry_statistics, retry_with_backoff
 from apps.bot.multi_tenant.session_pool import SharedAiogramSession
 from core.models.user_bot_domain import UserBotCredentials
-from core.services.encryption_service import get_encryption_service
+from core.services.system.encryption_service import get_encryption_service
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +225,7 @@ class UserBotInstance:
         try:
             # Import moderation components
             from apps.bot.handlers.user_bot_service.router import create_service_router
-            from core.services.user_bot_service import UserBotService
+            from core.services.system.user_bot_service import UserBotService
             from infra.db.repositories.user_bot_service_repository import UserBotServiceRepository
             
             # Get database session from DI
@@ -272,8 +272,8 @@ class UserBotInstance:
         
         try:
             from apps.di import get_container
-            from core.services.bot_features.bot_features_manager import BotFeaturesManager
-            from core.services.feature_gate_service import FeatureGateService
+            from core.services.bot.moderation.bot_features_manager import BotFeaturesManager
+            from core.services.system.feature_gate_service import FeatureGateService
             from infra.db.repositories.marketplace_service_repository import (
                 MarketplaceServiceRepository,
             )

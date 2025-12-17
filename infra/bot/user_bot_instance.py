@@ -12,7 +12,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from core.models.user_bot_domain import UserBotCredentials
-from core.services.encryption_service import get_encryption_service
+from core.services.system.encryption_service import get_encryption_service
 
 
 class MTProtoClient(Protocol):

@@ -14,7 +14,7 @@ This service:
 import logging
 from typing import Any
 
-from core.services.mtproto_service import MTProtoService
+from core.services.mtproto.mtproto_service import MTProtoService
 
 logger = logging.getLogger(__name__)
 

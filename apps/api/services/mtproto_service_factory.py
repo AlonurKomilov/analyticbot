@@ -6,7 +6,7 @@ from the DI container into MTProto service.
 """
 
 from apps.di import get_container
-from core.services.mtproto_service import MTProtoService, get_mtproto_service
+from core.services.mtproto.mtproto_service import MTProtoService, get_mtproto_service
 
 
 async def create_mtproto_service() -> MTProtoService:

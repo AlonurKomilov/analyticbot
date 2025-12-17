@@ -10,7 +10,7 @@ from typing import Any
 
 from apps.celery.celery_app import celery_app, enhanced_retry_task
 from apps.di import get_db_session
-from core.services.materialized_view_service import MaterializedViewService
+from core.services.system.cache.materialized_view_service import MaterializedViewService
 
 logger = logging.getLogger(__name__)
 

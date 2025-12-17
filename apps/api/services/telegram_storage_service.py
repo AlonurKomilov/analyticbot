@@ -97,7 +97,7 @@ class TelegramStorageService:
         from fastapi import HTTPException, status
         from sqlalchemy import select
 
-        from core.services.encryption_service import get_encryption_service
+        from core.services.system.encryption_service import get_encryption_service
         from infra.db.models.user_bot_orm import UserBotCredentialsORM
 
         # Get user credentials

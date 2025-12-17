@@ -15,9 +15,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.di import get_db_connection
 from core.security_engine import AdministrativeRole, UserStatus
 from core.security_engine import User as AdminUser
-from core.services.backup_service import BackupService
-from core.services.materialized_view_service import MaterializedViewService
-from core.services.owner_service import OwnerService
+from core.services.system.backup_service import BackupService
+from core.services.system.cache.materialized_view_service import MaterializedViewService
+from core.services.system.owner_service import OwnerService
 
 # ===== PYDANTIC MODELS =====
 

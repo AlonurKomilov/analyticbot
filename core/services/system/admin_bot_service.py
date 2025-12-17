@@ -74,18 +74,18 @@ class AdminBotService:
         bot_username: str,
         api_id: int | None = None,
         api_hash: str | None = None,
-        max_requests_per_second: int = 30,
-        max_concurrent_requests: int = 10,
+        max_requests_per_second: float = 1.0,
+        max_concurrent_requests: int = 3,
     ) -> UserBotCredentials:
         """
         Create a new user bot.
 
         Args:
             user_id: User ID who owns the bot
-            bot_token: Telegram bot token
+            bot_token: Telegram bot token (from BotFather)
             bot_username: Bot username
-            api_id: MTProto API ID (optional)
-            api_hash: MTProto API Hash (optional)
+            api_id: MTProto API ID (optional, for MTProto features)
+            api_hash: MTProto API Hash (optional, for MTProto features)
             max_requests_per_second: Rate limit for requests per second
             max_concurrent_requests: Max concurrent requests
 
@@ -100,18 +100,22 @@ class AdminBotService:
         if existing:
             raise ValueError(f"User {user_id} already has a bot configured")
 
-        # Create credentials
+        # Create credentials - bot_token is for Bot API, mtproto fields are separate
         credentials = UserBotCredentials(
             id=None,  # Will be assigned by database
             user_id=user_id,
             bot_token=bot_token,
             bot_username=bot_username,
-            api_id=api_id,
-            api_hash=api_hash,
+            # MTProto credentials (optional)
+            mtproto_api_id=api_id,
+            telegram_api_hash=api_hash,
+            # Status
             status=BotStatus.PENDING,
             role=BotRole.USER,
-            max_requests_per_second=max_requests_per_second,
+            # Rate limiting
+            rate_limit_rps=max_requests_per_second,
             max_concurrent_requests=max_concurrent_requests,
+            # Timestamps
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -372,6 +376,147 @@ class AdminBotService:
         # For now, this would require adding a method to IUserBotRepository
         logger.info(f"Admin action logs requested (target_user_id={target_user_id}, limit={limit})")
         return []
+
+    async def verify_bot_credentials(
+        self,
+        user_id: int,
+        send_test_message: bool = False,
+        test_chat_id: int | None = None,
+        test_message: str | None = None,
+    ) -> tuple[bool, str, dict | None]:
+        """
+        Verify bot credentials by testing the bot token.
+
+        Args:
+            user_id: User ID whose bot to verify
+            send_test_message: Whether to send a test message
+            test_chat_id: Chat ID to send test message to
+            test_message: Test message content
+
+        Returns:
+            Tuple of (success, message, bot_info)
+        """
+        # Get user's bot
+        credentials = await self.repository.get_by_user_id(user_id)
+        if not credentials:
+            return False, "No bot found for this user", None
+
+        # Verify with Telegram
+        try:
+            import aiohttp
+            
+            async with aiohttp.ClientSession() as session:
+                # Get bot info from Telegram
+                url = f"https://api.telegram.org/bot{credentials.bot_token}/getMe"
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        return False, "Invalid bot token - could not connect to Telegram", None
+                    
+                    data = await response.json()
+                    if not data.get("ok"):
+                        return False, f"Bot verification failed: {data.get('description', 'Unknown error')}", None
+                    
+                    bot_info = data.get("result", {})
+                    bot_username = bot_info.get("username")
+                    bot_id = bot_info.get("id")
+
+            # Update bot credentials with verified info
+            credentials.bot_username = bot_username
+            credentials.bot_id = bot_id
+            credentials.status = BotStatus.ACTIVE
+            credentials.is_verified = True
+            credentials.updated_at = datetime.utcnow()
+            
+            await self.repository.update(credentials)
+
+            # Send test message if requested
+            if send_test_message and test_chat_id:
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        msg = test_message or "Hello! Your bot is now configured."
+                        url = f"https://api.telegram.org/bot{credentials.bot_token}/sendMessage"
+                        async with session.post(url, json={
+                            "chat_id": test_chat_id,
+                            "text": msg
+                        }) as response:
+                            if response.status != 200:
+                                logger.warning(f"Failed to send test message: {await response.text()}")
+                except Exception as e:
+                    logger.warning(f"Failed to send test message: {e}")
+
+            logger.info(f"Bot verified for user {user_id}: @{bot_username}")
+            return True, "Bot verified successfully", {
+                "bot_id": bot_id,
+                "bot_username": bot_username,
+                "is_verified": True,
+            }
+
+        except Exception as e:
+            logger.error(f"Error verifying bot for user {user_id}: {e}")
+            return False, f"Verification failed: {str(e)}", None
+
+    async def remove_user_bot(self, user_id: int) -> bool:
+        """
+        Remove a user's bot.
+
+        Args:
+            user_id: User ID whose bot to remove
+
+        Returns:
+            True if removed, False if not found
+        """
+        credentials = await self.repository.get_by_user_id(user_id)
+        if not credentials:
+            return False
+
+        # Shutdown bot instance if active
+        if self.bot_manager:
+            try:
+                await self.bot_manager.shutdown_user_bot(user_id)
+            except Exception as e:
+                logger.warning(f"Error shutting down bot for user {user_id}: {e}")
+
+        # Delete from database - pass user_id, not credentials.id
+        deleted = await self.repository.delete(user_id)
+        if not deleted:
+            logger.warning(f"Failed to delete bot credentials for user {user_id}")
+            return False
+        
+        logger.info(f"Removed bot for user {user_id}")
+        return True
+
+    async def update_rate_limits(
+        self,
+        user_id: int,
+        max_requests_per_second: float | None = None,
+        max_concurrent_requests: int | None = None,
+    ) -> UserBotCredentials | None:
+        """
+        Update rate limits for a user's bot.
+
+        Args:
+            user_id: User ID whose bot to update
+            max_requests_per_second: New RPS limit (optional)
+            max_concurrent_requests: New concurrent request limit (optional)
+
+        Returns:
+            Updated UserBotCredentials or None if not found
+        """
+        credentials = await self.repository.get_by_user_id(user_id)
+        if not credentials:
+            return None
+
+        if max_requests_per_second is not None:
+            credentials.rate_limit_rps = max_requests_per_second
+        if max_concurrent_requests is not None:
+            credentials.max_concurrent_requests = max_concurrent_requests
+        
+        credentials.updated_at = datetime.utcnow()
+        
+        await self.repository.update(credentials)
+        
+        logger.info(f"Updated rate limits for user {user_id}: rps={credentials.rate_limit_rps}, concurrent={credentials.max_concurrent_requests}")
+        return credentials
 
 
 def get_admin_bot_service(

@@ -130,7 +130,7 @@ async def check_all_channels_admin_status(
                     from aiogram import Bot
                     from aiogram.enums import ChatMemberStatus
 
-                    from core.services.encryption_service import get_encryption_service
+                    from core.services.system.encryption_service import get_encryption_service
 
                     # Decrypt bot token
                     encryption = get_encryption_service()

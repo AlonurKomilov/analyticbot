@@ -174,7 +174,7 @@ class UserMTProtoService:
             return None
 
         # Decrypt sensitive data (handled by domain model)
-        from core.services.encryption_service import get_encryption_service
+        from core.services.system.encryption_service import get_encryption_service
 
         encryption = get_encryption_service()
 

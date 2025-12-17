@@ -23,7 +23,7 @@ async def test_mtproto():
         from telethon import TelegramClient
         from telethon.sessions import StringSession
 
-        from core.services.encryption_service import EncryptionService
+        from core.services.system.encryption_service import EncryptionService
 
         # Step 1: Get credentials from database
         print("1️⃣ Fetching credentials from database...")

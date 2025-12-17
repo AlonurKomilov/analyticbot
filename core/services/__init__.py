@@ -3,24 +3,65 @@ Framework-agnostic business services
 Contains core business logic without external dependencies
 
 Module Structure:
-- bot/        : Bot moderation, analytics, alerts, dashboard, reporting
-- mtproto/    : MTProto services, history access, media download
-- ai/         : AI/ML services, NLG, churn prediction, insights
-- system/     : System services, auth, cache, marketplace
+    core/services/
+    ├── bot/                      # All bot-related services
+    │   ├── moderation/           # Anti-spam, auto-delete, warnings
+    │   ├── analytics/            # Bot analytics services
+    │   ├── alerts/               # Alert rules and conditions
+    │   ├── content/              # Content protection, watermarking
+    │   ├── dashboard/            # Dashboard service
+    │   ├── metrics/              # Health, business, system metrics
+    │   ├── reporting/            # Report generation
+    │   └── scheduling/           # Post scheduling
+    │
+    ├── mtproto/                  # All MTProto services
+    │   ├── mtproto_service.py    # Main MTProto service
+    │   ├── features/             # history_access, media_download
+    │   └── collection/           # Auto-collection services
+    │
+    ├── ai/                       # All AI/ML services
+    │   ├── ai_chat_service.py    # AI chat assistant
+    │   ├── strategy_generation_service.py
+    │   ├── deep_learning/        # CNN, Transformer models
+    │   ├── nlg/                  # Natural Language Generation
+    │   ├── insights/             # AI insights fusion
+    │   ├── churn/                # Churn prediction
+    │   ├── predictive/           # Predictive intelligence
+    │   ├── anomaly/              # Anomaly detection
+    │   └── adaptive/             # Adaptive learning
+    │
+    └── system/                   # System/utility services
+        ├── backup_service.py
+        ├── encryption_service.py
+        ├── feature_gate_service.py
+        ├── marketplace_service.py
+        ├── channel_service.py
+        ├── owner_service.py
+        ├── admin_bot_service.py
+        ├── user_bot_service.py
+        ├── auth/                 # Authentication
+        ├── cache/                # Caching services
+        ├── analytics/            # Analytics fusion
+        ├── alerts/               # Alerts fusion
+        └── optimization/         # Optimization services
 
 Usage:
     # Bot services
-    from core.services.bot import BotFeaturesManager, AntiSpamService
-    from core.services.bot.analytics import AnalyticsBatchProcessor
+    from core.services.bot.moderation import BotFeaturesManager, AntiSpamService
+    from core.services.bot.analytics import AnalyticsService
+    from core.services.bot.content import ContentProtectionService
     
     # MTProto services
-    from core.services.mtproto import MTProtoService, HistoryAccessService
+    from core.services.mtproto.mtproto_service import MTProtoService
+    from core.services.mtproto.features import HistoryAccessService
     
     # AI services
-    from core.services.ai import AIChatService, StrategyGenerationService
+    from core.services.ai.ai_chat_service import AIChatService
+    from core.services.ai.deep_learning.orchestrator import DLOrchestratorService
     
     # System services
-    from core.services.system import MarketplaceService, FeatureGateService
+    from core.services.system.marketplace_service import MarketplaceService
+    from core.services.system.feature_gate_service import FeatureGateService
 """
 
 import logging

@@ -161,7 +161,7 @@ async def get_strategy_service():
 
         # For now, we'll create a minimal AI insights service
         # In production, this would be properly injected
-        from core.services.strategy_generation_service import StrategyGenerationService
+        from core.services.ai.strategy_generation_service import StrategyGenerationService
 
         class MinimalAIInsights:
             """Minimal AI insights for strategy service"""

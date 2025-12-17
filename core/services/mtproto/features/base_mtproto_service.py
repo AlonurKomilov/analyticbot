@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
 
-from core.services.feature_gate_service import FeatureGateService
+from core.services.system.feature_gate_service import FeatureGateService
 from infra.db.repositories.marketplace_service_repository import (
     MarketplaceServiceRepository,
 )

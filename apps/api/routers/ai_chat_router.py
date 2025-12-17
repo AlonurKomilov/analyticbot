@@ -122,7 +122,7 @@ async def get_ai_chat_service():
 
         # For now, we'll create a minimal AI insights service
         # In production, this would be properly injected
-        from core.services.ai_chat_service import AIChatService
+        from core.services.ai.ai_chat_service import AIChatService
 
         # Create a minimal version for MVP
         # Note: Full integration would require proper AI insights service

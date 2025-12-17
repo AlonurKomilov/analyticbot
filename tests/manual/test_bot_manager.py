@@ -8,7 +8,7 @@ from datetime import datetime
 
 from core.models.user_bot_domain import AdminBotAction, BotStatus, UserBotCredentials
 from core.ports.user_bot_repository import IUserBotRepository
-from core.services.encryption_service import get_encryption_service
+from core.services.system.encryption_service import get_encryption_service
 
 
 class MockRepository(IUserBotRepository):

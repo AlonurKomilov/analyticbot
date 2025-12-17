@@ -28,7 +28,7 @@ from apps.api.routers.user_mtproto.session_storage import (
     get_pending_session,
 )
 from core.ports.user_bot_repository import IUserBotRepository
-from core.services.encryption_service import get_encryption_service
+from core.services.system.encryption_service import get_encryption_service
 
 logger = logging.getLogger(__name__)
 

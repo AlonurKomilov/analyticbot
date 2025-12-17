@@ -76,56 +76,130 @@ async def lookup_channel(
     **Returns:**
     - Channel info including name, subscribers, description, etc.
     """
+    import os
+    import aiohttp
+    
+    # Clean username
+    clean_username = username.strip()
+    if clean_username.startswith("@"):
+        clean_username = clean_username[1:]
+    
     try:
-        if telegram_service is None:
-            logger.warning("Telegram validation unavailable for channel lookup")
+        # If Telegram validation service is available, use it (MTProto - best results)
+        if telegram_service is not None:
+            validation_result = await telegram_service.validate_channel_by_username(username)
+            
+            if validation_result.is_valid:
+                # Check admin access using USER'S OWN BOT credentials
+                is_admin = None
+                admin_error = None
+                if validation_result.telegram_id:
+                    user_id = current_user["id"]
+                    is_admin, admin_error = await _check_user_admin_access(
+                        user_id=user_id,
+                        channel_id=validation_result.telegram_id,
+                        channel_username=validation_result.username or username,
+                    )
+                    if is_admin:
+                        admin_error = None
+
+                # Convert telegram_id to proper format with 100 prefix
+                formatted_telegram_id = validation_result.telegram_id
+                if formatted_telegram_id:
+                    raw_id = abs(formatted_telegram_id)
+                    id_str = str(raw_id)
+                    if not id_str.startswith("100"):
+                        formatted_telegram_id = int(f"100{raw_id}")
+
+                return ChannelLookupResponse(
+                    is_valid=validation_result.is_valid,
+                    telegram_id=formatted_telegram_id,
+                    username=validation_result.username,
+                    title=validation_result.title,
+                    subscriber_count=validation_result.subscriber_count,
+                    description=validation_result.description,
+                    telegram_created_at=validation_result.telegram_created_at,
+                    is_verified=validation_result.is_verified,
+                    is_scam=validation_result.is_scam,
+                    is_admin=is_admin,
+                    error_message=validation_result.error_message or (admin_error if not is_admin else None),
+                )
+
+        # Fallback: Use Bot API directly for public channel lookup
+        logger.info(f"Using Bot API fallback for channel lookup: @{clean_username}")
+        bot_token = os.getenv("TELEGRAM_BOT_TOKEN") or os.getenv("BOT_TOKEN")
+        
+        if not bot_token:
             return ChannelLookupResponse(
                 is_valid=False,
-                username=username,
-                error_message="Telegram service unavailable. Please try again later.",
+                username=clean_username,
+                error_message="Telegram service temporarily unavailable. Please try again later.",
             )
 
-        # Validate and fetch channel info using system bot (for public channel info)
-        validation_result = await telegram_service.validate_channel_by_username(username)
+        async with aiohttp.ClientSession() as session:
+            url = f"https://api.telegram.org/bot{bot_token}/getChat"
+            async with session.post(url, json={"chat_id": f"@{clean_username}"}) as response:
+                data = await response.json()
+                
+                if not data.get("ok"):
+                    error_desc = data.get("description", "Unknown error")
+                    logger.warning(f"Bot API lookup failed for @{clean_username}: {error_desc}")
+                    if "chat not found" in error_desc.lower():
+                        return ChannelLookupResponse(
+                            is_valid=False,
+                            username=clean_username,
+                            error_message="Channel not found",
+                        )
+                    return ChannelLookupResponse(
+                        is_valid=False,
+                        username=clean_username,
+                        error_message=error_desc,
+                    )
 
-        # Check admin access using USER'S OWN BOT credentials
-        is_admin = None
-        admin_error = None
-        if validation_result.is_valid and validation_result.telegram_id:
-            user_id = current_user["id"]
+                chat = data.get("result", {})
+                chat_type = chat.get("type")
+                
+                # Accept channels and supergroups
+                if chat_type not in ["channel", "supergroup"]:
+                    return ChannelLookupResponse(
+                        is_valid=False,
+                        username=clean_username,
+                        error_message=f"Entity is not a channel (type: {chat_type})",
+                    )
 
-            # Try to check admin using user's bot first, then MTProto
-            is_admin, admin_error = await _check_user_admin_access(
-                user_id=user_id,
-                channel_id=validation_result.telegram_id,
-                channel_username=validation_result.username or username,
-            )
+                telegram_id = chat.get("id")
+                # Format telegram_id with 100 prefix
+                if telegram_id:
+                    raw_id = abs(telegram_id)
+                    id_str = str(raw_id)
+                    if not id_str.startswith("100"):
+                        telegram_id = int(f"100{raw_id}")
 
-            if is_admin:
-                admin_error = None  # Clear any previous error if admin access confirmed
+                logger.info(f"Bot API lookup successful for @{clean_username}: id={telegram_id}")
+                
+                # Check admin access for current user
+                is_admin = None
+                admin_error = None
+                if telegram_id:
+                    user_id = current_user["id"]
+                    is_admin, admin_error = await _check_user_admin_access(
+                        user_id=user_id,
+                        channel_id=telegram_id,
+                        channel_username=chat.get("username", clean_username),
+                    )
+                    if is_admin:
+                        admin_error = None
 
-        # Convert telegram_id to proper format with 100 prefix
-        formatted_telegram_id = validation_result.telegram_id
-        if formatted_telegram_id:
-            raw_id = abs(formatted_telegram_id)
-            id_str = str(raw_id)
-            if not id_str.startswith("100"):
-                formatted_telegram_id = int(f"100{raw_id}")
-
-        return ChannelLookupResponse(
-            is_valid=validation_result.is_valid,
-            telegram_id=formatted_telegram_id,
-            username=validation_result.username,
-            title=validation_result.title,
-            subscriber_count=validation_result.subscriber_count,
-            description=validation_result.description,
-            telegram_created_at=validation_result.telegram_created_at,
-            is_verified=validation_result.is_verified,
-            is_scam=validation_result.is_scam,
-            is_admin=is_admin,
-            error_message=validation_result.error_message
-            or (admin_error if not is_admin else None),
-        )
+                return ChannelLookupResponse(
+                    is_valid=True,
+                    telegram_id=telegram_id,
+                    username=chat.get("username", clean_username),
+                    title=chat.get("title"),
+                    description=chat.get("description"),
+                    subscriber_count=None,  # Bot API doesn't provide this
+                    is_admin=is_admin,
+                    error_message=admin_error if not is_admin else None,
+                )
 
     except Exception as e:
         logger.error(f"Channel lookup failed for @{username}: {e}")
@@ -173,7 +247,7 @@ async def _check_user_admin_access(
         if bot_token:
             try:
                 # Decrypt bot token if encrypted
-                from core.services.encryption_service import get_encryption_service
+                from core.services.system.encryption_service import get_encryption_service
 
                 encryption = get_encryption_service()
                 try:
@@ -192,7 +266,7 @@ async def _check_user_admin_access(
         if creds["mtproto_enabled"] and creds["session_string"]:
             try:
                 # Decrypt MTProto credentials
-                from core.services.encryption_service import get_encryption_service
+                from core.services.system.encryption_service import get_encryption_service
 
                 encryption = get_encryption_service()
                 try:

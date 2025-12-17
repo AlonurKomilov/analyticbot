@@ -14,7 +14,7 @@ from aiogram import Bot
 from aiogram.types import Chat
 from dotenv import load_dotenv
 
-from core.services.encryption_service import EncryptionService
+from core.services.system.encryption_service import EncryptionService
 
 # Load environment
 load_dotenv(".env.development")

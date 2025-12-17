@@ -9,7 +9,7 @@ from datetime import datetime
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 
-from core.services.channel_service import ChannelData, ChannelService
+from core.services.system.channel_service import ChannelData, ChannelService
 
 logger = logging.getLogger(__name__)
 

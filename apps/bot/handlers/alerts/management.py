@@ -32,7 +32,9 @@ async def toggle_alert(
         alert_id = int(callback.data.split(":")[2])
 
         # Get the current subscription to check its state
-        all_subs = await alert_repo.get_user_subscriptions(callback.from_user.id if callback.from_user else 0)
+        all_subs = await alert_repo.get_user_subscriptions(
+            callback.from_user.id if callback.from_user else 0
+        )
         current_sub = next((s for s in all_subs if s.id == alert_id), None)
 
         if not current_sub:
@@ -134,6 +136,6 @@ async def delete_alert_cancelled(callback: CallbackQuery, i18n: I18nContext):
     assert isinstance(callback.message, Message)
 
     await callback.message.edit_text(
-        "❌ **Alert Deletion Cancelled**\n\n" "The alert subscription was not deleted."
+        "❌ **Alert Deletion Cancelled**\n\nThe alert subscription was not deleted."
     )
     await callback.answer("Deletion cancelled")

@@ -261,16 +261,20 @@ class TaskOptimizer:
             report["summary"] = {
                 "total_executions": total_executions,
                 "total_duration": total_duration,
-                "average_duration": total_duration / total_executions
-                if total_executions > 0
-                else 0,
-                "failure_rate": total_failures / total_executions if total_executions > 0 else 0,
-                "most_used_task": max(metrics.keys(), key=lambda k: metrics[k]["total_executions"])
-                if metrics
-                else None,
-                "slowest_task": max(metrics.keys(), key=lambda k: metrics[k]["average_duration"])
-                if metrics
-                else None,
+                "average_duration": (
+                    total_duration / total_executions if total_executions > 0 else 0
+                ),
+                "failure_rate": (total_failures / total_executions if total_executions > 0 else 0),
+                "most_used_task": (
+                    max(metrics.keys(), key=lambda k: metrics[k]["total_executions"])
+                    if metrics
+                    else None
+                ),
+                "slowest_task": (
+                    max(metrics.keys(), key=lambda k: metrics[k]["average_duration"])
+                    if metrics
+                    else None
+                ),
             }
 
         return report
@@ -348,7 +352,14 @@ def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=
 
 @task_postrun.connect
 def task_postrun_handler(
-    sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds
+    sender=None,
+    task_id=None,
+    task=None,
+    args=None,
+    kwargs=None,
+    retval=None,
+    state=None,
+    **kwds,
 ):
     """Handle task postrun signal"""
     task_name = getattr(task, "name", "unknown_task") if task else "unknown_task"
@@ -383,7 +394,11 @@ def process_channel_data_optimized(self, channel_data: list[dict]):
         except Exception as e:
             logger.error(f"Error processing channel {data.get('channel_id')}: {e}")
             results.append(
-                {"channel_id": data.get("channel_id"), "error": str(e), "status": "error"}
+                {
+                    "channel_id": data.get("channel_id"),
+                    "error": str(e),
+                    "status": "error",
+                }
             )
 
     return results

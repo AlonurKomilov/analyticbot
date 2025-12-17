@@ -172,7 +172,9 @@ async def get_strategy_service():
         ai_insights = MinimalAIInsights()
 
         return StrategyGenerationService(
-            nlg_service=nlg_service, ai_insights_service=ai_insights, post_repo=post_repo
+            nlg_service=nlg_service,
+            ai_insights_service=ai_insights,
+            post_repo=post_repo,
         )
 
     except Exception as e:
@@ -296,7 +298,9 @@ async def get_quick_strategy_tips(
         )
 
         result = await strategy_service.generate_quick_strategy_tips(
-            channel_id=request.channel_id, focus_area=request.focus_area, count=request.count
+            channel_id=request.channel_id,
+            focus_area=request.focus_area,
+            count=request.count,
         )
 
         if not result or "error" in result:
@@ -387,7 +391,8 @@ async def analyze_strategy_effectiveness(
         raise
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid date format: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid date format: {str(e)}",
         )
     except Exception as e:
         logger.error(f"Strategy effectiveness analysis failed: {e}", exc_info=True)
@@ -435,7 +440,11 @@ async def generate_implementation_roadmap(
                 "phase": 1,
                 "name": "Foundation & Analysis",
                 "duration_days": request.timeframe // 4,
-                "activities": ["Baseline analysis", "Goal setting", "Resource allocation"],
+                "activities": [
+                    "Baseline analysis",
+                    "Goal setting",
+                    "Resource allocation",
+                ],
             },
             {
                 "phase": 2,
@@ -457,12 +466,20 @@ async def generate_implementation_roadmap(
                 "phase": 4,
                 "name": "Evaluation & Iteration",
                 "duration_days": request.timeframe // 4,
-                "activities": ["Results analysis", "Learning capture", "Next phase planning"],
+                "activities": [
+                    "Results analysis",
+                    "Learning capture",
+                    "Next phase planning",
+                ],
             },
         ]
 
         milestones = [
-            {"name": "Strategy Kickoff", "day": 0, "deliverable": "Strategy document approved"},
+            {
+                "name": "Strategy Kickoff",
+                "day": 0,
+                "deliverable": "Strategy document approved",
+            },
             {
                 "name": "First Quick Win",
                 "day": request.timeframe // 8,
@@ -541,7 +558,8 @@ async def get_service_health():
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service health check failed"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service health check failed",
         )
 
 
@@ -562,7 +580,13 @@ async def get_service_stats():
             "quick_tips_time": "1.4s",
             "strategies_generated": 847,
         },
-        "supported_goals": ["engagement", "growth", "reach", "conversion", "consistency"],
+        "supported_goals": [
+            "engagement",
+            "growth",
+            "reach",
+            "conversion",
+            "consistency",
+        ],
         "narrative_styles": ["analytical", "executive", "conversational", "technical"],
         "status": "active",
     }

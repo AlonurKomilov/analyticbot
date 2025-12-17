@@ -111,7 +111,8 @@ async def reset_password(
         reset_data = get_security_manager().verify_password_reset_token(request.token)
         if not reset_data:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token",
             )
 
         user_email = reset_data["email"]
@@ -148,5 +149,6 @@ async def reset_password(
     except Exception as e:
         logger.error(f"Reset password error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Password reset failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Password reset failed",
         )

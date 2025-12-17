@@ -8,7 +8,12 @@ suspending/activating bots, and updating rate limits.
 import logging
 from datetime import datetime
 
-from core.models.user_bot_domain import AdminBotAction, BotStatus, BotRole, UserBotCredentials
+from core.models.user_bot_domain import (
+    AdminBotAction,
+    BotRole,
+    BotStatus,
+    UserBotCredentials,
+)
 from core.ports.bot_manager_port import IBotManager
 from core.ports.user_bot_repository import IUserBotRepository
 
@@ -118,7 +123,7 @@ class AdminBotService:
 
         # Save to database
         created = await self.repository.create(credentials)
-        
+
         logger.info(f"Created bot @{bot_username} for user {user_id}")
         return created
 

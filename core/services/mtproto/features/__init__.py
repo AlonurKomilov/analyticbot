@@ -17,9 +17,11 @@ Services:
 """
 
 from core.services.mtproto.features.base_mtproto_service import BaseMTProtoService
-from core.services.mtproto.features.mtproto_features_manager import MTProtoFeaturesManager
 from core.services.mtproto.features.history_access_service import HistoryAccessService
 from core.services.mtproto.features.media_download_service import MediaDownloadService
+from core.services.mtproto.features.mtproto_features_manager import (
+    MTProtoFeaturesManager,
+)
 
 __all__ = [
     "BaseMTProtoService",
@@ -27,4 +29,3 @@ __all__ = [
     "HistoryAccessService",
     "MediaDownloadService",
 ]
-

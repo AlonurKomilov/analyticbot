@@ -55,8 +55,11 @@ class UserBotCredentialsORM(Base):
 
     # Role - system vs user ownership
     role: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default="user", index=True,
-        comment="Bot role: 'system' for system-owned, 'user' for user-owned bots"
+        String(20),
+        nullable=False,
+        server_default="user",
+        index=True,
+        comment="Bot role: 'system' for system-owned, 'user' for user-owned bots",
     )
 
     # Webhook configuration
@@ -76,7 +79,10 @@ class UserBotCredentialsORM(Base):
         DateTime(timezone=True), nullable=False, default=datetime.now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.now, onupdate=datetime.now
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
     )
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -134,7 +140,10 @@ class ChannelMTProtoSettings(Base):
         DateTime(timezone=True), nullable=False, default=datetime.now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.now, onupdate=datetime.now
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
     )
 
     __table_args__ = (

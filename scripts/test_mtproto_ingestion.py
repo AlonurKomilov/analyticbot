@@ -47,7 +47,8 @@ async def test_mtproto_ingestion():
 
         # Check MTProto settings
         mtproto_settings = await conn.fetchrow(
-            "SELECT * FROM channel_mtproto_settings WHERE channel_id = $1", 1002678877654
+            "SELECT * FROM channel_mtproto_settings WHERE channel_id = $1",
+            1002678877654,
         )
         if mtproto_settings and mtproto_settings["mtproto_enabled"]:
             print("   ✅ MTProto enabled for channel")
@@ -100,14 +101,18 @@ async def test_mtproto_ingestion():
     try:
         from apps.mtproto.multi_tenant.user_mtproto_service import UserMTProtoService
         from core.services.encryption_service import EncryptionService
-        from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
+        from infra.db.repositories.user_bot_repository_factory import (
+            UserBotRepositoryFactory,
+        )
 
         # Initialize services
-        encryption_service = EncryptionService()
+        EncryptionService()
 
         # Create asyncpg pool
         db_pool = await asyncpg.create_pool(
-            "postgresql://analytic:change_me@localhost:10100/analytic_bot", min_size=2, max_size=5
+            "postgresql://analytic:change_me@localhost:10100/analytic_bot",
+            min_size=2,
+            max_size=5,
         )
 
         # Create repository factory

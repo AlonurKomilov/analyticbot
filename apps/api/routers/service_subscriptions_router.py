@@ -9,7 +9,7 @@ This is SEPARATE from marketplace_router.py which handles marketplace_items (the
 
 import json
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -42,26 +42,27 @@ async def get_optional_user_id(
     """Get user ID from token if authenticated, otherwise return None."""
     try:
         token = None
-        
+
         # Try Bearer token from Authorization header
         if credentials and credentials.credentials:
             token = credentials.credentials
-            logger.debug(f"Found Bearer token in header")
-        
+            logger.debug("Found Bearer token in header")
+
         # Try httpOnly cookie
         if not token:
             token = request.cookies.get("access_token")
             if token:
-                logger.debug(f"Found token in cookie")
-        
+                logger.debug("Found token in cookie")
+
         if not token:
             logger.debug("No token found for optional auth")
             return None
-        
+
         # Decode token to get user ID
         import jwt
+
         from config.settings import settings
-        
+
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=["HS256"])
         user_id = payload.get("sub") or payload.get("user_id")
         if user_id:
@@ -85,7 +86,9 @@ async def get_db_pool():
         raise HTTPException(status_code=500, detail="Database pool not available")
 
 
-async def get_marketplace_repo(pool=Depends(get_db_pool)) -> MarketplaceServiceRepository:
+async def get_marketplace_repo(
+    pool=Depends(get_db_pool),
+) -> MarketplaceServiceRepository:
     """Get marketplace service repository instance."""
     return MarketplaceServiceRepository(pool)
 
@@ -261,9 +264,7 @@ async def get_services_catalog(
     """
     try:
         # Get catalog (user_id optional for marking subscribed services)
-        services = await marketplace_service.get_service_catalog(
-            category=category, user_id=user_id
-        )
+        services = await marketplace_service.get_service_catalog(category=category, user_id=user_id)
 
         # Apply additional filters
         if featured is not None:
@@ -279,7 +280,7 @@ async def get_services_catalog(
             ]
 
         # Get unique categories
-        categories = list(set(s.get("category") for s in services if s.get("category")))
+        categories = list({s.get("category") for s in services if s.get("category")})
 
         return ServiceListResponse(
             services=services, total=len(services), categories=sorted(categories)
@@ -336,7 +337,7 @@ async def get_featured_services(
     try:
         services = await marketplace_service.get_featured_services(limit=limit)
 
-        categories = list(set(s.get("category") for s in services if s.get("category")))
+        categories = list({s.get("category") for s in services if s.get("category")})
 
         return ServiceListResponse(
             services=services, total=len(services), categories=sorted(categories)
@@ -418,8 +419,8 @@ async def get_my_active_services(
         )
 
         # Count active subscriptions (use timezone-aware datetime)
-        from datetime import timezone
-        now = datetime.now(timezone.utc)
+
+        now = datetime.now(UTC)
         active_count = sum(
             1
             for s in subscriptions
@@ -428,7 +429,9 @@ async def get_my_active_services(
         )
 
         return MyServicesResponse(
-            subscriptions=subscriptions, total=len(subscriptions), active_count=active_count
+            subscriptions=subscriptions,
+            total=len(subscriptions),
+            active_count=active_count,
         )
 
     except Exception as e:

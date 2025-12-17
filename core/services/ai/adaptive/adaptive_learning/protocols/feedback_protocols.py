@@ -112,7 +112,6 @@ class FeedbackProtocol(ABC):
         Returns:
             True if feedback was successfully collected
         """
-        pass
 
     @abstractmethod
     async def validate_feedback(self, feedback: UserFeedback) -> FeedbackQuality:
@@ -125,11 +124,13 @@ class FeedbackProtocol(ABC):
         Returns:
             Quality level of the feedback
         """
-        pass
 
     @abstractmethod
     async def get_feedback_batch(
-        self, model_id: str, batch_size: int = 100, quality_filter: FeedbackQuality | None = None
+        self,
+        model_id: str,
+        batch_size: int = 100,
+        quality_filter: FeedbackQuality | None = None,
     ) -> FeedbackBatch:
         """
         Get batch of feedback for processing
@@ -142,7 +143,6 @@ class FeedbackProtocol(ABC):
         Returns:
             Batch of feedback
         """
-        pass
 
     @abstractmethod
     async def mark_feedback_processed(self, feedback_ids: list[str]) -> bool:
@@ -155,7 +155,6 @@ class FeedbackProtocol(ABC):
         Returns:
             True if all feedback was successfully marked
         """
-        pass
 
     @abstractmethod
     async def get_feedback_stats(
@@ -171,7 +170,6 @@ class FeedbackProtocol(ABC):
         Returns:
             Dictionary containing feedback statistics
         """
-        pass
 
 
 class FeedbackProcessorProtocol(ABC):
@@ -193,7 +191,6 @@ class FeedbackProcessorProtocol(ABC):
         Returns:
             Dictionary containing processing results
         """
-        pass
 
     @abstractmethod
     async def extract_learning_signals(self, feedbacks: list[UserFeedback]) -> dict[str, Any]:
@@ -206,7 +203,6 @@ class FeedbackProcessorProtocol(ABC):
         Returns:
             Dictionary containing learning signals
         """
-        pass
 
     @abstractmethod
     async def analyze_feedback_trends(
@@ -224,7 +220,6 @@ class FeedbackProcessorProtocol(ABC):
         Returns:
             Feedback analysis results
         """
-        pass
 
     @abstractmethod
     async def detect_feedback_anomalies(
@@ -240,7 +235,6 @@ class FeedbackProcessorProtocol(ABC):
         Returns:
             List of detected anomalies
         """
-        pass
 
 
 class FeedbackStorageProtocol(ABC):
@@ -262,7 +256,6 @@ class FeedbackStorageProtocol(ABC):
         Returns:
             True if feedback was successfully stored
         """
-        pass
 
     @abstractmethod
     async def retrieve_feedback(
@@ -279,7 +272,6 @@ class FeedbackStorageProtocol(ABC):
         Returns:
             List of retrieved feedback
         """
-        pass
 
     @abstractmethod
     async def update_feedback_status(
@@ -295,7 +287,6 @@ class FeedbackStorageProtocol(ABC):
         Returns:
             True if updates were successful
         """
-        pass
 
     @abstractmethod
     async def cleanup_old_feedback(self, retention_days: int) -> int:
@@ -308,4 +299,3 @@ class FeedbackStorageProtocol(ABC):
         Returns:
             Number of feedback items cleaned up
         """
-        pass

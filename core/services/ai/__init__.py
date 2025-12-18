@@ -28,6 +28,6 @@ from core.services.ai.strategy_generation_service import StrategyGenerationServi
 
 __all__ = [
     "AIChatService",
-    "NLGIntegrationService", 
+    "NLGIntegrationService",
     "StrategyGenerationService",
 ]

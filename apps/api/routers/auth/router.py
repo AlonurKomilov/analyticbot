@@ -7,7 +7,7 @@ unified router for the main application.
 
 from fastapi import APIRouter
 
-from . import login, password, profile, registration, telegram_login, bot_login
+from . import bot_login, login, password, profile, registration, telegram_login
 
 # Create main auth router
 router = APIRouter(prefix="/auth", tags=["Authentication"])

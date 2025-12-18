@@ -20,7 +20,9 @@ logger = logging.getLogger(__name__)
 async def _create_analytics_batch_processor(analytics_repository=None, **kwargs):
     """Create core analytics batch processor (pure business logic)"""
     try:
-        from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+        from core.services.bot.analytics.analytics_batch_processor import (
+            AnalyticsBatchProcessor,
+        )
 
         # Check if repository is required
         if analytics_repository is None:
@@ -63,7 +65,9 @@ async def _create_analytics_fusion_service(**kwargs):
     logger.info("🏭 Creating analytics fusion service via analytics_container...")
     try:
         # Delegate to the properly-configured analytics container
-        from apps.di.analytics_container import get_analytics_fusion_service as get_fusion_svc
+        from apps.di.analytics_container import (
+            get_analytics_fusion_service as get_fusion_svc,
+        )
 
         service = await get_fusion_svc()
         if service:
@@ -166,7 +170,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     # Predictive orchestrator with contextual, temporal, modeling, and cross-channel intelligence
     predictive_orchestrator_service = providers.Factory(
         lambda: __import__(
-            "core.services.predictive_intelligence", fromlist=["create_predictive_orchestrator"]
+            "core.services.predictive_intelligence",
+            fromlist=["create_predictive_orchestrator"],
         ).create_predictive_orchestrator(
             analytics_service=None,  # Optional analytics service
             data_access_service=None,  # Optional data access service

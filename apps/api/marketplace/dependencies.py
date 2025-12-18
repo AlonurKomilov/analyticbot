@@ -6,11 +6,12 @@ Dependency injection for marketplace API endpoints.
 """
 
 from typing import Annotated
+
 from fastapi import Depends
 
 from apps.di import get_container
+from core.marketplace import FeatureGateService, MarketplaceService
 from infra.marketplace import MarketplaceItemRepository, MarketplaceServiceRepository
-from core.marketplace import MarketplaceService, FeatureGateService
 
 
 async def get_marketplace_item_repo() -> MarketplaceItemRepository:
@@ -41,6 +42,8 @@ async def get_feature_gate_service() -> FeatureGateService:
 
 # Type aliases for dependency injection
 MarketplaceItemRepoDep = Annotated[MarketplaceItemRepository, Depends(get_marketplace_item_repo)]
-MarketplaceServiceRepoDep = Annotated[MarketplaceServiceRepository, Depends(get_marketplace_service_repo)]
+MarketplaceServiceRepoDep = Annotated[
+    MarketplaceServiceRepository, Depends(get_marketplace_service_repo)
+]
 MarketplaceServiceDep = Annotated[MarketplaceService, Depends(get_marketplace_service)]
 FeatureGateServiceDep = Annotated[FeatureGateService, Depends(get_feature_gate_service)]

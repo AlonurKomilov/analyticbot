@@ -10,6 +10,7 @@ Tests that Phase 1 is complete and functional:
 
 import asyncio
 import os
+
 import asyncpg
 
 
@@ -79,9 +80,7 @@ async def main():
                 badge += "🔥 POPULAR"
 
             yearly = (
-                f" | Yearly: {svc['price_credits_yearly']}cr"
-                if svc["price_credits_yearly"]
-                else ""
+                f" | Yearly: {svc['price_credits_yearly']}cr" if svc["price_credits_yearly"] else ""
             )
 
             print(f"  • {svc['name']} {badge}")

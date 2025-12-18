@@ -131,7 +131,7 @@ class RecommendationEngineService(RecommendationEngineProtocol):
                         optimization_type=OptimizationType.INDEX_SUGGESTION,
                         priority=OptimizationPriority.HIGH,
                         title="Add Database Indexes for Slow Queries",
-                        description=f"Current average query time ({current_query_time}ms) is {((current_query_time/threshold-1)*100):.1f}% above threshold. Adding strategic indexes can reduce query execution time.",
+                        description=f"Current average query time ({current_query_time}ms) is {((current_query_time / threshold - 1) * 100):.1f}% above threshold. Adding strategic indexes can reduce query execution time.",
                         estimated_impact={
                             "performance_gain": 0.4,  # 40% improvement
                             "query_time_reduction_ms": current_query_time * 0.4,
@@ -523,8 +523,16 @@ class RecommendationEngineService(RecommendationEngineProtocol):
     def _load_optimization_templates(self) -> dict[str, Any]:
         """Load optimization templates and patterns"""
         return {
-            "query_patterns": ["index_optimization", "query_rewriting", "partition_strategy"],
-            "resource_patterns": ["async_processing", "connection_pooling", "memory_optimization"],
+            "query_patterns": [
+                "index_optimization",
+                "query_rewriting",
+                "partition_strategy",
+            ],
+            "resource_patterns": [
+                "async_processing",
+                "connection_pooling",
+                "memory_optimization",
+            ],
             "cache_patterns": ["cache_warming", "multi_level_caching", "cache_aside"],
         }
 

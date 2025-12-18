@@ -20,12 +20,13 @@ import os
 import secrets
 from datetime import datetime
 
+import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-import redis.asyncio as redis
 
 from apps.api.auth_utils import FastAPIAuthUtils, get_auth_utils
 from apps.api.middleware.auth import get_user_repository
+from config.settings import settings
 from core.ports.security_ports import AuthRequest
 from core.repositories.interfaces import UserRepository
 from core.security_engine import (
@@ -35,7 +36,6 @@ from core.security_engine import (
     UserStatus,
     get_security_manager,
 )
-from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +44,14 @@ router = APIRouter()
 # Redis connection for storing login codes
 _redis_client = None
 
+
 async def get_redis() -> redis.Redis:
     """Get Redis client for login code storage"""
     global _redis_client
     if _redis_client is None:
-        redis_url = getattr(settings, 'REDIS_URL', None) or os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+        redis_url = getattr(settings, "REDIS_URL", None) or os.getenv(
+            "REDIS_URL", "redis://localhost:6379/0"
+        )
         _redis_client = redis.from_url(redis_url, decode_responses=True)
     return _redis_client
 
@@ -60,6 +63,7 @@ LOGIN_CODE_TTL = 300  # 5 minutes
 
 class BotLoginInitResponse(BaseModel):
     """Response when initializing bot-based login"""
+
     login_code: str = Field(..., description="Unique login code")
     bot_username: str = Field(..., description="Bot username for deep link")
     deep_link: str = Field(..., description="Full Telegram deep link URL")
@@ -68,12 +72,14 @@ class BotLoginInitResponse(BaseModel):
 
 class BotLoginInitRequest(BaseModel):
     """Request to initialize bot-based login with client info"""
+
     user_agent: str | None = Field(None, description="Browser user agent")
     client_ip: str | None = Field(None, description="Client IP address")
 
 
 class BotLoginStatusResponse(BaseModel):
     """Response for login status check"""
+
     status: str = Field(..., description="pending, completed, expired, or error")
     access_token: str | None = Field(None, description="JWT access token if completed")
     refresh_token: str | None = Field(None, description="JWT refresh token if completed")
@@ -82,6 +88,7 @@ class BotLoginStatusResponse(BaseModel):
 
 class BotLoginConfirmRequest(BaseModel):
     """Request from bot to confirm login"""
+
     login_code: str = Field(..., description="Login code from deep link")
     telegram_id: int = Field(..., description="Telegram user ID")
     first_name: str = Field(..., description="User's first name")
@@ -97,38 +104,40 @@ async def init_bot_login(
 ):
     """
     Initialize bot-based login flow.
-    
+
     Generates a unique login code and returns deep link to bot.
     User will click this link to open Telegram and start the bot.
     """
     try:
         # Generate unique login code
         login_code = secrets.token_urlsafe(16)
-        
+
         # Get bot username from settings
-        bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', None) or os.getenv('TELEGRAM_BOT_USERNAME', 'AnasAnalyticBot')
-        
+        bot_username = getattr(settings, "TELEGRAM_BOT_USERNAME", None) or os.getenv(
+            "TELEGRAM_BOT_USERNAME", "AnasAnalyticBot"
+        )
+
         # Get client info for session display
         client_ip = None
         user_agent = None
-        
+
         # Try to get real IP from headers (behind proxy/cloudflare)
         if request:
             client_ip = (
-                request.headers.get("cf-connecting-ip") or
-                request.headers.get("x-real-ip") or
-                request.headers.get("x-forwarded-for", "").split(",")[0].strip() or
-                (request.client.host if request.client else None)
+                request.headers.get("cf-connecting-ip")
+                or request.headers.get("x-real-ip")
+                or request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+                or (request.client.host if request.client else None)
             )
             user_agent = request.headers.get("user-agent", "")
-        
+
         # Override with explicitly passed data if available
         if data:
             if data.client_ip:
                 client_ip = data.client_ip
             if data.user_agent:
                 user_agent = data.user_agent
-        
+
         # Store code in Redis with pending status and client info
         redis_client = await get_redis()
         login_data = {
@@ -138,25 +147,23 @@ async def init_bot_login(
             "created_at": datetime.utcnow().isoformat(),
         }
         await redis_client.setex(
-            f"{LOGIN_CODE_PREFIX}{login_code}",
-            LOGIN_CODE_TTL,
-            json.dumps(login_data)
+            f"{LOGIN_CODE_PREFIX}{login_code}", LOGIN_CODE_TTL, json.dumps(login_data)
         )
-        
+
         logger.info(f"🔐 Bot login initiated with code: {login_code[:8]}... from IP: {client_ip}")
-        
+
         return BotLoginInitResponse(
             login_code=login_code,
             bot_username=bot_username,
             deep_link=f"https://t.me/{bot_username}?start=login_{login_code}",
-            expires_in=LOGIN_CODE_TTL
+            expires_in=LOGIN_CODE_TTL,
         )
-        
+
     except Exception as e:
         logger.error(f"Error initializing bot login: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to initialize login"
+            detail="Failed to initialize login",
         )
 
 
@@ -164,51 +171,51 @@ async def init_bot_login(
 async def check_bot_login_status(login_code: str):
     """
     Check the status of a bot-based login attempt.
-    
+
     Frontend polls this endpoint to know when login is complete.
     """
     try:
         redis_client = await get_redis()
-        
+
         # Check if code exists
         status_data = await redis_client.get(f"{LOGIN_CODE_PREFIX}{login_code}")
-        
+
         if not status_data:
             return BotLoginStatusResponse(status="expired")
-        
+
         # Try to parse as JSON
         try:
             data = json.loads(status_data)
-            
+
             # Check if it's still pending (new format)
             if data.get("status") == "pending":
                 return BotLoginStatusResponse(status="pending")
-            
+
             # It's completed - has auth data
             if data.get("access_token"):
                 # Delete the code after successful retrieval (one-time use)
                 await redis_client.delete(f"{LOGIN_CODE_PREFIX}{login_code}")
-                
+
                 return BotLoginStatusResponse(
                     status="completed",
                     access_token=data.get("access_token"),
                     refresh_token=data.get("refresh_token"),
-                    user=data.get("user")
+                    user=data.get("user"),
                 )
-            
+
             return BotLoginStatusResponse(status="pending")
-            
+
         except json.JSONDecodeError:
             # Old format - plain "pending" string
             if status_data == "pending":
                 return BotLoginStatusResponse(status="pending")
             return BotLoginStatusResponse(status="error")
-            
+
     except Exception as e:
         logger.error(f"Error checking bot login status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to check login status"
+            detail="Failed to check login status",
         )
 
 
@@ -222,22 +229,22 @@ async def confirm_bot_login(
 ):
     """
     Confirm bot-based login (called by the bot after user starts it).
-    
+
     This endpoint is called by the bot when user clicks the deep link
     and starts the bot with the login code.
     """
     try:
         redis_client = await get_redis()
-        
+
         # Verify code exists and get stored data
         code_data_raw = await redis_client.get(f"{LOGIN_CODE_PREFIX}{data.login_code}")
-        
+
         if not code_data_raw:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Login code not found or expired"
+                detail="Login code not found or expired",
             )
-        
+
         # Parse the stored data to get client info
         client_info = {}
         try:
@@ -245,7 +252,7 @@ async def confirm_bot_login(
             if code_data.get("status") != "pending":
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Login code already used"
+                    detail="Login code already used",
                 )
             client_info = {
                 "client_ip": code_data.get("client_ip"),
@@ -256,20 +263,20 @@ async def confirm_bot_login(
             if code_data_raw != "pending":
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Login code already used"
+                    detail="Login code already used",
                 )
-        
+
         # Find or create user by Telegram ID
         user_data = await user_repo.get_user_by_telegram_id(data.telegram_id)
-        
+
         if not user_data:
             # Create new user
             logger.info(f"Creating new user for bot login: telegram_id={data.telegram_id}")
-            
+
             full_name = data.first_name
             if data.last_name:
                 full_name = f"{data.first_name} {data.last_name}"
-            
+
             new_user_data = {
                 "email": f"telegram_{data.telegram_id}@telegram.local",
                 "username": data.username or f"tg_{data.telegram_id}",
@@ -281,17 +288,17 @@ async def confirm_bot_login(
                 "auth_provider": "telegram",
                 "status": "active",
             }
-            
+
             await user_repo.create_user(new_user_data)
             user_data = await user_repo.get_user_by_telegram_id(data.telegram_id)
             logger.info(f"✅ Created new user via bot login: {user_data.get('id')}")
-        
+
         if not user_data:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to create user"
+                detail="Failed to create user",
             )
-        
+
         # Create User object for security manager (matching telegram_login.py)
         user = User(
             id=str(user_data["id"]),
@@ -305,7 +312,7 @@ async def confirm_bot_login(
             created_at=user_data.get("created_at", datetime.utcnow()),
             last_login=user_data.get("last_login"),
         )
-        
+
         # Create session (matching telegram_login.py)
         auth_request = AuthRequest(
             client_ip=request.client.host if request.client else None,
@@ -314,11 +321,11 @@ async def confirm_bot_login(
             headers=dict(request.headers),
         )
         session = security_manager.create_user_session(user, auth_request)
-        
+
         # Generate tokens
         access_token = auth_utils.create_access_token(user)
         refresh_token = auth_utils.create_refresh_token(user.id, session.token)
-        
+
         # Prepare user response data
         user_response = {
             "id": int(user.id),
@@ -332,30 +339,30 @@ async def confirm_bot_login(
             "credit_balance": float(user_data.get("credit_balance", 0) or 0),
             "role": user_data.get("role", "user"),
         }
-        
+
         # Store auth data in Redis for frontend to retrieve
         auth_data = {
             "access_token": access_token,
             "refresh_token": refresh_token,
-            "user": user_response
+            "user": user_response,
         }
-        
+
         await redis_client.setex(
             f"{LOGIN_CODE_PREFIX}{data.login_code}",
             60,  # Keep for 1 minute for frontend to retrieve
-            json.dumps(auth_data)
+            json.dumps(auth_data),
         )
-        
+
         # Store the access token for later revocation (keyed by telegram_id)
         # This allows the "Terminate session" button to revoke the exact token
         await redis_client.setex(
             f"bot_login_token:{data.telegram_id}",
             86400,  # Keep for 24 hours
-            access_token
+            access_token,
         )
-        
+
         logger.info(f"✅ Bot login confirmed for telegram_id={data.telegram_id}")
-        
+
         # Return client info for the bot to display
         return {
             "status": "success",
@@ -363,14 +370,14 @@ async def confirm_bot_login(
             "client_info": client_info,
             "session_token": session.token,
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error confirming bot login: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to confirm login"
+            detail="Failed to confirm login",
         )
 
 
@@ -384,40 +391,40 @@ async def terminate_bot_login_session(
     """
     Terminate a session created via bot login.
     Called when user clicks "Terminate session" button in bot.
-    
+
     Note: session_token is the access token (possibly truncated to first 50 chars).
     We look up the user by telegram_id and terminate all their sessions.
     """
     try:
         redis_client = await get_redis()
-        
+
         # Get the full access token stored during login
         stored_token = await redis_client.get(f"bot_login_token:{telegram_id}")
         if stored_token:
             full_token = stored_token.decode() if isinstance(stored_token, bytes) else stored_token
             logger.info(f"🔐 Found stored token for telegram_id={telegram_id}")
-            
+
             # Revoke the full token
             security_manager.revoke_token(full_token)
             logger.info(f"🔐 Revoked full access token for telegram_id={telegram_id}")
-            
+
             # Clean up the stored token
             await redis_client.delete(f"bot_login_token:{telegram_id}")
-        
+
         # Look up user by telegram_id to get the actual user_id
         user_data = await user_repo.get_user_by_telegram_id(telegram_id)
-        
+
         if user_data:
             user_id = user_data.get("id")
             logger.info(f"🔐 Found user_id={user_id} for telegram_id={telegram_id}")
-            
+
             # Terminate all sessions for this user
             try:
                 count = security_manager.terminate_all_user_sessions(str(user_id))
                 logger.info(f"🔐 Terminated {count} sessions for user_id={user_id}")
             except Exception as e:
                 logger.warning(f"Failed to terminate user sessions: {e}")
-            
+
             # Revoke all cached tokens for this user
             try:
                 security_manager.revoke_user_sessions(str(user_id))
@@ -426,11 +433,11 @@ async def terminate_bot_login_session(
                 logger.warning(f"Failed to revoke user sessions: {e}")
         else:
             logger.warning(f"⚠️ No user found for telegram_id={telegram_id}")
-        
+
         return {"status": "success", "message": "Session terminated"}
     except Exception as e:
         logger.error(f"Error terminating session: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to terminate session"
+            detail="Failed to terminate session",
         )

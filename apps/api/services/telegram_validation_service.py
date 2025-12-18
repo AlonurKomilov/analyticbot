@@ -71,9 +71,7 @@ class TelegramValidationService:
             clean_username = clean_username[1:]
 
         if not clean_username:
-            return ChannelValidationResult(
-                is_valid=False, error_message="Username cannot be empty"
-            )
+            return ChannelValidationResult(is_valid=False, error_message="Username cannot be empty")
 
         # Try MTProto first (best results)
         try:
@@ -90,13 +88,14 @@ class TelegramValidationService:
             return ChannelValidationResult(
                 is_valid=False,
                 username=clean_username,
-                error_message=f"Channel not found or not accessible",
+                error_message="Channel not found or not accessible",
             )
 
     async def _validate_via_bot_api(self, clean_username: str) -> ChannelValidationResult:
         """Validate channel using Bot API (limited info for public channels)"""
-        import aiohttp
         import os
+
+        import aiohttp
 
         # Get bot token from environment
         bot_token = os.getenv("TELEGRAM_BOT_TOKEN") or os.getenv("BOT_TOKEN")
@@ -113,7 +112,7 @@ class TelegramValidationService:
                 url = f"https://api.telegram.org/bot{bot_token}/getChat"
                 async with session.post(url, json={"chat_id": f"@{clean_username}"}) as response:
                     data = await response.json()
-                    
+
                     if not data.get("ok"):
                         error_desc = data.get("description", "Unknown error")
                         # Common errors
@@ -131,7 +130,7 @@ class TelegramValidationService:
 
                     chat = data.get("result", {})
                     chat_type = chat.get("type")
-                    
+
                     # Only accept channels
                     if chat_type not in ["channel", "supergroup"]:
                         return ChannelValidationResult(
@@ -197,7 +196,7 @@ class TelegramValidationService:
             username_from_entity = getattr(entity, "username", clean_username)
             is_verified = getattr(entity, "verified", False)
             is_scam = getattr(entity, "scam", False)
-            
+
             # Get channel creation date from entity
             telegram_created_at = None
             entity_date = getattr(entity, "date", None)
@@ -262,20 +261,20 @@ class TelegramValidationService:
             # Try multiple ID formats for robustness
             entity = None
             errors = []
-            
+
             # Method 1: Try with provided ID directly
             try:
                 entity = await self.client._client.get_entity(telegram_id)  # type: ignore
             except Exception as e1:
                 errors.append(f"direct({telegram_id}): {e1}")
-                
+
                 # Method 2: Try with negative format
                 try:
                     negative_id = -abs(telegram_id)
                     entity = await self.client._client.get_entity(negative_id)  # type: ignore
                 except Exception as e2:
                     errors.append(f"negative({negative_id}): {e2}")
-                    
+
                     # Method 3: If ID has 100 prefix, try without it
                     id_str = str(abs(telegram_id))
                     if len(id_str) > 10 and id_str.startswith("100"):
@@ -284,11 +283,11 @@ class TelegramValidationService:
                             entity = await self.client._client.get_entity(raw_id)  # type: ignore
                         except Exception as e3:
                             errors.append(f"raw({raw_id}): {e3}")
-            
+
             if not entity:
                 error_details = "; ".join(errors)
                 return {"error": f"Could not resolve channel: {error_details}"}
-            
+
             full_channel = await self.client.get_full_channel(entity)
 
             metadata = {

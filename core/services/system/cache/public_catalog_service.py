@@ -6,7 +6,6 @@ Handles fetching channel data from Telegram, caching, and database operations.
 """
 
 import logging
-from datetime import datetime, timedelta
 from typing import Any
 
 from sqlalchemy import text
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 class PublicCatalogService:
     """
     Service for managing the public channel catalog.
-    
+
     Responsibilities:
     - Fetch channel data from Telegram Bot API
     - Cache data in Redis (with DB fallback)
@@ -42,6 +41,7 @@ class PublicCatalogService:
         if self._bot is None and self.bot_token:
             try:
                 from aiogram import Bot
+
                 self._bot = Bot(token=self.bot_token)
             except ImportError:
                 logger.error("aiogram not installed")
@@ -55,10 +55,10 @@ class PublicCatalogService:
     async def fetch_channel_from_telegram(self, username: str) -> dict[str, Any] | None:
         """
         Fetch channel info directly from Telegram Bot API.
-        
+
         Args:
             username: Channel username (without @)
-            
+
         Returns:
             Channel info dict or None if not found
         """
@@ -70,10 +70,10 @@ class PublicCatalogService:
         try:
             # Clean username
             clean_username = username.lstrip("@")
-            
+
             # Get chat info
             chat = await bot.get_chat(chat_id=f"@{clean_username}")
-            
+
             # Get member count
             try:
                 member_count = await bot.get_chat_member_count(chat_id=chat.id)
@@ -86,7 +86,9 @@ class PublicCatalogService:
                 try:
                     # Get file info for the small photo
                     file = await bot.get_file(chat.photo.small_file_id)
-                    avatar_url = f"https://api.telegram.org/file/bot{self.bot_token}/{file.file_path}"
+                    avatar_url = (
+                        f"https://api.telegram.org/file/bot{self.bot_token}/{file.file_path}"
+                    )
                 except Exception as e:
                     logger.debug(f"Could not get avatar URL: {e}")
 
@@ -107,10 +109,10 @@ class PublicCatalogService:
     async def resolve_username(self, username: str) -> int | None:
         """
         Resolve a username to a Telegram ID.
-        
+
         Args:
             username: Channel username
-            
+
         Returns:
             Telegram ID or None if not found
         """
@@ -133,7 +135,7 @@ class PublicCatalogService:
     ) -> dict[str, Any]:
         """
         Add a channel to the public catalog.
-        
+
         Either telegram_id or username must be provided.
         If only username is provided, it will be resolved via Telegram API.
         """
@@ -141,7 +143,10 @@ class PublicCatalogService:
         if not telegram_id and username:
             info = await self.fetch_channel_from_telegram(username)
             if not info:
-                return {"success": False, "error": f"Channel @{username} not found on Telegram"}
+                return {
+                    "success": False,
+                    "error": f"Channel @{username} not found on Telegram",
+                }
             telegram_id = info["telegram_id"]
             username = info.get("username")
             title = info.get("title", username)
@@ -160,24 +165,31 @@ class PublicCatalogService:
                     avatar_url = None
                     subscriber_count = await bot.get_chat_member_count(chat_id=telegram_id)
                 except Exception as e:
-                    return {"success": False, "error": f"Channel {telegram_id} not accessible: {e}"}
+                    return {
+                        "success": False,
+                        "error": f"Channel {telegram_id} not accessible: {e}",
+                    }
             else:
                 return {"success": False, "error": "Bot not configured"}
         else:
-            return {"success": False, "error": "Either telegram_id or username is required"}
+            return {
+                "success": False,
+                "error": "Either telegram_id or username is required",
+            }
 
         try:
             # Check if already exists
             existing = await self.db.execute(
                 text("SELECT id FROM public_channel_catalog WHERE telegram_id = :tid"),
-                {"tid": telegram_id}
+                {"tid": telegram_id},
             )
             if existing.fetchone():
                 return {"success": False, "error": "Channel already in catalog"}
 
             # Insert into catalog
             result = await self.db.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO public_channel_catalog 
                     (telegram_id, username, title, description, avatar_url, category_id, 
                      country_code, language_code, is_featured, is_verified, is_active, 
@@ -186,7 +198,8 @@ class PublicCatalogService:
                             :category_id, :country_code, :language_code, :is_featured, 
                             :is_verified, :is_active, :added_by, NOW(), :metadata)
                     RETURNING id
-                """),
+                """
+                ),
                 {
                     "telegram_id": telegram_id,
                     "username": username,
@@ -198,10 +211,10 @@ class PublicCatalogService:
                     "language_code": language_code,
                     "is_featured": is_featured,
                     "is_verified": False,  # Not verified by default
-                    "is_active": True,     # Active by default
+                    "is_active": True,  # Active by default
                     "added_by": added_by,
-                    "metadata": "{}",      # Empty JSON object
-                }
+                    "metadata": "{}",  # Empty JSON object
+                },
             )
             row = result.fetchone()
             catalog_id = row[0] if row else None
@@ -209,24 +222,28 @@ class PublicCatalogService:
             # Insert stats cache
             if subscriber_count:
                 await self.db.execute(
-                    text("""
+                    text(
+                        """
                         INSERT INTO channel_stats_cache (telegram_id, subscriber_count, cached_at)
                         VALUES (:tid, :count, NOW())
                         ON CONFLICT (telegram_id) DO UPDATE 
                         SET subscriber_count = :count, cached_at = NOW()
-                    """),
-                    {"tid": telegram_id, "count": subscriber_count}
+                    """
+                    ),
+                    {"tid": telegram_id, "count": subscriber_count},
                 )
 
             # Update category channel count
             if category_id:
                 await self.db.execute(
-                    text("""
+                    text(
+                        """
                         UPDATE channel_categories 
                         SET channel_count = channel_count + 1 
                         WHERE id = :cid
-                    """),
-                    {"cid": category_id}
+                    """
+                    ),
+                    {"cid": category_id},
                 )
 
             await self.db.commit()
@@ -282,7 +299,7 @@ class PublicCatalogService:
 
             await self.db.execute(
                 text(f"UPDATE public_channel_catalog SET {', '.join(updates)} WHERE id = :id"),
-                params
+                params,
             )
             await self.db.commit()
 
@@ -298,7 +315,7 @@ class PublicCatalogService:
             # Get category_id before deactivating
             result = await self.db.execute(
                 text("SELECT category_id FROM public_channel_catalog WHERE id = :id"),
-                {"id": catalog_id}
+                {"id": catalog_id},
             )
             row = result.fetchone()
             category_id = row[0] if row else None
@@ -306,18 +323,20 @@ class PublicCatalogService:
             # Soft delete
             await self.db.execute(
                 text("UPDATE public_channel_catalog SET is_active = FALSE WHERE id = :id"),
-                {"id": catalog_id}
+                {"id": catalog_id},
             )
 
             # Update category count
             if category_id:
                 await self.db.execute(
-                    text("""
+                    text(
+                        """
                         UPDATE channel_categories 
                         SET channel_count = GREATEST(0, channel_count - 1) 
                         WHERE id = :cid
-                    """),
-                    {"cid": category_id}
+                    """
+                    ),
+                    {"cid": category_id},
                 )
 
             await self.db.commit()
@@ -330,7 +349,7 @@ class PublicCatalogService:
     async def sync_channel_stats(self, telegram_id: int) -> dict[str, Any]:
         """
         Sync channel stats from Telegram API.
-        
+
         Updates the channel_stats_cache table with fresh data.
         """
         bot = await self._get_bot()
@@ -343,23 +362,27 @@ class PublicCatalogService:
 
             # Update stats cache
             await self.db.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO channel_stats_cache (telegram_id, subscriber_count, cached_at)
                     VALUES (:tid, :count, NOW())
                     ON CONFLICT (telegram_id) DO UPDATE 
                     SET subscriber_count = :count, cached_at = NOW()
-                """),
-                {"tid": telegram_id, "count": member_count}
+                """
+                ),
+                {"tid": telegram_id, "count": member_count},
             )
 
             # Update last_synced_at in catalog
             await self.db.execute(
-                text("""
+                text(
+                    """
                     UPDATE public_channel_catalog 
                     SET last_synced_at = NOW() 
                     WHERE telegram_id = :tid
-                """),
-                {"tid": telegram_id}
+                """
+                ),
+                {"tid": telegram_id},
             )
 
             await self.db.commit()
@@ -378,15 +401,17 @@ class PublicCatalogService:
         """Get a catalog entry by ID."""
         try:
             result = await self.db.execute(
-                text("""
+                text(
+                    """
                     SELECT pcc.*, csc.subscriber_count, csc.avg_views, csc.growth_rate,
                            cc.name as category_name, cc.slug as category_slug
                     FROM public_channel_catalog pcc
                     LEFT JOIN channel_stats_cache csc ON pcc.telegram_id = csc.telegram_id
                     LEFT JOIN channel_categories cc ON pcc.category_id = cc.id
                     WHERE pcc.id = :id
-                """),
-                {"id": catalog_id}
+                """
+                ),
+                {"id": catalog_id},
             )
             row = result.fetchone()
             if not row:

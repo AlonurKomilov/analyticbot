@@ -22,7 +22,7 @@ Usage
         MarketplaceItemRepository,
         MarketplaceServiceRepository,
     )
-    
+
     # Or use through dependency injection
     from apps.di import get_marketplace_item_repo, get_marketplace_service_repo
 

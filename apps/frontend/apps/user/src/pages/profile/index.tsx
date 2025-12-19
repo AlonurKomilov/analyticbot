@@ -85,7 +85,11 @@ const ProfilePage: React.FC = () => {
     // Handle login method update success - reload user data
     const handleLoginMethodSuccess = async () => {
         setProfileSuccess('Login method updated successfully!');
-        // Reload user data from API to get updated has_password status
+        await refreshUserData();
+    };
+
+    // Refresh user data from API
+    const refreshUserData = async () => {
         try {
             const { apiClient } = await import('@/api/client');
             const userData = await apiClient.get('/auth/me');
@@ -100,7 +104,7 @@ const ProfilePage: React.FC = () => {
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
             {/* Header */}
-            <ProfileHeader user={user} />
+            <ProfileHeader user={user} onPhotoUpdated={refreshUserData} />
 
             {/* Status Messages */}
             {success && (

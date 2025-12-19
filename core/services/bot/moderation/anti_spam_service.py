@@ -37,7 +37,7 @@ class AntiSpamService(BaseBotService):
         user_id: int,
         feature_gate_service: Any,
         marketplace_repo: Any,
-        service: UserBotService,
+        moderation_service: UserBotService,
     ):
         """
         Initialize anti-spam service.
@@ -46,7 +46,7 @@ class AntiSpamService(BaseBotService):
             user_id: Bot owner's user ID
             feature_gate_service: Service for access control
             marketplace_repo: Repository for usage logging
-            service: Service for moderation operations
+            moderation_service: Service for moderation operations
         """
         super().__init__(user_id, feature_gate_service, marketplace_repo)
         self.moderation_service = moderation_service

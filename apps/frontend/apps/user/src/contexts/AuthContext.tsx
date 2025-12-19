@@ -9,6 +9,15 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { apiClient } from '../api/client';
 import { authLogger } from '@/utils/logger';
 import { getMTProtoStatus, connectMTProto } from '@/features/mtproto-setup/api';
+import {
+    setAuthTokens,
+    getAccessToken,
+    getRefreshToken,
+    setUserData,
+    getUserData,
+    clearAuthData,
+    syncAuthStorage,
+} from '@/utils/crossDomainAuth';
 
 /**
  * Auto-connect MTProto if user has it configured and enabled
@@ -95,39 +104,30 @@ export const useAuth = () => {
     return context;
 };
 
-// Token storage helpers
+// Token storage helpers - now using cross-domain SSO utilities
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const USER_KEY = 'auth_user';
 
-const getStoredToken = (): string | null => localStorage.getItem(TOKEN_KEY);
-const getStoredRefreshToken = (): string | null => localStorage.getItem(REFRESH_TOKEN_KEY);
-const getStoredUser = (): User | null => {
-    try {
-        const user = localStorage.getItem(USER_KEY);
-        return user ? JSON.parse(user) : null;
-    } catch {
-        return null;
-    }
-};
+const getStoredToken = (): string | null => getAccessToken();
+const getStoredRefreshToken = (): string | null => getRefreshToken();
+const getStoredUser = (): User | null => getUserData();
 
 const setStoredAuth = (token: string, refreshToken: string, user: User): void => {
-    authLogger.debug('Storing auth tokens', {
+    authLogger.debug('Storing auth tokens (with SSO cookies)', {
         tokenLength: token?.length,
         refreshTokenLength: refreshToken?.length,
         userId: user?.id
     });
-    localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    // Use shared SSO utilities for cross-subdomain auth
+    setAuthTokens(token, refreshToken);
+    setUserData(user);
 };
 
 const clearStoredAuth = (): void => {
-    authLogger.info('Clearing all auth tokens');
-    // Clear primary keys
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    authLogger.info('Clearing all auth tokens (including SSO cookies)');
+    // Use shared SSO utilities to clear both cookies and localStorage
+    clearAuthData();
     // Clear backup/legacy keys
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
@@ -147,6 +147,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     useEffect(() => {
         const initializeAuth = async () => {
             try {
+                // Sync auth storage between cookies and localStorage (for SSO)
+                syncAuthStorage();
+                
                 // Small delay to allow TWA auto-login to complete first (if in Telegram)
                 const isTelegram = !!(window as any).Telegram?.WebApp?.initData;
                 if (isTelegram) {

@@ -316,6 +316,7 @@ const NavigationBar: React.FC = () => {
                         aria-expanded={profileMenuOpen ? 'true' : undefined}
                     >
                         <Avatar
+                            src={user?.photo_url || undefined}
                             sx={{
                                 width: 36,
                                 height: 36,

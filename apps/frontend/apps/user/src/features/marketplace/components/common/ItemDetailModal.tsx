@@ -34,9 +34,9 @@ import {
   ShoppingCart,
   TrendingUp,
 } from '@mui/icons-material';
-import type { MarketplaceItem, BillingCycle } from '../../types';
-import { getCategoryConfig, getUseCaseConfig } from '../../utils/categoryConfig';
-import { getPriceDisplay, getSavingsDisplay } from '../../utils/priceFormatter';
+import type { MarketplaceItem, BillingCycle } from '@/pages/marketplace/types';
+import { getCategoryConfig, getUseCaseConfig } from '@/pages/marketplace/utils/categoryConfig';
+import { getPriceDisplay, getSavingsDisplay } from '@/pages/marketplace/utils/priceFormatter';
 
 interface ItemDetailModalProps {
   open: boolean;

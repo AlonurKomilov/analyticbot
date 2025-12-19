@@ -250,10 +250,11 @@ class CreditRepository:
 
         async with self._pool.acquire() as conn:
             async with conn.transaction():
-                # Get current balance
+                # Get current balance with row-level lock to prevent race conditions
+                # FOR UPDATE ensures no concurrent transactions can modify this row
                 current = await conn.fetchval(
                     """
-                    SELECT COALESCE(balance, 0) FROM user_credits WHERE user_id = $1
+                    SELECT COALESCE(balance, 0) FROM user_credits WHERE user_id = $1 FOR UPDATE
                 """,
                     user_id,
                 )

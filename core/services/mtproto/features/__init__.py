@@ -1,29 +1,51 @@
 """
-MTProto Features - Pluggable marketplace services for MTProto operations
+MTProto Features - DEPRECATED - Use core.marketplace.services.mtproto
 
-This package contains modular MTProto features that can be purchased
-and activated through the marketplace services system.
+This package has been moved to core/marketplace/services/mtproto/
+for proper separation of marketplace (paid) services.
 
-Each feature integrates with:
-- Feature gate service (access control)
-- Usage logging (quota tracking)
-- MTProto client (execution)
+For backward compatibility, imports are re-exported from the new location.
 
-Services:
-- BaseMTProtoService: Base class for all MTProto services
-- MTProtoFeaturesManager: Manager for MTProto feature orchestration
-- HistoryAccessService: Channel message history access
-- MediaDownloadService: Media file download service
+New location:
+    from core.marketplace.services.mtproto import (
+        BaseMTProtoMarketplaceService,
+        MTProtoServicesManager,
+        HistoryAccessService,
+        MediaDownloadService,
+    )
+
+DEPRECATED imports (still work for backward compatibility):
+    from core.services.mtproto.features import (
+        BaseMTProtoService,        # -> BaseMTProtoMarketplaceService
+        MTProtoFeaturesManager,    # -> MTProtoServicesManager
+        HistoryAccessService,
+        MediaDownloadService,
+    )
 """
 
-from core.services.mtproto.features.base_mtproto_service import BaseMTProtoService
-from core.services.mtproto.features.mtproto_features_manager import MTProtoFeaturesManager
-from core.services.mtproto.features.history_access_service import HistoryAccessService
-from core.services.mtproto.features.media_download_service import MediaDownloadService
+import warnings
+
+# Re-export from new location for backward compatibility
+from core.marketplace.services.mtproto.base_mtproto_marketplace_service import (
+    BaseMTProtoMarketplaceService as BaseMTProtoService,
+)
+from core.marketplace.services.mtproto.mtproto_services_manager import (
+    MTProtoServicesManager as MTProtoFeaturesManager,
+)
+from core.marketplace.services.mtproto.history_access_service import HistoryAccessService
+from core.marketplace.services.mtproto.media_download_service import MediaDownloadService
+
+# Emit deprecation warning on import
+warnings.warn(
+    "core.services.mtproto.features is deprecated. "
+    "Use core.marketplace.services.mtproto instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 __all__ = [
-    "BaseMTProtoService",
-    "MTProtoFeaturesManager",
+    "BaseMTProtoService",  # Alias for BaseMTProtoMarketplaceService
+    "MTProtoFeaturesManager",  # Alias for MTProtoServicesManager
     "HistoryAccessService",
     "MediaDownloadService",
 ]

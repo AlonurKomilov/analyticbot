@@ -1,6 +1,6 @@
 /**
  * MTProto Account Info Card Component
- * Shows user's MTProto configuration details and management actions
+ * Shows user's MTProto configuration details and management actions with modern design
  */
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +12,6 @@ import {
   Grid,
   Button,
   Chip,
-  Divider,
   Switch,
   FormControlLabel,
   Alert,
@@ -22,9 +21,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  Stack,
   Tooltip,
   IconButton,
+  Paper,
+  Avatar,
+  alpha,
 } from '@mui/material';
 import {
   AccountCircle,
@@ -33,12 +34,14 @@ import {
   Delete as DeleteIcon,
   PowerSettingsNew as DisconnectIcon,
   CheckCircle,
-  Cancel,
   Visibility,
   VisibilityOff,
   ContentCopy,
   Settings as SettingsIcon,
   Warning as WarningIcon,
+  Refresh as RefreshIcon,
+  Store as MarketplaceIcon,
+  Security as SecurityIcon,
 } from '@mui/icons-material';
 import { apiClient } from '@/api/client';
 
@@ -56,9 +59,55 @@ interface MTProtoStatus {
 
 interface AccountInfoCardProps {
   onStatusChange?: () => void;
+  onTestConnection?: () => void;
+  onBrowsePowerUps?: () => void;
+  onOpenSettings?: () => void;
+  isTestingConnection?: boolean;
 }
 
-export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange }) => {
+interface StatItemProps {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  color?: string;
+  actions?: React.ReactNode;
+}
+
+const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color = '#8b5cf6', actions }) => (
+  <Box display="flex" alignItems="center" gap={1.5}>
+    <Box
+      sx={{
+        width: 40,
+        height: 40,
+        borderRadius: 1.5,
+        bgcolor: alpha(color, 0.15),
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: color,
+      }}
+    >
+      {icon}
+    </Box>
+    <Box flex={1}>
+      <Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} fontSize="0.65rem">
+        {label}
+      </Typography>
+      <Box display="flex" alignItems="center" gap={0.5}>
+        {value}
+        {actions}
+      </Box>
+    </Box>
+  </Box>
+);
+
+export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ 
+  onStatusChange,
+  onTestConnection,
+  onBrowsePowerUps,
+  onOpenSettings,
+  isTestingConnection = false,
+}) => {
   const { t } = useTranslation(['mtproto', 'common']);
   const [status, setStatus] = useState<MTProtoStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -158,10 +207,16 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
 
   if (loading) {
     return (
-      <Card sx={{ mb: 3 }}>
+      <Card 
+        sx={{ 
+          mb: 3,
+          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)',
+          border: '1px solid rgba(139, 92, 246, 0.2)',
+        }}
+      >
         <CardContent>
           <Box display="flex" alignItems="center" justifyContent="center" py={3}>
-            <CircularProgress size={24} />
+            <CircularProgress size={24} sx={{ color: '#8b5cf6' }} />
             <Typography sx={{ ml: 2 }}>{t('mtproto:accountInfo.loading')}</Typography>
           </Box>
         </CardContent>
@@ -171,19 +226,41 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
 
   if (!status?.configured) {
     return (
-      <Card sx={{ mb: 3 }}>
+      <Card 
+        sx={{ 
+          mb: 3,
+          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)',
+          border: '1px solid rgba(139, 92, 246, 0.2)',
+        }}
+      >
         <CardContent>
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
-            <SettingsIcon color="action" />
-            <Typography variant="h6">{t('mtproto:status.configuration')}</Typography>
+          <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <Avatar
+              sx={{
+                width: 48,
+                height: 48,
+                bgcolor: alpha('#8b5cf6', 0.2),
+                color: '#8b5cf6',
+              }}
+            >
+              <SettingsIcon sx={{ fontSize: 28 }} />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight={600}>{t('mtproto:status.configuration')}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t('mtproto:setup.needAccount')}
+              </Typography>
+            </Box>
           </Box>
-          <Alert severity="info">
-            {t('mtproto:setup.needAccount')}
-          </Alert>
           <Button
             variant="contained"
             href="/mtproto-setup"
-            sx={{ mt: 2 }}
+            sx={{
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)',
+              },
+            }}
           >
             {t('mtproto:setup.title')}
           </Button>
@@ -193,12 +270,34 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
   }
 
   return (
-    <Card sx={{ mb: 3 }}>
+    <Card 
+      sx={{ 
+        mb: 3,
+        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)',
+        border: '1px solid rgba(139, 92, 246, 0.2)',
+      }}
+    >
       <CardContent>
-        <Box display="flex" alignItems="center" gap={1} mb={2}>
-          <AccountCircle color="primary" />
-          <Typography variant="h6">{t('mtproto:status.account')}</Typography>
-          <Box flexGrow={1} />
+        {/* Header */}
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Avatar
+              sx={{
+                width: 48,
+                height: 48,
+                bgcolor: alpha('#8b5cf6', 0.2),
+                color: '#8b5cf6',
+              }}
+            >
+              <AccountCircle sx={{ fontSize: 28 }} />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight={600}>{t('mtproto:status.account')}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t('mtproto:description')}
+              </Typography>
+            </Box>
+          </Box>
           {/* Global Enable/Disable Toggle */}
           <FormControlLabel
             control={
@@ -206,20 +305,29 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
                 checked={status.mtproto_enabled ?? false}
                 onChange={handleToggle}
                 disabled={isToggling}
-                color="success"
+                sx={{
+                  '& .MuiSwitch-switchBase.Mui-checked': {
+                    color: '#10b981',
+                  },
+                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#10b981',
+                  },
+                }}
               />
             }
             label={
-              <Typography variant="body2" color={status.mtproto_enabled ? 'success.main' : 'text.secondary'}>
-                {status.mtproto_enabled ? t('common:enabled') : t('common:disabled')}
-              </Typography>
+              <Chip 
+                label={status.mtproto_enabled ? t('common:enabled') : t('common:disabled')}
+                size="small"
+                sx={{
+                  height: 24,
+                  bgcolor: status.mtproto_enabled ? 'rgba(16, 185, 129, 0.2)' : 'rgba(107, 114, 128, 0.2)',
+                  color: status.mtproto_enabled ? '#10b981' : '#6b7280',
+                }}
+              />
             }
           />
         </Box>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          {t('mtproto:description')}
-        </Typography>
-        <Divider sx={{ my: 2 }} />
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
@@ -233,130 +341,176 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ onStatusChange
           </Alert>
         )}
 
-        <Grid container spacing={3}>
-          {/* Phone Number */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Box>
-              <Typography variant="body2" color="text.secondary">{t('mtproto:accountInfo.phoneNumber')}</Typography>
-              <Box display="flex" alignItems="center" gap={1} mt={1}>
-                <PhoneIcon fontSize="small" color="action" />
-                <Typography variant="body1" fontFamily="monospace">
-                  {maskPhone(status.phone)}
-                </Typography>
-                <Tooltip title={showPhone ? 'Hide' : 'Show'}>
-                  <IconButton size="small" onClick={() => setShowPhone(!showPhone)}>
-                    {showPhone ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                  </IconButton>
-                </Tooltip>
-                {status.phone && (
-                  <Tooltip title="Copy">
-                    <IconButton size="small" onClick={() => copyToClipboard(status.phone!)}>
-                      <ContentCopy fontSize="small" />
+        {/* Account Info Stats */}
+        <Paper
+          sx={{
+            p: 2,
+            background: 'rgba(0, 0, 0, 0.2)',
+            borderRadius: 2,
+            mb: 2,
+          }}
+        >
+          <Grid container spacing={2}>
+            {/* Phone Number */}
+            <Grid item xs={6} sm={3}>
+              <StatItem
+                icon={<PhoneIcon sx={{ fontSize: 20 }} />}
+                label={t('mtproto:accountInfo.phoneNumber')}
+                value={
+                  <Typography variant="subtitle2" fontWeight={600} fontFamily="monospace">
+                    {maskPhone(status.phone)}
+                  </Typography>
+                }
+                color="#8b5cf6"
+                actions={
+                  <Box display="flex" gap={0.5}>
+                    <IconButton size="small" onClick={() => setShowPhone(!showPhone)} sx={{ p: 0.5 }}>
+                      {showPhone ? <VisibilityOff sx={{ fontSize: 14, color: 'text.secondary' }} /> : <Visibility sx={{ fontSize: 14, color: 'text.secondary' }} />}
                     </IconButton>
-                  </Tooltip>
-                )}
-              </Box>
-            </Box>
+                    {status.phone && (
+                      <IconButton size="small" onClick={() => copyToClipboard(status.phone!)} sx={{ p: 0.5 }}>
+                        <ContentCopy sx={{ fontSize: 14, color: 'text.secondary' }} />
+                      </IconButton>
+                    )}
+                  </Box>
+                }
+              />
+            </Grid>
+
+            {/* API ID */}
+            <Grid item xs={6} sm={3}>
+              <StatItem
+                icon={<KeyIcon sx={{ fontSize: 20 }} />}
+                label={t('mtproto:accountInfo.apiId')}
+                value={
+                  <Typography variant="subtitle2" fontWeight={600} fontFamily="monospace">
+                    {status.api_id || 'System Default'}
+                  </Typography>
+                }
+                color="#f59e0b"
+              />
+            </Grid>
+
+            {/* Verification Status */}
+            <Grid item xs={6} sm={3}>
+              <StatItem
+                icon={<CheckCircle sx={{ fontSize: 20 }} />}
+                label={t('common:status')}
+                value={
+                  <Chip
+                    label={status.verified ? t('mtproto:status.verified') : t('errors:notVerified')}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: '0.65rem',
+                      bgcolor: status.verified ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                      color: status.verified ? '#10b981' : '#ef4444',
+                    }}
+                  />
+                }
+                color={status.verified ? '#10b981' : '#ef4444'}
+              />
+            </Grid>
+
+            {/* Can Read History */}
+            <Grid item xs={6} sm={3}>
+              <StatItem
+                icon={<SecurityIcon sx={{ fontSize: 20 }} />}
+                label={t('common:permissions')}
+                value={
+                  <Chip
+                    label={status.can_read_history ? t('common:readHistory') : t('common:limitedAccess')}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: '0.65rem',
+                      bgcolor: status.can_read_history ? 'rgba(16, 185, 129, 0.2)' : 'rgba(107, 114, 128, 0.2)',
+                      color: status.can_read_history ? '#10b981' : '#6b7280',
+                    }}
+                  />
+                }
+                color={status.can_read_history ? '#10b981' : '#6b7280'}
+              />
+            </Grid>
           </Grid>
 
-          {/* API ID */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Box>
-              <Typography variant="body2" color="text.secondary">{t('mtproto:accountInfo.apiId')}</Typography>
-              <Box display="flex" alignItems="center" gap={1} mt={1}>
-                <KeyIcon fontSize="small" color="action" />
-                <Typography variant="body1" fontFamily="monospace">
-                  {status.api_id || 'System Default'}
-                </Typography>
-              </Box>
-            </Box>
-          </Grid>
-
-          {/* Verification Status */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Box>
-              <Typography variant="body2" color="text.secondary">{t('common:status')}</Typography>
-              <Box display="flex" alignItems="center" gap={1} mt={1}>
-                {status.verified ? (
-                  <>
-                    <CheckCircle color="success" fontSize="small" />
-                    <Chip label={t('mtproto:status.verified')} size="small" color="success" />
-                  </>
-                ) : (
-                  <>
-                    <Cancel color="error" fontSize="small" />
-                    <Chip label={t('errors:notVerified')} size="small" color="error" />
-                  </>
-                )}
-              </Box>
-            </Box>
-          </Grid>
-
-          {/* Can Read History */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Box>
-              <Typography variant="body2" color="text.secondary">{t('common:permissions')}</Typography>
-              <Box display="flex" alignItems="center" gap={1} mt={1}>
-                <Chip
-                  label={status.can_read_history ? t('common:readHistory') : t('common:limitedAccess')}
-                  size="small"
-                  color={status.can_read_history ? 'success' : 'default'}
-                  variant={status.can_read_history ? 'filled' : 'outlined'}
-                />
-              </Box>
-            </Box>
-          </Grid>
-        </Grid>
-
-        {/* Last Used Info */}
-        {status.last_used && (
-          <Box mt={2}>
-            <Typography variant="caption" color="text.secondary">
+          {/* Last Used Info */}
+          {status.last_used && (
+            <Typography variant="caption" color="text.secondary" display="block" mt={1.5}>
               Last activity: {new Date(status.last_used).toLocaleString()}
             </Typography>
-          </Box>
-        )}
+          )}
+        </Paper>
 
-        <Divider sx={{ my: 2 }} />
+        {/* Quick Actions */}
+        <Box display="flex" gap={1.5} flexWrap="wrap" alignItems="center">
+          {/* Disconnect Session Button */}
+          <Tooltip title={t('mtproto:accountInfo.disconnectDesc', 'Close active connection but keep session')}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={isDisconnecting ? <CircularProgress size={14} /> : <DisconnectIcon />}
+              onClick={handleDisconnect}
+              disabled={isDisconnecting || !status.connected}
+              sx={{
+                borderColor: 'rgba(107, 114, 128, 0.5)',
+                color: 'text.secondary',
+                '&:hover': {
+                  borderColor: 'rgba(107, 114, 128, 0.8)',
+                  bgcolor: 'rgba(107, 114, 128, 0.1)',
+                },
+              }}
+            >
+              {t('mtproto:accountInfo.disconnectSession', 'Disconnect Session')}
+            </Button>
+          </Tooltip>
 
-        {/* Action Buttons */}
-        <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-          <Button
-            variant="outlined"
-            color="warning"
-            size="small"
-            startIcon={isDisconnecting ? <CircularProgress size={16} /> : <DisconnectIcon />}
-            onClick={handleDisconnect}
-            disabled={isDisconnecting || !status.connected}
-          >
-            {isDisconnecting ? t('common:disconnecting') : t('common:disconnect')}
-          </Button>
+          {/* Remove MTProto Button */}
+          <Tooltip title={t('mtproto:quickActions.removeDesc', 'Permanently delete your MTProto configuration')}>
+            <Button
+              variant="outlined"
+              size="small"
+              color="error"
+              startIcon={isRemoving ? <CircularProgress size={14} /> : <DeleteIcon />}
+              onClick={() => setRemoveDialogOpen(true)}
+              disabled={isRemoving}
+              sx={{
+                borderColor: 'rgba(239, 68, 68, 0.5)',
+                '&:hover': {
+                  borderColor: 'rgba(239, 68, 68, 0.8)',
+                  bgcolor: 'rgba(239, 68, 68, 0.1)',
+                },
+              }}
+            >
+              {t('mtproto:quickActions.remove', 'Remove MTProto')}
+            </Button>
+          </Tooltip>
 
-          <Button
-            variant="outlined"
-            color="error"
-            size="small"
-            startIcon={<DeleteIcon />}
-            onClick={() => setRemoveDialogOpen(true)}
-            disabled={isRemoving}
-          >
-            {t('common:remove')}
-          </Button>
-
+          {/* MTProto Setup Link */}
           <Button
             variant="text"
             size="small"
             href="/mtproto-setup"
+            sx={{ color: '#8b5cf6' }}
           >
             {t('mtproto:setup.title')}
           </Button>
-        </Stack>
+        </Box>
 
-        {/* Warning about removing */}
-        <Alert severity="warning" icon={<WarningIcon />} sx={{ mt: 2 }}>
+        {/* Warning Alert */}
+        <Alert 
+          severity="warning" 
+          icon={<WarningIcon sx={{ fontSize: 18 }} />} 
+          sx={{ 
+            mt: 2,
+            bgcolor: 'rgba(245, 158, 11, 0.1)',
+            border: '1px solid rgba(245, 158, 11, 0.2)',
+            '& .MuiAlert-icon': { color: '#f59e0b' },
+          }}
+        >
           <Typography variant="caption">
-            <strong>Disconnect:</strong> Closes active connection but keeps your session.
-            <strong> Remove:</strong> Permanently deletes all MTProto data including session.
+            <strong>Disconnect:</strong> Closes active connection but keeps your session.{' '}
+            <strong>Remove:</strong> <span style={{ color: '#ef4444' }}>Permanently deletes all MTProto data including session.</span>
           </Typography>
         </Alert>
       </CardContent>

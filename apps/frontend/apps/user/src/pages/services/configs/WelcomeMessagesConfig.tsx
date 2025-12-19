@@ -42,6 +42,7 @@ interface WelcomeSettings {
 interface WelcomeMessage {
   id: number;
   message_text: string;
+  message_type: string;
   media_url: string | null;
   buttons: any[];
   is_active: boolean;
@@ -59,40 +60,56 @@ export const WelcomeMessagesConfig: React.FC<Props> = ({ chatId }) => {
   });
   const [messages, setMessages] = useState<WelcomeMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  // messageType selector - can add UI for this later
+  const [messageType, _setMessageType] = useState<'welcome' | 'goodbye' | 'rules'>('welcome');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingMessage, setIsAddingMessage] = useState(false);
+  const [isNewConfig, setIsNewConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
+      let settingsFound = false;
       try {
         // Fetch settings
-        const settingsResponse = await apiClient.get(`/bot/moderation/${chatId}/settings`) as WelcomeSettings;
+        const settingsResponse = await apiClient.get(`/user-bot/service/settings/${chatId}`) as WelcomeSettings;
         if (settingsResponse) {
+          settingsFound = true;
           setSettings(prev => ({
             ...prev,
             welcome_enabled: settingsResponse.welcome_enabled ?? false,
             welcome_delete_after: settingsResponse.welcome_delete_after ?? 0,
           }));
         }
+      } catch (err: any) {
+        // 404 means settings don't exist yet - this is normal for new chats
+        if (err.message?.includes('not found') || err.status === 404) {
+          setIsNewConfig(true);
+        } else {
+          setError(err.message || 'Failed to load settings');
+        }
+      }
 
-        // Fetch welcome messages
+      // Fetch welcome messages only if settings exist
+      if (settingsFound) {
         try {
-          const messagesResponse = await apiClient.get(`/bot/moderation/${chatId}/welcome-messages`) as { messages?: WelcomeMessage[] };
-          if (messagesResponse?.messages) {
-            setMessages(messagesResponse.messages);
-          }
+          const welcomeMsg = await apiClient.get(`/user-bot/service/welcome/${chatId}?message_type=welcome`) as WelcomeMessage | null;
+          const goodbyeMsg = await apiClient.get(`/user-bot/service/welcome/${chatId}?message_type=goodbye`) as WelcomeMessage | null;
+          const rulesMsg = await apiClient.get(`/user-bot/service/welcome/${chatId}?message_type=rules`) as WelcomeMessage | null;
+          
+          const allMessages: WelcomeMessage[] = [];
+          if (welcomeMsg) allMessages.push(welcomeMsg);
+          if (goodbyeMsg) allMessages.push(goodbyeMsg);
+          if (rulesMsg) allMessages.push(rulesMsg);
+          setMessages(allMessages);
         } catch {
           setMessages([]);
         }
-      } catch (err: any) {
-        setError(err.message || 'Failed to load settings');
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
     if (chatId) {
@@ -105,8 +122,9 @@ export const WelcomeMessagesConfig: React.FC<Props> = ({ chatId }) => {
     setError(null);
     setSuccess(false);
     try {
-      await apiClient.patch(`/bot/moderation/${chatId}/settings`, settings);
+      await apiClient.post(`/user-bot/service/settings/${chatId}`, settings);
       setSuccess(true);
+      setIsNewConfig(false);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       setError(err.message || 'Failed to save settings');
@@ -120,13 +138,17 @@ export const WelcomeMessagesConfig: React.FC<Props> = ({ chatId }) => {
     
     setIsAddingMessage(true);
     try {
-      const response = await apiClient.post(`/bot/moderation/${chatId}/welcome-messages`, {
+      const response = await apiClient.post(`/user-bot/service/welcome/${chatId}`, {
         message_text: newMessage.trim(),
-        is_active: true,
+        message_type: messageType,
       }) as WelcomeMessage;
       
       if (response) {
-        setMessages(prev => [...prev, response]);
+        // Replace or add message based on type (API only stores one per type)
+        setMessages(prev => {
+          const filtered = prev.filter(m => m.message_type !== messageType);
+          return [...filtered, response];
+        });
         setNewMessage('');
       }
     } catch (err: any) {
@@ -137,23 +159,26 @@ export const WelcomeMessagesConfig: React.FC<Props> = ({ chatId }) => {
   };
 
   const handleDeleteMessage = async (messageId: number) => {
-    try {
-      await apiClient.delete(`/bot/moderation/${chatId}/welcome-messages/${messageId}`);
-      setMessages(prev => prev.filter(m => m.id !== messageId));
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete message');
+    // Note: DELETE endpoint not implemented yet
+    // To "delete" a message, post an empty one (or just remove from UI)
+    const msg = messages.find(m => m.id === messageId);
+    if (msg) {
+      try {
+        // Post empty message to effectively clear it
+        await apiClient.post(`/user-bot/service/welcome/${chatId}`, {
+          message_text: '',
+          message_type: msg.message_type,
+        });
+        setMessages(prev => prev.filter(m => m.id !== messageId));
+      } catch (err: any) {
+        setError(err.message || 'Failed to delete message');
+      }
     }
   };
 
-  const handleToggleMessage = async (messageId: number, isActive: boolean) => {
-    try {
-      await apiClient.patch(`/bot/moderation/${chatId}/welcome-messages/${messageId}`, {
-        is_active: isActive,
-      });
-      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_active: isActive } : m));
-    } catch (err: any) {
-      setError(err.message || 'Failed to update message');
-    }
+  const handleToggleMessage = async (_messageId: number, _isActive: boolean) => {
+    // Note: Individual message toggle not supported - use POST to update entire message
+    console.log('Message toggle not implemented yet - use save to update');
   };
 
   if (isLoading) {
@@ -177,6 +202,11 @@ export const WelcomeMessagesConfig: React.FC<Props> = ({ chatId }) => {
     <Box>
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 3 }}>Settings saved successfully!</Alert>}
+      {isNewConfig && !success && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          This chat hasn't been configured yet. Customize your settings and save to get started!
+        </Alert>
+      )}
 
       {/* Main Toggle */}
       <Card sx={{ mb: 3, bgcolor: alpha('#8b5cf6', 0.05), border: '1px solid', borderColor: alpha('#8b5cf6', 0.2) }}>

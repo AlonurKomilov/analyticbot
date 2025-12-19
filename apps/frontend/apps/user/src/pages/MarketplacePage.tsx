@@ -17,9 +17,6 @@ import {
     Skeleton,
     Alert,
     Snackbar,
-    ToggleButtonGroup,
-    ToggleButton,
-    Chip,
 } from '@mui/material';
 import { MarketplaceCategory, BillingCycle, MarketplaceItem, ServiceSubcategory } from './marketplace/types';
 import { useMarketplaceData } from './marketplace/hooks/useMarketplaceData';
@@ -39,7 +36,7 @@ const MarketplacePage: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<MarketplaceCategory>('services');
     const [selectedSubcategory, setSelectedSubcategory] = useState<ServiceSubcategory>('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
+    const [billingCycle] = useState<BillingCycle>('monthly');
     const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
     const [detailModalOpen, setDetailModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);

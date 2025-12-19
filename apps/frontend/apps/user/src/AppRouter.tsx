@@ -299,6 +299,16 @@ const AppRouter: React.FC = () => {
                                         </ProtectedRoute>
                                     }
                                 />
+                                <Route
+                                    path="/workers/mtproto/service/:serviceKey"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <ServiceConfigPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
 
                                 {/* Legacy Bot Routes - Redirect to Workers */}
                                 <Route path="/bot/setup" element={<Navigate to="/workers/bot" replace />} />

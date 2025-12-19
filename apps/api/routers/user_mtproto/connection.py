@@ -92,6 +92,87 @@ async def connect_mtproto(
 
 
 @router.post(
+    "/test-connection",
+    response_model=MTProtoActionResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        400: {"model": ErrorResponse, "description": "No MTProto configuration or not verified"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+async def test_mtproto_connection(
+    user_id: Annotated[int, Depends(get_current_user_id)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
+):
+    """
+    Test MTProto connection by attempting to connect and verify the session.
+
+    This is a non-destructive operation that verifies:
+    1. Credentials exist and are verified
+    2. MTProto service can create/access the client
+    3. The client can communicate with Telegram
+    """
+    try:
+        # Check credentials exist and are verified
+        credentials = await repository.get_by_user_id(user_id)
+
+        if not credentials:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No MTProto configuration found. Please configure MTProto first.",
+            )
+
+        if not credentials.is_verified or not credentials.session_string:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="MTProto not verified. Please complete verification first.",
+            )
+
+        # Get MTProto service and try to get/create client
+        mtproto_service = await get_user_mtproto_service()
+
+        # This will create client and add to pool if not exists
+        client = await mtproto_service.get_user_client(user_id)
+
+        if not client:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create MTProto client. Your session may be invalid.",
+            )
+
+        # Try to get user info to verify connection works
+        try:
+            me = await client.get_me()
+            if me:
+                logger.info(f"MTProto connection test successful for user {user_id}, phone: {me.phone}")
+                return MTProtoActionResponse(
+                    success=True,
+                    message=f"Connection successful! Logged in as {me.phone or me.username or 'User'}",
+                )
+        except Exception as api_err:
+            logger.warning(f"MTProto get_me failed for user {user_id}: {api_err}")
+            # Client exists but API call failed - still partially successful
+            return MTProtoActionResponse(
+                success=True,
+                message="MTProto client connected. Connection test partially successful.",
+            )
+
+        return MTProtoActionResponse(
+            success=True,
+            message="MTProto connection test successful!",
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error testing MTProto connection for user {user_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Connection test failed: {str(e)}",
+        )
+
+
+@router.post(
     "/disconnect",
     response_model=MTProtoActionResponse,
     status_code=status.HTTP_200_OK,

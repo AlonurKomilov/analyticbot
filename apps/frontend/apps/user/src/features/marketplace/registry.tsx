@@ -17,6 +17,10 @@ import {
   Warning as WarningIcon,
   Analytics as AnalyticsIcon,
   Extension as ExtensionIcon,
+  History as HistoryIcon,
+  Schedule as ScheduleIcon,
+  Download as DownloadIcon,
+  ImportExport as ExportIcon,
 } from '@mui/icons-material';
 
 import type { ServiceMetadata, ServiceConfigProps } from './types';
@@ -29,6 +33,12 @@ import { WelcomeMessagesConfig } from '@/pages/services/configs/WelcomeMessagesC
 import { InviteTrackingConfig } from '@/pages/services/configs/InviteTrackingConfig';
 import { WarningSystemConfig } from '@/pages/services/configs/WarningSystemConfig';
 import { AdvancedAnalyticsConfig } from '@/pages/services/configs/AdvancedAnalyticsConfig';
+
+// Import MTProto service config components
+import { HistoryAccessConfig } from '@/pages/services/configs/mtproto/HistoryAccessConfig';
+import { AutoCollectConfig } from '@/pages/services/configs/mtproto/AutoCollectConfig';
+import { BulkExportConfig } from '@/pages/services/configs/mtproto/BulkExportConfig';
+import { MediaDownloadConfig } from '@/pages/services/configs/mtproto/MediaDownloadConfig';
 
 // =============================================================================
 // SERVICE REGISTRY
@@ -213,10 +223,85 @@ export const SERVICE_REGISTRY: Record<string, ServiceRegistryEntry> = {
   // MTPROTO SERVICES
   // =========================================================================
   
-  // TODO: Add MTProto services here when implemented
-  // mtproto_history_access: { ... },
-  // mtproto_bulk_export: { ... },
-  // mtproto_auto_collect: { ... },
+  mtproto_history_access: {
+    metadata: {
+      service_key: 'mtproto_history_access',
+      name: 'MTProto History Access',
+      description: 'Full chat history download via MTProto with media metadata, reactions, and replies',
+      features: [
+        'Full history access',
+        'Media download',
+        'Message search',
+        'Reactions & replies',
+      ],
+      icon: 'History',
+      color: '#2196F3',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: HistoryAccessConfig,
+    icon: <HistoryIcon fontSize="small" />,
+  },
+
+  mtproto_auto_collect: {
+    metadata: {
+      service_key: 'mtproto_auto_collect',
+      name: 'MTProto Auto-Collection',
+      description: 'Real-time message collection with automatic scheduling and webhook support',
+      features: [
+        'Real-time collection',
+        'Multi-chat monitoring',
+        'Webhook support',
+        'Auto scheduling',
+      ],
+      icon: 'Schedule',
+      color: '#4CAF50',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: AutoCollectConfig,
+    icon: <ScheduleIcon fontSize="small" />,
+  },
+
+  mtproto_bulk_export: {
+    metadata: {
+      service_key: 'mtproto_bulk_export',
+      name: 'Bulk Message Export',
+      description: 'High-volume message and media export with parallel processing',
+      features: [
+        'Multi-chat export',
+        'Media download',
+        'Parallel processing',
+        'Export formats',
+      ],
+      icon: 'ImportExport',
+      color: '#9C27B0',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: BulkExportConfig,
+    icon: <ExportIcon fontSize="small" />,
+  },
+
+  mtproto_media_download: {
+    metadata: {
+      service_key: 'mtproto_media_download',
+      name: 'MTProto Media Download',
+      description: 'Bulk download of photos, videos, documents and other media from chats',
+      features: [
+        'Bulk media download',
+        'Format filtering',
+        'Size limits',
+        'Organized storage',
+      ],
+      icon: 'Download',
+      color: '#FF9800',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: MediaDownloadConfig,
+    icon: <DownloadIcon fontSize="small" />,
+  },
 
   // =========================================================================
   // AI SERVICES

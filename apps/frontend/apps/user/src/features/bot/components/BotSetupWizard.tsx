@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -32,8 +33,6 @@ import { useUserBotStore } from '@/store';
 import type { CreateBotRequest } from '@/types';
 import toast from 'react-hot-toast';
 
-const steps = ['Bot Credentials', 'Rate Limits', 'Verification'];
-
 interface BotWizardFormData {
   bot_token: string;
   rate_limit_rps: string;
@@ -42,8 +41,15 @@ interface BotWizardFormData {
 }
 
 export const BotSetupWizard: React.FC = () => {
+  const { t } = useTranslation(['moderation', 'common']);
   const navigate = useNavigate();
   const { createBot, verifyBot, isCreating, isVerifying, error, clearError, bot } = useUserBotStore();
+
+  const steps = [
+    t('moderation:setupWizard.steps.credentials'),
+    t('moderation:setupWizard.steps.rateLimits'),
+    t('moderation:setupWizard.steps.verification')
+  ];
 
   const [activeStep, setActiveStep] = useState(0);
   const [showBotToken, setShowBotToken] = useState(false);
@@ -97,21 +103,21 @@ export const BotSetupWizard: React.FC = () => {
     switch (step) {
       case 0: // Bot Credentials
         if (!formData.bot_token.trim()) {
-          errors.bot_token = 'Bot token is required';
+          errors.bot_token = t('moderation:setupWizard.credentials.tokenRequired');
         } else if (!formData.bot_token.match(/^\d+:[A-Za-z0-9_-]+$/)) {
-          errors.bot_token = 'Invalid bot token format';
+          errors.bot_token = t('moderation:setupWizard.credentials.tokenInvalid');
         }
         break;
 
       case 1: // Rate Limits
         const rps = parseFloat(formData.rate_limit_rps);
         if (isNaN(rps) || rps <= 0) {
-          errors.rate_limit_rps = 'RPS must be a positive number';
+          errors.rate_limit_rps = t('moderation:setupWizard.rateLimits.rpsError');
         }
 
         const concurrent = parseInt(formData.max_concurrent_requests);
         if (isNaN(concurrent) || concurrent <= 0) {
-          errors.max_concurrent_requests = 'Max concurrent must be a positive integer';
+          errors.max_concurrent_requests = t('moderation:setupWizard.rateLimits.maxConcurrentError');
         }
         break;
     }
@@ -130,11 +136,11 @@ export const BotSetupWizard: React.FC = () => {
       };
 
       await createBot(createData);
-      toast.success('🎉 Bot created successfully!');
+      toast.success(`🎉 ${t('moderation:setupWizard.messages.created')}`);
 
       // Verify bot
       await verifyBot({ test_message: formData.test_message || undefined });
-      toast.success('✅ Bot verified and connected!');
+      toast.success(`✅ ${t('moderation:setupWizard.messages.verified')}`);
 
       // Navigate to bot dashboard
       setTimeout(() => {
@@ -145,16 +151,16 @@ export const BotSetupWizard: React.FC = () => {
 
       // Handle specific error cases with helpful messages
       if (errorMessage.includes('already has a bot')) {
-        toast.success('✅ You already have a bot configured! Redirecting to dashboard...', {
+        toast.success(`✅ ${t('moderation:setupWizard.messages.alreadyConfigured')}`, {
           duration: 3000,
         });
         setTimeout(() => {
           navigate('/bot/dashboard');
         }, 2000);
       } else if (errorMessage.includes('Invalid bot token')) {
-        toast.error('❌ Invalid bot token. Please check your token from @BotFather');
+        toast.error(`❌ ${t('moderation:setupWizard.messages.invalidToken')}`);
       } else if (errorMessage.includes('Unauthorized')) {
-        toast.error('❌ Bot token unauthorized. Make sure it\'s a valid token from @BotFather');
+        toast.error(`❌ ${t('moderation:setupWizard.messages.unauthorized')}`);
       } else {
         toast.error(`❌ ${errorMessage}`);
       }
@@ -177,22 +183,18 @@ export const BotSetupWizard: React.FC = () => {
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
-              Enter Your Bot Token
+              {t('moderation:setupWizard.credentials.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Get your bot token from{' '}
-              <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer">
-                @BotFather
-              </a>{' '}
-              on Telegram
+              {t('moderation:setupWizard.credentials.description')}
             </Typography>
             <TextField
               fullWidth
-              label="Bot Token"
+              label={t('moderation:setupWizard.credentials.botToken')}
               value={formData.bot_token}
               onChange={handleChange('bot_token')}
               error={!!formErrors.bot_token}
-              helperText={formErrors.bot_token || 'Format: 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11'}
+              helperText={formErrors.bot_token || t('moderation:setupWizard.credentials.tokenFormat')}
               type={showBotToken ? 'text' : 'password'}
               InputProps={{
                 startAdornment: (
@@ -211,19 +213,15 @@ export const BotSetupWizard: React.FC = () => {
             />
             <Alert severity="info" sx={{ mt: 3 }} icon={<Info />}>
               <Typography variant="body2">
-                <strong>Need MTProto for advanced features?</strong>
+                <strong>{t('moderation:setupWizard.credentials.mtprotoInfo')}</strong>
               </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
-                MTProto API setup is now separate and optional. Configure it later in{' '}
-                <Link href="/settings/mtproto-setup" underline="hover">
-                  Settings → MTProto Setup
-                </Link>
-                {' '}to enable features like:
+                {t('moderation:setupWizard.credentials.mtprotoDescription')}
               </Typography>
               <ul style={{ marginTop: '4px', marginBottom: 0, paddingLeft: '20px' }}>
-                <li>Access to private channels/groups</li>
-                <li>User account authentication</li>
-                <li>Advanced Telegram features</li>
+                <li>{t('moderation:setupWizard.credentials.mtprotoFeatures.privateChannels')}</li>
+                <li>{t('moderation:setupWizard.credentials.mtprotoFeatures.userAuth')}</li>
+                <li>{t('moderation:setupWizard.credentials.mtprotoFeatures.advancedFeatures')}</li>
               </ul>
             </Alert>
           </Box>
@@ -233,18 +231,18 @@ export const BotSetupWizard: React.FC = () => {
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
-              Configure Rate Limits
+              {t('moderation:setupWizard.rateLimits.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Set request limits for your bot
+              {t('moderation:setupWizard.rateLimits.description')}
             </Typography>
             <TextField
               fullWidth
-              label="Requests Per Second (RPS)"
+              label={t('moderation:setupWizard.rateLimits.rps')}
               value={formData.rate_limit_rps}
               onChange={handleChange('rate_limit_rps')}
               error={!!formErrors.rate_limit_rps}
-              helperText={formErrors.rate_limit_rps || 'Maximum requests per second (default: 30)'}
+              helperText={formErrors.rate_limit_rps || t('moderation:setupWizard.rateLimits.rpsHelp')}
               type="number"
               sx={{ mb: 2 }}
               InputProps={{
@@ -257,12 +255,12 @@ export const BotSetupWizard: React.FC = () => {
             />
             <TextField
               fullWidth
-              label="Max Concurrent Requests"
+              label={t('moderation:setupWizard.rateLimits.maxConcurrent')}
               value={formData.max_concurrent_requests}
               onChange={handleChange('max_concurrent_requests')}
               error={!!formErrors.max_concurrent_requests}
               helperText={
-                formErrors.max_concurrent_requests || 'Maximum concurrent requests (default: 10)'
+                formErrors.max_concurrent_requests || t('moderation:setupWizard.rateLimits.maxConcurrentHelp')
               }
               type="number"
               InputProps={{
@@ -280,29 +278,29 @@ export const BotSetupWizard: React.FC = () => {
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
-              Test Your Bot
+              {t('moderation:setupWizard.verification.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Optional: Send a test message to verify your bot is working
+              {t('moderation:setupWizard.verification.description')}
             </Typography>
             <TextField
               fullWidth
-              label="Test Message (Optional)"
+              label={t('moderation:setupWizard.verification.testMessage')}
               value={formData.test_message}
               onChange={handleChange('test_message')}
               multiline
               rows={3}
-              helperText="We'll send this message from your bot to verify it works"
+              helperText={t('moderation:setupWizard.verification.testMessageHelp')}
             />
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2" component="div">
-                Once you click "Create & Verify Bot", we will:
+                {t('moderation:setupWizard.verification.infoTitle')}
               </Typography>
               <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-                <li>Create your bot with the provided credentials</li>
-                <li>Initialize the bot instance</li>
-                <li>Send the test message (if provided)</li>
-                <li>Mark your bot as verified</li>
+                <li>{t('moderation:setupWizard.verification.steps.create')}</li>
+                <li>{t('moderation:setupWizard.verification.steps.initialize')}</li>
+                <li>{t('moderation:setupWizard.verification.steps.sendTest')}</li>
+                <li>{t('moderation:setupWizard.verification.steps.verify')}</li>
               </ul>
             </Alert>
           </Box>
@@ -319,10 +317,10 @@ export const BotSetupWizard: React.FC = () => {
   return (
     <Paper sx={{ p: 4, maxWidth: 800, mx: 'auto', mt: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom align="center">
-        Setup Your Bot
+        {t('moderation:setupWizard.title')}
       </Typography>
       <Typography variant="body1" color="text.secondary" paragraph align="center">
-        Follow these steps to create and configure your multi-tenant bot
+        {t('moderation:setupWizard.subtitle')}
       </Typography>
 
       <Stepper activeStep={activeStep} sx={{ mt: 4, mb: 4 }}>
@@ -343,7 +341,7 @@ export const BotSetupWizard: React.FC = () => {
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
         <Button disabled={activeStep === 0 || isLoading} onClick={handleBack}>
-          Back
+          {t('moderation:setupWizard.buttons.back')}
         </Button>
         <Button
           variant="contained"
@@ -351,7 +349,7 @@ export const BotSetupWizard: React.FC = () => {
           disabled={isLoading}
           startIcon={isLoading ? <CircularProgress size={20} /> : isLastStep ? <CheckCircle /> : null}
         >
-          {isLoading ? 'Processing...' : isLastStep ? 'Create & Verify Bot' : 'Next'}
+          {isLoading ? t('moderation:setupWizard.buttons.processing') : isLastStep ? t('moderation:setupWizard.buttons.createVerify') : t('moderation:setupWizard.buttons.next')}
         </Button>
       </Box>
     </Paper>

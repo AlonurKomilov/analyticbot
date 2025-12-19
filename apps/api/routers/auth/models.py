@@ -45,9 +45,9 @@ class UserResponse(BaseModel):
     """User response model"""
 
     id: str
-    email: str
-    username: str
-    full_name: str | None
+    email: str | None = None  # Optional for Telegram-only users
+    username: str | None = None  # Optional
+    full_name: str | None = None
     role: str
     status: str
     created_at: datetime
@@ -58,6 +58,8 @@ class UserResponse(BaseModel):
     telegram_username: str | None = None  # Telegram username if linked
     # Credit system
     credit_balance: float = 0.0  # User's current credit balance
+    # Profile photo
+    photo_url: str | None = None  # User's profile photo URL
 
 
 class PasswordResetRequest(BaseModel):

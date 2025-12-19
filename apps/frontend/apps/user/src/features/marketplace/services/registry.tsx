@@ -17,6 +17,16 @@ import {
   Warning as WarningIcon,
   Analytics as AnalyticsIcon,
   Extension as ExtensionIcon,
+  // MTProto icons
+  History as HistoryIcon,
+  Schedule as ScheduleIcon,
+  CloudDownload as DownloadIcon,
+  ImportExport as ExportIcon,
+  // AI icons
+  AutoFixHigh as OptimizeIcon,
+  SentimentSatisfied as SentimentIcon,
+  QuickreplyRounded as ReplyIcon,
+  Shield as ModerationIcon,
 } from '@mui/icons-material';
 
 import type { ServiceMetadata, ServiceConfigProps } from '../types';
@@ -30,6 +40,22 @@ import { WelcomeMessagesConfig } from '@/pages/services/configs/WelcomeMessagesC
 import { InviteTrackingConfig } from '@/pages/services/configs/InviteTrackingConfig';
 import { WarningSystemConfig } from '@/pages/services/configs/WarningSystemConfig';
 import { AdvancedAnalyticsConfig } from '@/pages/services/configs/AdvancedAnalyticsConfig';
+
+// MTProto service config components
+import { 
+  HistoryAccessConfig,
+  AutoCollectConfig,
+  MediaDownloadConfig,
+  BulkExportConfig,
+} from '@/pages/services/configs/mtproto';
+
+// AI service config components
+import {
+  ContentOptimizerConfig,
+  SentimentAnalyzerConfig,
+  SmartRepliesConfig,
+  ContentModerationConfig,
+} from '@/pages/services/configs/ai';
 
 // =============================================================================
 // SERVICE REGISTRY
@@ -214,18 +240,185 @@ export const SERVICE_REGISTRY: Record<string, ServiceRegistryEntry> = {
   // MTPROTO SERVICES
   // =========================================================================
   
-  // TODO: Add MTProto services here when implemented
-  // mtproto_history_access: { ... },
-  // mtproto_bulk_export: { ... },
-  // mtproto_auto_collect: { ... },
+  mtproto_history_access: {
+    metadata: {
+      service_key: 'mtproto_history_access',
+      name: 'MTProto History Access',
+      description: 'Fetch and analyze full message history from your channels via MTProto API with configurable limits.',
+      features: [
+        'Full message history access',
+        'Configurable date ranges',
+        'Media metadata extraction',
+        'Reaction data collection',
+        'Reply thread tracking',
+        'Export to JSON/CSV',
+      ],
+      icon: 'History',
+      color: '#2196F3',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: HistoryAccessConfig,
+    icon: <HistoryIcon fontSize="small" />,
+  },
+
+  mtproto_auto_collect: {
+    metadata: {
+      service_key: 'mtproto_auto_collect',
+      name: 'MTProto Auto-Collect',
+      description: 'Automatically collect messages from your channels on a schedule with smart prioritization.',
+      features: [
+        'Scheduled collection runs',
+        'Activity-based prioritization',
+        'Worker status monitoring',
+        'Error handling & retries',
+        'Per-channel quotas',
+        'Collection history',
+      ],
+      icon: 'Schedule',
+      color: '#FF9800',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: AutoCollectConfig,
+    icon: <ScheduleIcon fontSize="small" />,
+  },
+
+  mtproto_media_download: {
+    metadata: {
+      service_key: 'mtproto_media_download',
+      name: 'MTProto Media Download',
+      description: 'Download photos, videos, and documents from your channels in bulk with quality controls.',
+      features: [
+        'Bulk media downloads',
+        'Photo/video/document support',
+        'Quality & size controls',
+        'Smart file organization',
+        'Duplicate detection',
+        'Resume interrupted downloads',
+      ],
+      icon: 'CloudDownload',
+      color: '#4CAF50',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: MediaDownloadConfig,
+    icon: <DownloadIcon fontSize="small" />,
+  },
+
+  mtproto_bulk_export: {
+    metadata: {
+      service_key: 'mtproto_bulk_export',
+      name: 'MTProto Bulk Export',
+      description: 'Export all your channel data in bulk with multiple format options and delivery methods.',
+      features: [
+        'JSON/CSV/HTML export',
+        'Messages & media export',
+        'Member list export',
+        'Statistics inclusion',
+        'Compressed archives',
+        'Email notifications',
+      ],
+      icon: 'ImportExport',
+      color: '#9C27B0',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: BulkExportConfig,
+    icon: <ExportIcon fontSize="small" />,
+  },
 
   // =========================================================================
   // AI SERVICES
   // =========================================================================
   
-  // TODO: Add AI services here when implemented
-  // ai_content_optimizer: { ... },
-  // ai_sentiment_analyzer: { ... },
+  ai_content_optimizer: {
+    metadata: {
+      service_key: 'ai_content_optimizer',
+      name: 'AI Content Optimizer',
+      description: 'Get AI-powered suggestions to improve your posts for better engagement, reach, and clarity.',
+      features: [
+        'Engagement optimization',
+        'Tone & style suggestions',
+        'Hashtag recommendations',
+        'Emoji suggestions',
+        'Call-to-action tips',
+        'Length optimization',
+      ],
+      icon: 'AutoFixHigh',
+      color: '#6366F1',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: ContentOptimizerConfig,
+    icon: <OptimizeIcon fontSize="small" />,
+  },
+
+  ai_sentiment_analyzer: {
+    metadata: {
+      service_key: 'ai_sentiment_analyzer',
+      name: 'AI Sentiment Analyzer',
+      description: 'Understand your audience mood and reactions with AI-powered sentiment analysis.',
+      features: [
+        'Real-time sentiment tracking',
+        'Comment & reaction analysis',
+        'Trend detection',
+        'Alert on sentiment spikes',
+        'Multi-language support',
+        'Detailed reports',
+      ],
+      icon: 'SentimentSatisfied',
+      color: '#EC4899',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: SentimentAnalyzerConfig,
+    icon: <SentimentIcon fontSize="small" />,
+  },
+
+  ai_smart_replies: {
+    metadata: {
+      service_key: 'ai_smart_replies',
+      name: 'AI Smart Replies',
+      description: 'Generate intelligent, context-aware reply suggestions powered by AI.',
+      features: [
+        'Context-aware suggestions',
+        'Tone customization',
+        'Auto-reply triggers',
+        'Response timing control',
+        'Signature support',
+        'Learning from history',
+      ],
+      icon: 'QuickreplyRounded',
+      color: '#14B8A6',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: SmartRepliesConfig,
+    icon: <ReplyIcon fontSize="small" />,
+  },
+
+  ai_content_moderation: {
+    metadata: {
+      service_key: 'ai_content_moderation',
+      name: 'AI Content Moderation',
+      description: 'Automatically detect and moderate harmful content using advanced AI.',
+      features: [
+        'Spam detection',
+        'Hate speech filtering',
+        'Adult content detection',
+        'Violence detection',
+        'Auto-moderation actions',
+        'Appeal workflow',
+      ],
+      icon: 'Shield',
+      color: '#EF4444',
+      per_chat_config: false,
+      has_quotas: true,
+    },
+    configComponent: ContentModerationConfig,
+    icon: <ModerationIcon fontSize="small" />,
+  },
 };
 
 // =============================================================================

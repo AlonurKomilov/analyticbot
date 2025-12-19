@@ -1,5 +1,13 @@
 {
   "title": "Saqlash va fayllar",
+  "searchFiles": "Fayllarni qidirish...",
+  "filterByType": "Tur bo'yicha filterlash",
+  "allFiles": "Barcha fayllar",
+  "images": "Rasmlar",
+  "videos": "Videolar",
+  "documents": "Hujjatlar",
+  "noFilesYet": "Saqlashda hali fayllar yo'q. Fayllarni yuklang, ularni bu yerda ko'rasiz.",
+  "noFilesMatch": "Qidiruv mezonlariga mos fayllar yo'q.",
   "channelManager": {
     "title": "Saqlash kanali menejeri",
     "description": "Fayllarni saqlash uchun Telegram kanalini sozlash",
@@ -31,12 +39,18 @@
   },
   "upload": {
     "title": "Fayllarni yuklash",
-    "dragDrop": "Fayllarni bu yerga sudrab tashlang",
-    "orClick": "yoki tanlash uchun bosing",
+    "enhancedTitle": "Kengaytirilgan media yuklash",
+    "directToChannel": "To'g'ridan-to'g'ri kanalga yuklash",
+    "selectChannel": "Kanalni tanlang",
+    "dropHere": "Faylni bu yerga tashlang",
+    "clickOrDrag": "Yuklash uchun bosing yoki sudrab tashlang",
+    "supportedFormats": "Qo'llab-quvvatlanadi: Rasmlar, Videolar, PDF, Matn (Maks: 50MB)",
     "uploading": "Yuklanmoqda...",
-    "uploadSuccess": "Fayl muvaffaqiyatli yuklandi",
+    "uploadSuccess": "Yuklash muvaffaqiyatli!",
     "uploadError": "Faylni yuklashda xatolik",
     "maxSize": "Maksimal hajm: {{size}}",
-    "allowedTypes": "Ruxsat etilgan turlar: {{types}}"
+    "allowedTypes": "Ruxsat etilgan turlar: {{types}}",
+    "dragDrop": "Fayllarni bu yerga sudrab tashlang",
+    "orClick": "yoki tanlash uchun bosing"
   }
 }

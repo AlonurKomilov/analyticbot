@@ -137,9 +137,9 @@ export const useMarketplaceData = (options: UseMarketplaceDataOptions) => {
     // Mark items as owned based on purchases and subscriptions
     const itemsWithOwnership = items.map(item => ({
         ...item,
-        user_owned: item.user_owned || 
+        user_owned: !!(item.user_owned || 
                     userPurchases.includes(item.id) || 
-                    (item.service_key && userSubscriptions.includes(item.service_key)),
+                    (item.service_key && userSubscriptions.includes(item.service_key))),
     }));
 
     return {

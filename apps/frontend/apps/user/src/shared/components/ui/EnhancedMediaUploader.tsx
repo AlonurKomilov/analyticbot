@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box,
     Typography,
@@ -33,6 +34,7 @@ interface UploadStats {
 }
 
 const EnhancedMediaUploader: React.FC = React.memo(() => {
+    const { t } = useTranslation(['storage', 'common']);
     const { uploadMedia, pendingMedia, clearPendingMedia, isUploading } = useMediaStore();
     const { channels } = useChannelStore();
 
@@ -160,7 +162,7 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
     return (
         <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-                <span aria-hidden="true">📱</span> Enhanced Media Upload
+                <span aria-hidden="true">📱</span> {t('storage:upload.enhancedTitle')}
             </Typography>
 
             {/* Upload Configuration */}
@@ -173,15 +175,15 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
                             disabled={isUploading}
                         />
                     }
-                    label="Upload directly to channel"
+                    label={t('storage:upload.directToChannel')}
                 />
 
                 {directToChannel && (
                     <FormControl fullWidth sx={{ mt: 1 }} disabled={isUploading}>
-                        <InputLabel>Select Channel</InputLabel>
+                        <InputLabel>{t('storage:upload.selectChannel')}</InputLabel>
                         <Select
                             value={selectedChannelId}
-                            label="Select Channel"
+                            label={t('storage:upload.selectChannel')}
                             onChange={(e: SelectChangeEvent) => setSelectedChannelId(e.target.value)}
                         >
                             {channelOptions.map((option) => (
@@ -227,10 +229,10 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
 
                 <UploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
                 <Typography variant="h6" color="primary">
-                    {dragActive ? 'Drop file here' : 'Click or drag file to upload'}
+                    {dragActive ? t('storage:upload.dropHere') : t('storage:upload.clickOrDrag')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                    Supported: Images, Videos, PDF, Text (Max: 50MB)
+                    {t('storage:upload.supportedFormats')}
                 </Typography>
             </Box>
 
@@ -239,7 +241,7 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
                 <Box sx={{ mt: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                         <Typography variant="body2" sx={{ flex: 1 }}>
-                            Uploading... {uploadProgress.toFixed(1)}%
+                            {t('storage:upload.uploading')} {uploadProgress.toFixed(1)}%
                         </Typography>
                         {(pendingMedia as any).uploadSpeed > 0 && (
                             <Chip
@@ -285,7 +287,7 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
                         </IconButton>
                     }
                 >
-                    <Typography variant="subtitle2">Upload Successful!</Typography>
+                    <Typography variant="subtitle2">{t('storage:upload.uploadSuccess')}</Typography>
                     {uploadStats && (
                         <Grid container spacing={1} sx={{ mt: 1 }}>
                             <Grid item xs={6}>

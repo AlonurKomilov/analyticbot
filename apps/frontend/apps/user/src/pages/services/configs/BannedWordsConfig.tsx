@@ -68,6 +68,7 @@ export const BannedWordsConfig: React.FC<Props> = ({ chatId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingWord, setIsAddingWord] = useState(false);
+  const [isNewConfig, setIsNewConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -76,7 +77,7 @@ export const BannedWordsConfig: React.FC<Props> = ({ chatId }) => {
       setIsLoading(true);
       try {
         // Fetch settings
-        const settingsResponse = await apiClient.get(`/bot/moderation/${chatId}/settings`) as BannedWordsSettings;
+        const settingsResponse = await apiClient.get(`/user-bot/service/settings/${chatId}`) as BannedWordsSettings;
         if (settingsResponse) {
           setSettings(prev => ({
             ...prev,
@@ -85,22 +86,26 @@ export const BannedWordsConfig: React.FC<Props> = ({ chatId }) => {
             case_sensitive: settingsResponse.case_sensitive ?? false,
           }));
         }
-
-        // Fetch banned words list
-        try {
-          const wordsResponse = await apiClient.get(`/bot/moderation/${chatId}/banned-words`) as { words?: BannedWord[] };
-          if (wordsResponse?.words) {
-            setBannedWords(wordsResponse.words);
-          }
-        } catch {
-          // May not exist yet
-          setBannedWords([]);
-        }
       } catch (err: any) {
-        setError(err.message || 'Failed to load settings');
-      } finally {
-        setIsLoading(false);
+        // 404 means settings don't exist yet - this is normal for new chats
+        if (err.message?.includes('not found') || err.status === 404) {
+          setIsNewConfig(true);
+        } else {
+          setError(err.message || 'Failed to load settings');
+        }
       }
+
+      // Fetch banned words list
+      try {
+        const wordsResponse = await apiClient.get(`/user-bot/service/banned-words?chat_id=${chatId}`) as BannedWord[];
+        if (Array.isArray(wordsResponse)) {
+          setBannedWords(wordsResponse);
+        }
+      } catch {
+        // May not exist yet
+        setBannedWords([]);
+      }
+      setIsLoading(false);
     };
 
     if (chatId) {
@@ -113,8 +118,9 @@ export const BannedWordsConfig: React.FC<Props> = ({ chatId }) => {
     setError(null);
     setSuccess(false);
     try {
-      await apiClient.patch(`/bot/moderation/${chatId}/settings`, settings);
+      await apiClient.post(`/user-bot/service/settings/${chatId}`, settings);
       setSuccess(true);
+      setIsNewConfig(false);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       setError(err.message || 'Failed to save settings');
@@ -128,8 +134,9 @@ export const BannedWordsConfig: React.FC<Props> = ({ chatId }) => {
     
     setIsAddingWord(true);
     try {
-      const response = await apiClient.post(`/bot/moderation/${chatId}/banned-words`, {
+      const response = await apiClient.post(`/user-bot/service/banned-words`, {
         word: newWord.trim(),
+        chat_id: chatId,
         is_regex: isRegex,
       }) as BannedWord;
       
@@ -147,7 +154,7 @@ export const BannedWordsConfig: React.FC<Props> = ({ chatId }) => {
 
   const handleDeleteWord = async (wordId: number) => {
     try {
-      await apiClient.delete(`/bot/moderation/${chatId}/banned-words/${wordId}`);
+      await apiClient.delete(`/user-bot/service/banned-words/${wordId}`);
       setBannedWords(prev => prev.filter(w => w.id !== wordId));
     } catch (err: any) {
       setError(err.message || 'Failed to delete word');
@@ -166,6 +173,11 @@ export const BannedWordsConfig: React.FC<Props> = ({ chatId }) => {
     <Box>
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 3 }}>Settings saved successfully!</Alert>}
+      {isNewConfig && !success && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          This chat hasn't been configured yet. Customize your settings and save to get started!
+        </Alert>
+      )}
 
       {/* Main Toggle */}
       <Card sx={{ mb: 3, bgcolor: alpha('#ef4444', 0.05), border: '1px solid', borderColor: alpha('#ef4444', 0.2) }}>

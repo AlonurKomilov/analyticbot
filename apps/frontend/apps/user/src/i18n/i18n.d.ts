@@ -20,6 +20,7 @@ declare module 'i18next' {
       settings: typeof import('./locales/en/settings.json');
       errors: typeof import('./locales/en/errors.json');
       navigation: typeof import('./locales/en/navigation.json');
+      mtproto: typeof import('./locales/en/mtproto.json');
     };
   }
 }

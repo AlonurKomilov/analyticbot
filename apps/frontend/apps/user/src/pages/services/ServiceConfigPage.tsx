@@ -118,14 +118,19 @@ const ServiceConfigPage: React.FC = () => {
     );
   }
 
+  // Determine if this is an MTProto service
+  const isMTProtoService = serviceKey?.startsWith('mtproto_');
+  const backPath = isMTProtoService ? '/workers/mtproto' : '/workers/bot';
+  const dashboardName = isMTProtoService ? 'MTProto Dashboard' : 'Bot Dashboard';
+
   if (error || !subscription || !serviceKey) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
           {error || 'Service not found'}
         </Alert>
-        <Button startIcon={<BackIcon />} onClick={() => navigate('/workers/bot')}>
-          Back to Bot Dashboard
+        <Button startIcon={<BackIcon />} onClick={() => navigate(backPath)}>
+          Back to {dashboardName}
         </Button>
       </Container>
     );
@@ -145,10 +150,10 @@ const ServiceConfigPage: React.FC = () => {
           component="button"
           underline="hover"
           color="inherit"
-          onClick={() => navigate('/workers/bot')}
+          onClick={() => navigate(backPath)}
           sx={{ cursor: 'pointer' }}
         >
-          Bot Dashboard
+          {dashboardName}
         </Link>
         <Typography color="text.primary">{subscription.service_name}</Typography>
       </Breadcrumbs>
@@ -156,7 +161,7 @@ const ServiceConfigPage: React.FC = () => {
       {/* Back Button */}
       <Button
         startIcon={<BackIcon />}
-        onClick={() => navigate('/workers/bot')}
+        onClick={() => navigate(backPath)}
         sx={{ mb: 3 }}
       >
         Back to Dashboard
@@ -245,56 +250,69 @@ const ServiceConfigPage: React.FC = () => {
         )}
       </Paper>
 
-      {/* Chat Selector */}
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h6" mb={2}>
-          <SettingsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-          Configure for Channel/Group
-        </Typography>
-        
-        <FormControl fullWidth sx={{ maxWidth: 400 }}>
-          <InputLabel>Select Channel/Group</InputLabel>
-          <Select
-            value={selectedChatId || ''}
-            label="Select Channel/Group"
-            onChange={(e) => setSelectedChat(Number(e.target.value))}
-          >
-            {isLoadingChats && (
-              <MenuItem disabled>
-                <CircularProgress size={20} sx={{ mr: 1 }} />
-                Loading...
-              </MenuItem>
-            )}
-            {configuredChats.length === 0 && !isLoadingChats && (
-              <MenuItem disabled>
-                <em>No channels available. Add channels first.</em>
-              </MenuItem>
-            )}
-            {configuredChats.map((chat) => (
-              <MenuItem key={chat.chat_id} value={chat.chat_id}>
-                <Box display="flex" alignItems="center" gap={1}>
-                  {chat.chat_type === 'channel' ? (
-                    <ChannelIcon fontSize="small" color="primary" />
-                  ) : (
-                    <GroupIcon fontSize="small" color="secondary" />
-                  )}
-                  <Typography>{chat.chat_title}</Typography>
-                  <Chip label={chat.chat_type} size="small" sx={{ ml: 'auto' }} />
-                </Box>
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+      {/* Chat Selector - Only for bot services with per_chat_config */}
+      {!isMTProtoService && (
+        <Paper sx={{ p: 3, mb: 4 }}>
+          <Typography variant="h6" mb={2}>
+            <SettingsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+            Configure for Channel/Group
+          </Typography>
+          
+          <FormControl fullWidth sx={{ maxWidth: 400 }}>
+            <InputLabel>Select Channel/Group</InputLabel>
+            <Select
+              value={selectedChatId || ''}
+              label="Select Channel/Group"
+              onChange={(e) => setSelectedChat(Number(e.target.value))}
+            >
+              {isLoadingChats && (
+                <MenuItem disabled>
+                  <CircularProgress size={20} sx={{ mr: 1 }} />
+                  Loading...
+                </MenuItem>
+              )}
+              {configuredChats.length === 0 && !isLoadingChats && (
+                <MenuItem disabled>
+                  <em>No channels available. Add channels first.</em>
+                </MenuItem>
+              )}
+              {configuredChats.map((chat) => (
+                <MenuItem key={chat.chat_id} value={chat.chat_id}>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    {chat.chat_type === 'channel' ? (
+                      <ChannelIcon fontSize="small" color="primary" />
+                    ) : (
+                      <GroupIcon fontSize="small" color="secondary" />
+                    )}
+                    <Typography>{chat.chat_title}</Typography>
+                    <Chip label={chat.chat_type} size="small" sx={{ ml: 'auto' }} />
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-        {!selectedChatId && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            Select a channel or group to configure this service.
-          </Alert>
-        )}
-      </Paper>
+          {!selectedChatId && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Select a channel or group to configure this service.
+            </Alert>
+          )}
+        </Paper>
+      )}
 
       {/* Service Configuration */}
-      {selectedChatId && ConfigComponent && (
+      {/* For MTProto services: show config directly (user-level, no chat selection needed) */}
+      {/* For Bot services: require chat selection first */}
+      {isMTProtoService && ConfigComponent && (
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" mb={3}>
+            Service Settings
+          </Typography>
+          <ConfigComponent chatId={0} />
+        </Paper>
+      )}
+
+      {!isMTProtoService && selectedChatId && ConfigComponent && (
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" mb={3}>
             Service Settings
@@ -303,7 +321,13 @@ const ServiceConfigPage: React.FC = () => {
         </Paper>
       )}
 
-      {selectedChatId && !ConfigComponent && (
+      {!isMTProtoService && selectedChatId && !ConfigComponent && (
+        <Alert severity="warning">
+          Configuration for this service is not yet available.
+        </Alert>
+      )}
+
+      {isMTProtoService && !ConfigComponent && (
         <Alert severity="warning">
           Configuration for this service is not yet available.
         </Alert>

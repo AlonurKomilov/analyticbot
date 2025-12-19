@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box,
     Typography,
@@ -61,6 +62,7 @@ interface StorageFileBrowserProps {
 type FilterType = 'all' | 'images' | 'videos' | 'documents';
 
 const StorageFileBrowser: React.FC<StorageFileBrowserProps> = ({ onFileSelect = null }) => {
+    const { t } = useTranslation(['storage', 'common']);
     // Note: Storage file browsing would need a new method in media store
     // For now, using placeholder data
     const [storageFiles, setStorageFiles] = useState<StorageFilesData>({
@@ -263,7 +265,7 @@ const StorageFileBrowser: React.FC<StorageFileBrowserProps> = ({ onFileSelect = 
                         <TextField
                             fullWidth
                             size="small"
-                            placeholder="Search files..."
+                            placeholder={t('storage:searchFiles')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             InputProps={{
@@ -277,16 +279,16 @@ const StorageFileBrowser: React.FC<StorageFileBrowserProps> = ({ onFileSelect = 
                     </Grid>
                     <Grid item xs={12} sm={6}>
                         <FormControl fullWidth size="small">
-                            <InputLabel>Filter by type</InputLabel>
+                            <InputLabel>{t('storage:filterByType')}</InputLabel>
                             <Select
                                 value={filterType}
-                                label="Filter by type"
+                                label={t('storage:filterByType')}
                                 onChange={(e: SelectChangeEvent) => setFilterType(e.target.value as FilterType)}
                             >
-                                <MenuItem value="all">All Files</MenuItem>
-                                <MenuItem value="images">Images</MenuItem>
-                                <MenuItem value="videos">Videos</MenuItem>
-                                <MenuItem value="documents">Documents</MenuItem>
+                                <MenuItem value="all">{t('storage:allFiles')}</MenuItem>
+                                <MenuItem value="images">{t('storage:images')}</MenuItem>
+                                <MenuItem value="videos">{t('storage:videos')}</MenuItem>
+                                <MenuItem value="documents">{t('storage:documents')}</MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
@@ -312,14 +314,14 @@ const StorageFileBrowser: React.FC<StorageFileBrowserProps> = ({ onFileSelect = 
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                     <Typography variant="body1" color="text.secondary">
                         {storageFiles.files.length === 0 ?
-                            'No files in storage yet. Upload some files to see them here.' :
-                            'No files match your search criteria.'
+                            t('storage:noFilesYet') :
+                            t('storage:noFilesMatch')
                         }
                     </Typography>
                     {/* Debug info */}
                     {process.env.NODE_ENV === 'development' && (
                         <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', textAlign: 'left' }}>
-                            <Typography variant="caption">Debug info:</Typography>
+                            <Typography variant="caption">{t('common:debug')}:</Typography>
                             <pre style={{ fontSize: '10px' }}>
                                 Total files: {storageFiles.total}
                                 Files array length: {storageFiles.files.length}

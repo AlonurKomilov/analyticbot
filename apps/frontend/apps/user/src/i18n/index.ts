@@ -12,6 +12,7 @@ import enPosts from './locales/en/posts.json';
 import enSettings from './locales/en/settings.json';
 import enErrors from './locales/en/errors.json';
 import enNavigation from './locales/en/navigation.json';
+import enMtproto from './locales/en/mtproto.json';
 
 import ruCommon from './locales/ru/common.json';
 import ruAuth from './locales/ru/auth.json';
@@ -22,6 +23,7 @@ import ruPosts from './locales/ru/posts.json';
 import ruSettings from './locales/ru/settings.json';
 import ruErrors from './locales/ru/errors.json';
 import ruNavigation from './locales/ru/navigation.json';
+import ruMtproto from './locales/ru/mtproto.json';
 
 import uzCommon from './locales/uz/common.json';
 import uzAuth from './locales/uz/auth.json';
@@ -32,6 +34,7 @@ import uzPosts from './locales/uz/posts.json';
 import uzSettings from './locales/uz/settings.json';
 import uzErrors from './locales/uz/errors.json';
 import uzNavigation from './locales/uz/navigation.json';
+import uzMtproto from './locales/uz/mtproto.json';
 
 export const resources = {
   en: {
@@ -44,6 +47,7 @@ export const resources = {
     settings: enSettings,
     errors: enErrors,
     navigation: enNavigation,
+    mtproto: enMtproto,
   },
   ru: {
     common: ruCommon,
@@ -55,6 +59,7 @@ export const resources = {
     settings: ruSettings,
     errors: ruErrors,
     navigation: ruNavigation,
+    mtproto: ruMtproto,
   },
   uz: {
     common: uzCommon,
@@ -66,6 +71,7 @@ export const resources = {
     settings: uzSettings,
     errors: uzErrors,
     navigation: uzNavigation,
+    mtproto: uzMtproto,
   },
 };
 
@@ -94,6 +100,7 @@ i18n
       'settings',
       'errors',
       'navigation',
+      'mtproto',
     ],
     interpolation: {
       escapeValue: false, // React already escapes values

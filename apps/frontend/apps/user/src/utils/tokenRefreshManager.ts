@@ -6,6 +6,7 @@
  * - Queue management (prevents duplicate refresh calls)
  * - Automatic retry on 401 responses
  * - Graceful logout on refresh failure
+ * - Cross-subdomain SSO support
  *
  * Usage:
  * ```typescript
@@ -18,6 +19,10 @@
  */
 
 import { authLogger } from '@/utils/logger';
+import { getAccessToken as getCrossDomainAccessToken, getRefreshToken as getCrossDomainRefreshToken, setAuthTokens, clearAuthData, syncAuthStorage } from '@/utils/crossDomainAuth';
+
+// Sync auth storage on module load to ensure cookies are synced to localStorage
+syncAuthStorage();
 
 interface QueueItem {
   resolve: (token: string) => void;
@@ -76,36 +81,32 @@ export class TokenRefreshManager {
   }
 
   /**
-   * Get current access token
+   * Get current access token (checks cookies first for SSO)
    */
   getAccessToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return getCrossDomainAccessToken() || localStorage.getItem(this.TOKEN_KEY);
   }
 
   /**
-   * Get refresh token
+   * Get refresh token (checks cookies first for SSO)
    */
   getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    return getCrossDomainRefreshToken() || localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
   /**
-   * Store new tokens
+   * Store new tokens (to both cookies and localStorage for SSO)
    */
   private storeTokens(accessToken: string, refreshToken?: string): void {
-    localStorage.setItem(this.TOKEN_KEY, accessToken);
-    if (refreshToken) {
-      localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
-    }
+    // Use cross-domain auth to store in cookies + localStorage
+    setAuthTokens(accessToken, refreshToken || this.getRefreshToken() || '');
   }
 
   /**
-   * Clear all auth tokens
+   * Clear all auth tokens (from both cookies and localStorage)
    */
   private clearTokens(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    localStorage.removeItem('auth_user');
+    clearAuthData();
   }
 
   /**

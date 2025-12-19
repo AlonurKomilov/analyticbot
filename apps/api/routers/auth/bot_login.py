@@ -285,6 +285,23 @@ async def confirm_bot_login(
             await user_repo.create_user(new_user_data)
             user_data = await user_repo.get_user_by_telegram_id(data.telegram_id)
             logger.info(f"✅ Created new user via bot login: {user_data.get('id')}")
+        else:
+            # Update existing user's photo and info from Telegram
+            full_name = data.first_name
+            if data.last_name:
+                full_name = f"{data.first_name} {data.last_name}"
+            
+            update_data = {
+                "telegram_photo_url": data.photo_url,
+                "full_name": full_name,
+            }
+            if data.username:
+                update_data["telegram_username"] = data.username
+            
+            await user_repo.update_user(user_data["id"], **update_data)
+            # Refresh user data after update
+            user_data = await user_repo.get_user_by_telegram_id(data.telegram_id)
+            logger.info(f"✅ Updated existing user via bot login: {user_data.get('id')}")
         
         if not user_data:
             raise HTTPException(

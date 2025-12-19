@@ -68,6 +68,7 @@ export const AdvancedAnalyticsConfig: React.FC<Props> = ({ chatId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [isNewConfig, setIsNewConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -75,7 +76,7 @@ export const AdvancedAnalyticsConfig: React.FC<Props> = ({ chatId }) => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const settingsResponse = await apiClient.get(`/bot/moderation/${chatId}/settings`) as AnalyticsSettings;
+        const settingsResponse = await apiClient.get(`/user-bot/service/settings/${chatId}`) as AnalyticsSettings;
         if (settingsResponse) {
           setSettings(prev => ({
             ...prev,
@@ -94,7 +95,12 @@ export const AdvancedAnalyticsConfig: React.FC<Props> = ({ chatId }) => {
           await fetchStats();
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to load settings');
+        // 404 means settings don't exist yet - this is normal for new chats
+        if (err.message?.includes('not found') || err.status === 404) {
+          setIsNewConfig(true);
+        } else {
+          setError(err.message || 'Failed to load settings');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -108,10 +114,10 @@ export const AdvancedAnalyticsConfig: React.FC<Props> = ({ chatId }) => {
   const fetchStats = async () => {
     setIsLoadingStats(true);
     try {
-      const response = await apiClient.get(`/bot/moderation/${chatId}/analytics/summary`) as AnalyticsStats;
-      if (response) {
-        setStats(response);
-      }
+      // TODO: Backend endpoint /user-bot/service/analytics/{chatId}/summary not yet implemented
+      // Analytics stats display feature coming soon
+      console.log('Analytics summary endpoint not yet available');
+      setStats(null);
     } catch {
       // Stats may not exist yet
       setStats(null);
@@ -125,8 +131,9 @@ export const AdvancedAnalyticsConfig: React.FC<Props> = ({ chatId }) => {
     setError(null);
     setSuccess(false);
     try {
-      await apiClient.patch(`/bot/moderation/${chatId}/settings`, settings);
+      await apiClient.post(`/user-bot/service/settings/${chatId}`, settings);
       setSuccess(true);
+      setIsNewConfig(false);
       setTimeout(() => setSuccess(false), 3000);
       
       if (settings.analytics_enabled) {
@@ -151,6 +158,11 @@ export const AdvancedAnalyticsConfig: React.FC<Props> = ({ chatId }) => {
     <Box>
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 3 }}>Settings saved successfully!</Alert>}
+      {isNewConfig && !success && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          This chat hasn't been configured yet. Customize your settings and save to get started!
+        </Alert>
+      )}
 
       {/* Main Toggle */}
       <Card sx={{ mb: 3, bgcolor: alpha('#14b8a6', 0.05), border: '1px solid', borderColor: alpha('#14b8a6', 0.2) }}>

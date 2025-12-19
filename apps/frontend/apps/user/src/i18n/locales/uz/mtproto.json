@@ -95,10 +95,6 @@
     "channelsProcessed": "Qayta ishlangan kanallar",
     "estimatedTime": "Qolgan vaqt"
   },
-    "progress": "Yig'ish jarayoni",
-    "channelsProcessed": "Qayta ishlangan kanallar",
-    "estimatedTime": "Qolgan vaqt"
-  },
   "sessionHealth": {
     "title": "Sessiya holati",
     "description": "MTProto ulanish va ishlash ko'rsatkichlari",
@@ -137,6 +133,14 @@
     "notAvailableDesc": "Joriy planingiz ({{plan}}) interval tezlashtirishlarni qo'llab-quvvatlamaydi. Bu funksiyani ochish uchun rejangizni yangilang.",
     "maxSpeedReached": "Maksimal tezlikka erishildi!",
     "maxSpeedDesc": "Sizning yig'ish oralig'ingiz allaqachon minimal ({{minInterval}}daqiqa) {{plan}} rejangiz uchun.",
+    "maxSpeedForPlan": "Rejangiz uchun maksimal tezlik!",
+    "reachedMinimumDesc": "Yig'ish oralig'ingiz ({{interval}}daq) {{plan}} rejangiz uchun minimal.",
+    "wantFaster": "Tezroq bo'lishini xohlaysizmi?",
+    "plan": "Reja",
+    "intervalRange": "{{default}}-{{min}} daqiqa oraliqlar",
+    "minLabel": "daqiqa",
+    "faster": "tezroq",
+    "viewPlans": "Barcha rejalarni ko'rish",
     "current": "Hozirgi",
     "afterBoost": "Tezlashtirishdan keyin",
     "minimum": "Minimal",

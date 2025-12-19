@@ -151,8 +151,8 @@ class Settings:
         default_factory=lambda: SecretStr("dev_secret_key_change_in_production")
     )
     JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours - refresh token handles renewal
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30  # 30 days for long-term sessions
     PASSWORD_HASH_ROUNDS: int = 12
     RATE_LIMIT_PER_MINUTE: int = 60
 

@@ -739,3 +739,253 @@ async def get_leaderboard(
         )
         for i, e in enumerate(entries)
     ]
+
+
+# ============================================
+# INTERVAL BOOST ENDPOINTS
+# ============================================
+
+
+class IntervalBoostInfoResponse(BaseModel):
+    """Interval boost information for current user"""
+
+    current_interval: int
+    min_interval: int
+    can_purchase_boost: bool
+    credits_per_boost: int
+    boost_reduction_minutes: int
+    max_boosts_available: int
+    active_boost_minutes: int
+    credits_balance: float
+    plan_name: str
+
+
+class IntervalBoostPurchaseRequest(BaseModel):
+    """Request to purchase interval boosts"""
+
+    boost_count: int = Field(ge=1, le=10, default=1)
+
+
+class IntervalBoostPurchaseResponse(BaseModel):
+    """Response after purchasing interval boost"""
+
+    success: bool
+    credits_spent: float
+    new_balance: float
+    new_interval: int
+    boosts_purchased: int
+    message: str
+
+
+@router.get("/interval-boost/info", response_model=IntervalBoostInfoResponse)
+async def get_interval_boost_info(
+    current_user: dict = Depends(get_current_user),
+    pool=Depends(get_db_pool),
+):
+    """Get interval boost information for current user"""
+    user_id = int(current_user["id"])
+
+    async with pool.acquire() as conn:
+        # Get user's plan info and current interval
+        user_data = await conn.fetchrow(
+            """
+            SELECT
+                u.id,
+                u.plan_id,
+                COALESCE(p.name, 'free') as plan_name,
+                COALESCE(p.mtproto_interval_minutes, 60) as default_interval,
+                COALESCE(p.min_mtproto_interval_minutes, 30) as min_interval,
+                COALESCE(p.credits_per_interval_boost, 5) as credits_per_boost,
+                COALESCE(p.interval_boost_minutes, 10) as boost_reduction,
+                COALESCE(p.can_purchase_boost, true) as can_purchase_boost,
+                COALESCE(uc.balance, u.credit_balance, 0) as credits_balance,
+                COALESCE(u.mtproto_interval_override, p.mtproto_interval_minutes, 60) as current_interval
+            FROM users u
+            LEFT JOIN plans p ON u.plan_id = p.id
+            LEFT JOIN user_credits uc ON u.id = uc.user_id
+            WHERE u.id = $1
+            """,
+            user_id,
+        )
+
+        if not user_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+
+        current_interval = user_data["current_interval"]
+        min_interval = user_data["min_interval"]
+        boost_reduction = user_data["boost_reduction"]
+        credits_per_boost = user_data["credits_per_boost"]
+        credits_balance = float(user_data["credits_balance"])
+
+        # Calculate max boosts available (until reaching min interval)
+        if current_interval <= min_interval:
+            max_boosts = 0
+        else:
+            interval_to_reduce = current_interval - min_interval
+            max_boosts = interval_to_reduce // boost_reduction
+
+        # Calculate active boost (difference between default and current)
+        default_interval = user_data["default_interval"]
+        active_boost_minutes = max(0, default_interval - current_interval)
+
+        return IntervalBoostInfoResponse(
+            current_interval=current_interval,
+            min_interval=min_interval,
+            can_purchase_boost=user_data["can_purchase_boost"] and current_interval > min_interval,
+            credits_per_boost=credits_per_boost,
+            boost_reduction_minutes=boost_reduction,
+            max_boosts_available=max_boosts,
+            active_boost_minutes=active_boost_minutes,
+            credits_balance=credits_balance,
+            plan_name=user_data["plan_name"],
+        )
+
+
+@router.post("/interval-boost/purchase", response_model=IntervalBoostPurchaseResponse)
+async def purchase_interval_boost(
+    request: IntervalBoostPurchaseRequest,
+    current_user: dict = Depends(get_current_user),
+    pool=Depends(get_db_pool),
+):
+    """Purchase interval boosts to reduce collection interval"""
+    user_id = int(current_user["id"])
+
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            # Get current state
+            user_data = await conn.fetchrow(
+                """
+                SELECT
+                    u.id,
+                    COALESCE(p.name, 'free') as plan_name,
+                    COALESCE(p.min_mtproto_interval_minutes, 30) as min_interval,
+                    COALESCE(p.credits_per_interval_boost, 5) as credits_per_boost,
+                    COALESCE(p.interval_boost_minutes, 10) as boost_reduction,
+                    COALESCE(p.can_purchase_boost, true) as can_purchase_boost,
+                    COALESCE(uc.balance, u.credit_balance, 0) as credits_balance,
+                    COALESCE(u.mtproto_interval_override, p.mtproto_interval_minutes, 60) as current_interval
+                FROM users u
+                LEFT JOIN plans p ON u.plan_id = p.id
+                LEFT JOIN user_credits uc ON u.id = uc.user_id
+                WHERE u.id = $1
+                FOR UPDATE OF u
+                """,
+                user_id,
+            )
+
+            if not user_data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                )
+
+            if not user_data["can_purchase_boost"]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Your plan does not support interval boosts",
+                )
+
+            current_interval = user_data["current_interval"]
+            min_interval = user_data["min_interval"]
+            boost_reduction = user_data["boost_reduction"]
+            credits_per_boost = user_data["credits_per_boost"]
+            credits_balance = float(user_data["credits_balance"])
+
+            # Validate can boost
+            if current_interval <= min_interval:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Already at minimum interval ({min_interval}min)",
+                )
+
+            # Calculate actual boosts (limited by what would reach minimum)
+            max_possible_boosts = (current_interval - min_interval) // boost_reduction
+            actual_boosts = min(request.boost_count, max_possible_boosts)
+
+            if actual_boosts <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No boosts can be applied",
+                )
+
+            # Calculate cost (convert to Decimal for DB compatibility)
+            from decimal import Decimal
+            total_cost = Decimal(actual_boosts * credits_per_boost)
+
+            if credits_balance < float(total_cost):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Insufficient credits. Need {total_cost}, have {credits_balance:.0f}",
+                )
+
+            # Calculate new interval
+            total_reduction = actual_boosts * boost_reduction
+            new_interval = max(min_interval, current_interval - total_reduction)
+
+            # Deduct credits - update both user_credits and users tables
+            await conn.execute(
+                """
+                INSERT INTO user_credits (user_id, balance, lifetime_spent)
+                VALUES ($2, -$1::numeric, $1::numeric)
+                ON CONFLICT (user_id) DO UPDATE
+                SET balance = user_credits.balance - $1::numeric,
+                    lifetime_spent = user_credits.lifetime_spent + $1::numeric,
+                    updated_at = NOW()
+                """,
+                total_cost,
+                user_id,
+            )
+
+            # Also update users.credit_balance for quick access
+            await conn.execute(
+                """
+                UPDATE users
+                SET credit_balance = COALESCE(credit_balance, 0) - $1::numeric
+                WHERE id = $2
+                """,
+                total_cost,
+                user_id,
+            )
+
+            # Update user's MTProto interval override
+            await conn.execute(
+                """
+                UPDATE users
+                SET mtproto_interval_override = $1
+                WHERE id = $2
+                """,
+                new_interval,
+                user_id,
+            )
+
+            # Record transaction
+            new_balance = Decimal(credits_balance) - total_cost
+            await conn.execute(
+                """
+                INSERT INTO credit_transactions
+                (user_id, amount, balance_after, type, category, description)
+                VALUES ($1, $2::numeric, $3::numeric, 'debit', 'interval_boost',
+                        $4)
+                """,
+                user_id,
+                -total_cost,
+                new_balance,
+                f"Purchased {actual_boosts} interval boost(s) - reduced from {current_interval}min to {new_interval}min",
+            )
+
+            logger.info(
+                f"User {user_id} purchased {actual_boosts} interval boosts: "
+                f"{current_interval}min → {new_interval}min, cost: {total_cost} credits"
+            )
+
+            return IntervalBoostPurchaseResponse(
+                success=True,
+                credits_spent=float(total_cost),
+                new_balance=float(new_balance),
+                new_interval=new_interval,
+                boosts_purchased=actual_boosts,
+                message=f"Successfully reduced collection interval from {current_interval}min to {new_interval}min!",
+            )

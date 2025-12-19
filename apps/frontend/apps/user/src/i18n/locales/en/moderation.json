@@ -1,6 +1,112 @@
 {
   "title": "Bot Moderation",
   "description": "Manage bot moderation features and settings",
+  "setupWizard": {
+    "title": "Setup Your Bot",
+    "subtitle": "Follow these steps to create and configure your multi-tenant bot",
+    "steps": {
+      "credentials": "Bot Credentials",
+      "rateLimits": "Rate Limits",
+      "verification": "Verification"
+    },
+    "credentials": {
+      "title": "Enter Your Bot Token",
+      "description": "Get your bot token from @BotFather on Telegram",
+      "botToken": "Bot Token",
+      "tokenRequired": "Bot token is required",
+      "tokenInvalid": "Invalid bot token format",
+      "tokenFormat": "Format: 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
+      "mtprotoInfo": "Need MTProto for advanced features?",
+      "mtprotoDescription": "MTProto API setup is now separate and optional. Configure it later in Settings → MTProto Setup to enable features like:",
+      "mtprotoFeatures": {
+        "privateChannels": "Access to private channels/groups",
+        "userAuth": "User account authentication",
+        "advancedFeatures": "Advanced Telegram features"
+      }
+    },
+    "rateLimits": {
+      "title": "Configure Rate Limits",
+      "description": "Set request limits for your bot",
+      "rps": "Requests Per Second (RPS)",
+      "rpsHelp": "Maximum requests per second (default: 30)",
+      "rpsError": "RPS must be a positive number",
+      "maxConcurrent": "Max Concurrent Requests",
+      "maxConcurrentHelp": "Maximum concurrent requests (default: 10)",
+      "maxConcurrentError": "Max concurrent must be a positive integer"
+    },
+    "verification": {
+      "title": "Test Your Bot",
+      "description": "Optional: Send a test message to verify your bot is working",
+      "testMessage": "Test Message (Optional)",
+      "testMessageHelp": "We'll send this message from your bot to verify it works",
+      "infoTitle": "Once you click \"Create & Verify Bot\", we will:",
+      "steps": {
+        "create": "Create your bot with the provided credentials",
+        "initialize": "Initialize the bot instance",
+        "sendTest": "Send the test message (if provided)",
+        "verify": "Mark your bot as verified"
+      }
+    },
+    "buttons": {
+      "back": "Back",
+      "next": "Next",
+      "processing": "Processing...",
+      "createVerify": "Create & Verify Bot"
+    },
+    "messages": {
+      "alreadyConfigured": "You already have a bot configured! Redirecting to dashboard...",
+      "created": "Bot created successfully!",
+      "verified": "Bot verified and connected!",
+      "invalidToken": "Invalid bot token. Please check your token from @BotFather",
+      "unauthorized": "Bot token unauthorized. Make sure it's a valid token from @BotFather"
+    }
+  },
+  "adminPanel": {
+    "title": "Bot Management (Admin)",
+    "statusFilter": "Status Filter",
+    "all": "All",
+    "active": "Active",
+    "suspended": "Suspended",
+    "pending": "Pending",
+    "rateLimited": "Rate Limited",
+    "columns": {
+      "userId": "User ID",
+      "botUsername": "Bot Username",
+      "status": "Status",
+      "rps": "RPS",
+      "maxConcurrent": "Max Concurrent",
+      "totalRequests": "Total Requests",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "dialogs": {
+      "suspend": {
+        "title": "Suspend Bot",
+        "description": "Are you sure you want to suspend this bot? Please provide a reason.",
+        "reason": "Suspension Reason",
+        "reasonHelp": "This will be shown to the user",
+        "reasonError": "Suspension reason must be at least 5 characters",
+        "confirm": "Suspend",
+        "success": "Bot suspended successfully",
+        "error": "Failed to suspend bot"
+      },
+      "activate": {
+        "success": "Bot activated successfully",
+        "error": "Failed to activate bot"
+      },
+      "rateLimits": {
+        "title": "Update Rate Limits",
+        "description": "Adjust the rate limits for this bot",
+        "newRps": "New RPS",
+        "newConcurrent": "New Max Concurrent",
+        "confirm": "Update",
+        "success": "Rate limits updated successfully",
+        "error": "Failed to update rate limits"
+      }
+    },
+    "noData": "No bots found",
+    "refreshed": "Bot list refreshed"
+  },
   "tabs": {
     "settings": "Settings",
     "welcome": "Welcome Messages",

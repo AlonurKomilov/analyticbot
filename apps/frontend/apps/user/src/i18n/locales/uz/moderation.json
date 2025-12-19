@@ -1,6 +1,112 @@
 {
   "title": "Bot moderatsiyasi",
   "description": "Bot moderatsiya funksiyalari va sozlamalarini boshqarish",
+  "setupWizard": {
+    "title": "Botingizni sozlash",
+    "subtitle": "Ko'p foydalanuvchili botingizni yaratish va sozlash uchun quyidagi qadamlarni bajaring",
+    "steps": {
+      "credentials": "Bot hisob ma'lumotlari",
+      "rateLimits": "So'rov cheklovlari",
+      "verification": "Tekshirish"
+    },
+    "credentials": {
+      "title": "Bot tokeningizni kiriting",
+      "description": "Bot tokenini Telegramdagi @BotFather dan oling",
+      "botToken": "Bot tokeni",
+      "tokenRequired": "Bot tokeni talab qilinadi",
+      "tokenInvalid": "Bot tokeni formati noto'g'ri",
+      "tokenFormat": "Format: 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
+      "mtprotoInfo": "Kengaytirilgan funksiyalar uchun MTProto kerakmi?",
+      "mtprotoDescription": "MTProto API sozlamalari endi alohida va ixtiyoriy. Quyidagi funksiyalarni yoqish uchun keyinroq Sozlamalar → MTProto sozlamalari bo'limida sozlang:",
+      "mtprotoFeatures": {
+        "privateChannels": "Shaxsiy kanallarga/guruhlarga kirish",
+        "userAuth": "Foydalanuvchi hisobini autentifikatsiya qilish",
+        "advancedFeatures": "Kengaytirilgan Telegram funksiyalari"
+      }
+    },
+    "rateLimits": {
+      "title": "So'rov cheklovlarini sozlash",
+      "description": "Botingiz uchun so'rov cheklovlarini belgilang",
+      "rps": "Soniyada so'rovlar (RPS)",
+      "rpsHelp": "Maksimal soniyada so'rovlar (standart: 30)",
+      "rpsError": "RPS ijobiy son bo'lishi kerak",
+      "maxConcurrent": "Maksimal parallel so'rovlar",
+      "maxConcurrentHelp": "Maksimal parallel so'rovlar (standart: 10)",
+      "maxConcurrentError": "Maksimal parallel ijobiy butun son bo'lishi kerak"
+    },
+    "verification": {
+      "title": "Botni sinab ko'rish",
+      "description": "Ixtiyoriy: botning ishlashini tekshirish uchun test xabarini yuboring",
+      "testMessage": "Test xabari (ixtiyoriy)",
+      "testMessageHelp": "Ishlashini tekshirish uchun botingizdan bu xabarni yuboramiz",
+      "infoTitle": "\"Bot yaratish va tekshirish\" tugmasini bosganingizda biz:",
+      "steps": {
+        "create": "Berilgan hisob ma'lumotlari bilan botingizni yaratamiz",
+        "initialize": "Bot namunasini ishga tushiramiz",
+        "sendTest": "Test xabarini yuboramiz (agar ko'rsatilgan bo'lsa)",
+        "verify": "Botingizni tekshirilgan deb belgilaymiz"
+      }
+    },
+    "buttons": {
+      "back": "Orqaga",
+      "next": "Keyingi",
+      "processing": "Jarayonda...",
+      "createVerify": "Bot yaratish va tekshirish"
+    },
+    "messages": {
+      "alreadyConfigured": "Sizda allaqachon sozlangan bot bor! Boshqaruv paneliga yo'naltirilmoqda...",
+      "created": "Bot muvaffaqiyatli yaratildi!",
+      "verified": "Bot tekshirildi va ulandi!",
+      "invalidToken": "Bot tokeni noto'g'ri. @BotFather dan tokeningizni tekshiring",
+      "unauthorized": "Bot tokeni avtorizatsiya qilinmagan. @BotFather dan to'g'ri token ekanligiga ishonch hosil qiling"
+    }
+  },
+  "adminPanel": {
+    "title": "Botlarni boshqarish (Admin)",
+    "statusFilter": "Holat filtri",
+    "all": "Barchasi",
+    "active": "Faol",
+    "suspended": "To'xtatilgan",
+    "pending": "Kutilmoqda",
+    "rateLimited": "Cheklangan",
+    "columns": {
+      "userId": "Foydalanuvchi ID",
+      "botUsername": "Bot foydalanuvchi nomi",
+      "status": "Holat",
+      "rps": "RPS",
+      "maxConcurrent": "Maks. parallel",
+      "totalRequests": "Jami so'rovlar",
+      "created": "Yaratilgan",
+      "actions": "Amallar"
+    },
+    "dialogs": {
+      "suspend": {
+        "title": "Botni to'xtatish",
+        "description": "Bu botni to'xtatmoqchimisiz? Sababni ko'rsating.",
+        "reason": "To'xtatish sababi",
+        "reasonHelp": "Bu foydalanuvchiga ko'rsatiladi",
+        "reasonError": "To'xtatish sababi kamida 5 belgi bo'lishi kerak",
+        "confirm": "To'xtatish",
+        "success": "Bot muvaffaqiyatli to'xtatildi",
+        "error": "Botni to'xtatishda xatolik"
+      },
+      "activate": {
+        "success": "Bot muvaffaqiyatli faollashtirildi",
+        "error": "Botni faollashtirishda xatolik"
+      },
+      "rateLimits": {
+        "title": "So'rov cheklovlarini yangilash",
+        "description": "Bu bot uchun so'rov cheklovlarini sozlang",
+        "newRps": "Yangi RPS",
+        "newConcurrent": "Yangi maks. parallel",
+        "confirm": "Yangilash",
+        "success": "So'rov cheklovlari muvaffaqiyatli yangilandi",
+        "error": "So'rov cheklovlarini yangilashda xatolik"
+      }
+    },
+    "noData": "Botlar topilmadi",
+    "refreshed": "Bot ro'yxati yangilandi"
+  },
   "tabs": {
     "settings": "Sozlamalar",
     "welcome": "Xush kelibsiz xabarlari",

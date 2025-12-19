@@ -8,7 +8,9 @@
     "reports": "Hisobotlar",
     "settings": "Sozlamalar",
     "help": "Yordam",
-    "logout": "Chiqish"
+    "logout": "Chiqish",
+    "browseCatalog": "Katalogni ko'rish",
+    "publicCatalog": "Ommaviy katalog"
   },
   "aiServices": "AI Xizmatlari",
   "myBot": "Mening botim",

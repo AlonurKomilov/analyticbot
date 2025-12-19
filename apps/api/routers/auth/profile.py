@@ -45,7 +45,24 @@ async def get_current_user_profile(request: Request):
     cache key was not properly including user_id from JWT token.
     """
     start_time = time.time()
-    logger.info("⏱️ /auth/me endpoint called")
+    logger.debug("⏱️ /auth/me endpoint called")
+
+    # Get token from Authorization header first - return 401 if missing
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid authorization token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = auth_header[7:]
+    if not token or token == "null" or token == "undefined":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token provided",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     try:
         # Extract user info from JWT token
@@ -54,82 +71,98 @@ async def get_current_user_profile(request: Request):
 
         step1 = time.time()
         user_id = await get_current_user_id_from_request(request)
-        logger.info(f"⏱️ get_current_user_id_from_request took {(time.time() - step1)*1000:.2f}ms")
+        logger.debug(f"⏱️ get_current_user_id_from_request took {(time.time() - step1)*1000:.2f}ms")
 
-        # Get token from Authorization header
-        auth_header = request.headers.get("Authorization", "")
-        if auth_header.startswith("Bearer "):
-            step2 = time.time()
-            token = auth_header[7:]
-            security_manager = get_security_manager()
+        # Verify token and extract claims
+        step2 = time.time()
+        security_manager = get_security_manager()
+        try:
             claims = security_manager.verify_token(token)
-            logger.info(f"⏱️ Token verification took {(time.time() - step2)*1000:.2f}ms")
+            logger.info(f"✅ Token verified successfully for user_id={claims.get('sub')}")
+        except Exception as verify_error:
+            logger.error(f"❌ Token verification failed: {verify_error}")
+            logger.error(f"❌ Token prefix: {token[:50]}...")
+            raise
+        logger.debug(f"⏱️ Token verification took {(time.time() - step2)*1000:.2f}ms")
 
-            # Fetch additional user data from database (full_name, telegram info, password status)
-            step3 = time.time()
-            container = get_container()
-            pool = await container.database.asyncpg_pool()
+        # Fetch additional user data from database (full_name, telegram info, password status)
+        step3 = time.time()
+        container = get_container()
+        pool = await container.database.asyncpg_pool()
 
-            full_name = claims.get("full_name")
-            has_password = False
-            telegram_id = None
-            telegram_username = None
-            credit_balance = 0.0
+        full_name = claims.get("full_name")
+        has_password = False
+        telegram_id = None
+        telegram_username = None
+        credit_balance = 0.0
+        photo_url = None
 
-            async with pool.acquire() as conn:
-                row = await conn.fetchrow(
-                    """
-                    SELECT
-                        u.full_name,
-                        u.hashed_password IS NOT NULL as has_password,
-                        u.telegram_id,
-                        COALESCE(uc.balance, u.credit_balance, 0) as credit_balance,
-                        CASE
-                            WHEN u.telegram_id IS NOT NULL THEN u.username
-                            ELSE NULL
-                        END as telegram_username
-                    FROM users u
-                    LEFT JOIN user_credits uc ON u.id = uc.user_id
-                    WHERE u.id = $1
-                """,
-                    int(user_id),
-                )
-                if row:
-                    full_name = row["full_name"] or full_name
-                    has_password = row["has_password"] or False
-                    telegram_id = row["telegram_id"]
-                    telegram_username = row["telegram_username"]
-                    credit_balance = float(row["credit_balance"] or 0)
-
-            logger.info(f"⏱️ Database lookup took {(time.time() - step3)*1000:.2f}ms")
-
-            # Extract user info from JWT claims + database
-            response = UserResponse(
-                id=str(claims.get("sub", user_id)),
-                email=claims.get("email", f"user_{user_id}@example.com"),
-                username=claims.get("username", f"user_{user_id}"),
-                full_name=full_name,
-                role=claims.get("role", "user"),
-                status=claims.get("status", "active"),
-                created_at=datetime.utcnow(),
-                last_login=datetime.utcnow(),
-                has_password=has_password,
-                telegram_id=telegram_id,
-                telegram_username=telegram_username,
-                credit_balance=credit_balance,
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT
+                    u.full_name,
+                    u.hashed_password IS NOT NULL as has_password,
+                    u.telegram_id,
+                    u.photo_url,
+                    u.telegram_photo_url,
+                    COALESCE(uc.balance, u.credit_balance, 0) as credit_balance,
+                    CASE
+                        WHEN u.telegram_id IS NOT NULL THEN u.username
+                        ELSE NULL
+                    END as telegram_username
+                FROM users u
+                LEFT JOIN user_credits uc ON u.id = uc.user_id
+                WHERE u.id = $1
+            """,
+                int(user_id),
             )
+            if row:
+                full_name = row["full_name"] or full_name
+                has_password = row["has_password"] or False
+                telegram_id = row["telegram_id"]
+                telegram_username = row["telegram_username"]
+                credit_balance = float(row["credit_balance"] or 0)
+                # Use user's custom photo_url, fallback to telegram_photo_url
+                photo_url = row["photo_url"] or row["telegram_photo_url"]
 
-            total_time = (time.time() - start_time) * 1000
-            logger.info(f"⏱️ /auth/me TOTAL time: {total_time:.2f}ms")
-            return response
-        else:
-            raise HTTPException(status_code=401, detail="Missing authentication token")
+        logger.debug(f"⏱️ Database lookup took {(time.time() - step3)*1000:.2f}ms")
+
+        # Extract user info from JWT claims + database
+        # Handle None values for Telegram-only users
+        email = claims.get("email")
+        username = claims.get("username")
+        
+        response = UserResponse(
+            id=str(claims.get("sub", user_id)),
+            email=email,  # Can be None for Telegram users
+            username=username,  # Can be None
+            full_name=full_name,
+            role=claims.get("role", "user"),
+            status=claims.get("status", "active"),
+            created_at=datetime.utcnow(),
+            last_login=datetime.utcnow(),
+            has_password=has_password,
+            telegram_id=telegram_id,
+            telegram_username=telegram_username,
+            credit_balance=credit_balance,
+            photo_url=photo_url,
+        )
+
+        total_time = (time.time() - start_time) * 1000
+        logger.debug(f"⏱️ /auth/me TOTAL time: {total_time:.2f}ms")
+        return response
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting current user: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get user info: {str(e)}")
+        logger.warning(f"Auth error getting current user: {e}")
+        # Return 401 for auth-related errors, not 500
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 @router.get("/mfa/status")
@@ -268,6 +301,16 @@ async def update_profile(
                     status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email format"
                 )
             updates["email"] = body["email"]
+
+        if "photo_url" in body:
+            # Allow setting photo_url (can be URL or empty string to clear)
+            photo_url = body["photo_url"]
+            if photo_url and not photo_url.startswith(("http://", "https://", "data:")):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, 
+                    detail="Invalid photo URL format. Must be http://, https://, or data: URL"
+                )
+            updates["photo_url"] = photo_url if photo_url else None
 
         if "password" in body and body["password"]:
             # Hash the new password

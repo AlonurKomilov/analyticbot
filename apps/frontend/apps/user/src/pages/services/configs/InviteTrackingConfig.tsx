@@ -50,10 +50,13 @@ interface InviteLink {
 }
 
 interface InviteLeaderboard {
-  user_id: number;
-  user_name: string;
-  invite_count: number;
-  rank: number;
+  inviter_tg_id: number;
+  inviter_username: string | null;
+  inviter_name: string | null;
+  total_invited: number;
+  still_members: number;
+  left_count: number;
+  retention_rate: number;
 }
 
 interface Props {
@@ -69,6 +72,7 @@ export const InviteTrackingConfig: React.FC<Props> = ({ chatId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [isNewConfig, setIsNewConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [copiedLink, setCopiedLink] = useState<number | null>(null);
@@ -77,7 +81,7 @@ export const InviteTrackingConfig: React.FC<Props> = ({ chatId }) => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const settingsResponse = await apiClient.get(`/bot/moderation/${chatId}/settings`) as InviteTrackingSettings;
+        const settingsResponse = await apiClient.get(`/user-bot/service/settings/${chatId}`) as InviteTrackingSettings;
         if (settingsResponse) {
           setSettings({
             invite_tracking_enabled: settingsResponse.invite_tracking_enabled ?? false,
@@ -89,7 +93,12 @@ export const InviteTrackingConfig: React.FC<Props> = ({ chatId }) => {
           await fetchInviteStats();
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to load settings');
+        // 404 means settings don't exist yet - this is normal for new chats
+        if (err.message?.includes('not found') || err.status === 404) {
+          setIsNewConfig(true);
+        } else {
+          setError(err.message || 'Failed to load settings');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -103,21 +112,15 @@ export const InviteTrackingConfig: React.FC<Props> = ({ chatId }) => {
   const fetchInviteStats = async () => {
     setIsLoadingStats(true);
     try {
-      // Fetch invite links
-      try {
-        const linksResponse = await apiClient.get(`/bot/moderation/${chatId}/invite-links`) as { links?: InviteLink[] };
-        if (linksResponse?.links) {
-          setInviteLinks(linksResponse.links);
-        }
-      } catch {
-        setInviteLinks([]);
-      }
+      // Invite links endpoint not available - feature coming soon
+      // The backend only has invite stats/leaderboard endpoint
+      setInviteLinks([]);
 
-      // Fetch leaderboard
+      // Fetch invite stats (leaderboard)
       try {
-        const leaderboardResponse = await apiClient.get(`/bot/moderation/${chatId}/invite-leaderboard`) as { leaderboard?: InviteLeaderboard[] };
-        if (leaderboardResponse?.leaderboard) {
-          setLeaderboard(leaderboardResponse.leaderboard);
+        const statsResponse = await apiClient.get(`/user-bot/service/invites/${chatId}`) as InviteLeaderboard[];
+        if (Array.isArray(statsResponse)) {
+          setLeaderboard(statsResponse);
         }
       } catch {
         setLeaderboard([]);
@@ -132,8 +135,9 @@ export const InviteTrackingConfig: React.FC<Props> = ({ chatId }) => {
     setError(null);
     setSuccess(false);
     try {
-      await apiClient.patch(`/bot/moderation/${chatId}/settings`, settings);
+      await apiClient.post(`/user-bot/service/settings/${chatId}`, settings);
       setSuccess(true);
+      setIsNewConfig(false); // No longer new after first save
       setTimeout(() => setSuccess(false), 3000);
       
       if (settings.invite_tracking_enabled) {
@@ -154,8 +158,14 @@ export const InviteTrackingConfig: React.FC<Props> = ({ chatId }) => {
 
   const handleExportCSV = () => {
     // Generate CSV content
-    const headers = ['Rank', 'User', 'Invites'];
-    const rows = leaderboard.map(item => [item.rank, item.user_name, item.invite_count]);
+    const headers = ['Rank', 'User', 'Invites', 'Still Members', 'Retention'];
+    const rows = leaderboard.map((item, index) => [
+      index + 1,
+      item.inviter_username || item.inviter_name || `User ${item.inviter_tg_id}`,
+      item.total_invited,
+      item.still_members,
+      `${(item.retention_rate * 100).toFixed(1)}%`
+    ]);
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
     
     // Download
@@ -192,6 +202,11 @@ export const InviteTrackingConfig: React.FC<Props> = ({ chatId }) => {
     <Box>
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 3 }}>Settings saved successfully!</Alert>}
+      {isNewConfig && !success && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          This chat hasn't been configured yet. Customize your settings and save to get started!
+        </Alert>
+      )}
 
       {/* Main Toggle */}
       <Card sx={{ mb: 3, bgcolor: alpha('#3b82f6', 0.05), border: '1px solid', borderColor: alpha('#3b82f6', 0.2) }}>
@@ -276,26 +291,28 @@ export const InviteTrackingConfig: React.FC<Props> = ({ chatId }) => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {leaderboard.slice(0, 10).map((item) => (
+                    {leaderboard.slice(0, 10).map((item, index) => (
                       <TableRow
-                        key={item.user_id}
+                        key={item.inviter_tg_id}
                         sx={{
-                          bgcolor: item.rank <= 3 ? alpha('#f59e0b', 0.05) : 'transparent',
+                          bgcolor: index < 3 ? alpha('#f59e0b', 0.05) : 'transparent',
                         }}
                       >
                         <TableCell>
-                          <Typography variant="body1" fontWeight={item.rank <= 3 ? 600 : 400}>
-                            {getRankIcon(item.rank)}
+                          <Typography variant="body1" fontWeight={index < 3 ? 600 : 400}>
+                            {getRankIcon(index + 1)}
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2">{item.user_name}</Typography>
+                          <Typography variant="body2">
+                            {item.inviter_username || item.inviter_name || `User ${item.inviter_tg_id}`}
+                          </Typography>
                         </TableCell>
                         <TableCell align="right">
                           <Chip
-                            label={item.invite_count}
+                            label={item.total_invited}
                             size="small"
-                            color={item.rank === 1 ? 'warning' : 'default'}
+                            color={index === 0 ? 'warning' : 'default'}
                           />
                         </TableCell>
                       </TableRow>

@@ -156,7 +156,7 @@ async def login(
         return AuthResponse(
             access_token=access_token,
             refresh_token=refresh_token,
-            expires_in=30 * 60,  # 30 minutes
+            expires_in=480 * 60,  # 8 hours
             user={
                 "id": user.id,
                 "email": user.email,
@@ -199,7 +199,7 @@ async def refresh_token(
             "access_token": token_response["access_token"],
             "refresh_token": token_response["refresh_token"],  # 🔄 Rotated token
             "token_type": "bearer",
-            "expires_in": 30 * 60,
+            "expires_in": 480 * 60,  # 8 hours
         }
 
     except Exception as e:

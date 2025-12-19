@@ -10,6 +10,7 @@
  * - File upload capabilities
  * - Comprehensive error handling
  * - Type-safe method interface
+ * - Cross-subdomain SSO support
  */
 
 import type {
@@ -25,6 +26,10 @@ import type {
 import { tokenRefreshManager } from '@/utils/tokenRefreshManager';
 import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 import { apiLogger } from '@/utils/logger';
+import { getAccessToken, syncAuthStorage } from '@/utils/crossDomainAuth';
+
+// Sync auth storage on module load to ensure cookies are synced to localStorage
+syncAuthStorage();
 
 // Configuration constants
 const DEFAULT_CONFIG: ApiClientConfig = {
@@ -137,12 +142,12 @@ export class UnifiedApiClient {
 
     switch (this.authStrategy) {
       case 'jwt': {
-        // CRITICAL FIX: Use 'auth_token' as primary key (matches AuthContext and tokenRefreshManager)
-        // Check all possible token storage keys for backward compatibility
-        const token = localStorage.getItem('auth_token') ||      // ✅ Primary key (matches AuthContext)
+        // CRITICAL FIX: Use cross-domain SSO utility first, then fall back to localStorage
+        // This ensures tokens from cookies (set on analyticbot.org) are accessible on app.analyticbot.org
+        const token = getAccessToken() ||                        // ✅ SSO: checks cookies then localStorage
+                     localStorage.getItem('auth_token') ||       // Legacy key
                      localStorage.getItem('access_token') ||     // Legacy/alternate key
                      localStorage.getItem('token') ||            // Legacy key
-                     localStorage.getItem('accessToken') ||      // Alternate format
                      sessionStorage.getItem('access_token');     // Session storage fallback
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
@@ -155,7 +160,8 @@ export class UnifiedApiClient {
                                 endpoint?.includes('/auth/register') ||
                                 endpoint?.includes('/auth/refresh');
           if (!isAuthEndpoint && import.meta.env.DEV) {
-            apiLogger.warn('No JWT token found in storage', {
+            apiLogger.warn('No JWT token found in storage (SSO or localStorage)', {
+              sso_token: !!getAccessToken(),
               auth_token: !!localStorage.getItem('auth_token'),
               access_token: !!localStorage.getItem('access_token'),
               refresh_token: !!localStorage.getItem('refresh_token')

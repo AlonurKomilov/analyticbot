@@ -148,7 +148,7 @@ class MarketplaceItemRepository:
         price: int, 
         expires_at: Optional[datetime] = None
     ) -> Dict[str, Any]:
-        """Purchase a marketplace item."""
+        """Purchase a marketplace item with row-level locking for transaction safety."""
 
         async with self.pool.acquire() as conn:
             async with conn.transaction():
@@ -165,10 +165,11 @@ class MarketplaceItemRepository:
                 if existing:
                     return {"success": False, "error": "Item already purchased"}
 
-                # Check user balance
+                # Check user balance with row-level lock to prevent race conditions
+                # FOR UPDATE ensures no concurrent transactions can modify this row
                 balance = await conn.fetchval(
                     """
-                    SELECT credit_balance FROM users WHERE id = $1
+                    SELECT credit_balance FROM users WHERE id = $1 FOR UPDATE
                 """,
                     user_id,
                 )
@@ -352,10 +353,10 @@ class MarketplaceItemRepository:
                 if recipient["id"] == sender_id:
                     return {"success": False, "error": "Cannot send credits to yourself"}
 
-                # Check sender balance
+                # Check sender balance with row-level lock to prevent race conditions
                 balance = await conn.fetchval(
                     """
-                    SELECT credit_balance FROM users WHERE id = $1
+                    SELECT credit_balance FROM users WHERE id = $1 FOR UPDATE
                 """,
                     sender_id,
                 )
@@ -508,10 +509,10 @@ class MarketplaceItemRepository:
                 if not bundle:
                     return {"success": False, "error": "Bundle not found"}
 
-                # Check balance
+                # Check balance with row-level lock to prevent race conditions
                 balance = await conn.fetchval(
                     """
-                    SELECT credit_balance FROM users WHERE id = $1
+                    SELECT credit_balance FROM users WHERE id = $1 FOR UPDATE
                 """,
                     user_id,
                 )

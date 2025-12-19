@@ -42,6 +42,7 @@ export const AutoDeleteConfig: React.FC<Props> = ({ chatId }) => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isNewConfig, setIsNewConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -49,7 +50,7 @@ export const AutoDeleteConfig: React.FC<Props> = ({ chatId }) => {
     const fetchSettings = async () => {
       setIsLoading(true);
       try {
-        const response = await apiClient.get(`/bot/moderation/${chatId}/settings`) as AutoDeleteSettings;
+        const response = await apiClient.get(`/user-bot/service/settings/${chatId}`) as AutoDeleteSettings;
         if (response) {
           setSettings(prev => ({
             ...prev,
@@ -59,7 +60,12 @@ export const AutoDeleteConfig: React.FC<Props> = ({ chatId }) => {
           }));
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to load settings');
+        // 404 means settings don't exist yet - this is normal for new chats
+        if (err.message?.includes('not found') || err.status === 404) {
+          setIsNewConfig(true);
+        } else {
+          setError(err.message || 'Failed to load settings');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -75,8 +81,9 @@ export const AutoDeleteConfig: React.FC<Props> = ({ chatId }) => {
     setError(null);
     setSuccess(false);
     try {
-      await apiClient.patch(`/bot/moderation/${chatId}/settings`, settings);
+      await apiClient.post(`/user-bot/service/settings/${chatId}`, settings);
       setSuccess(true);
+      setIsNewConfig(false);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       setError(err.message || 'Failed to save settings');
@@ -99,6 +106,11 @@ export const AutoDeleteConfig: React.FC<Props> = ({ chatId }) => {
     <Box>
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 3 }}>Settings saved successfully!</Alert>}
+      {isNewConfig && !success && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          This chat hasn't been configured yet. Customize your settings and save to get started!
+        </Alert>
+      )}
 
       {/* Clean Join Messages */}
       <Card sx={{ mb: 3, bgcolor: alpha('#10b981', 0.05), border: '1px solid', borderColor: alpha('#10b981', 0.2) }}>

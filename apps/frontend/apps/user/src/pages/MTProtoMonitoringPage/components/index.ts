@@ -4,7 +4,13 @@
  */
 export { SessionHealthCard } from './SessionHealthCard';
 export { CollectionProgressCard } from './CollectionProgressCard';
-export { WorkerStatusCard } from './WorkerStatusCard';
+export { CollectionControlCard } from './CollectionControlCard';
 export { ChannelStatisticsCard } from './ChannelStatisticsCard';
-export { IntervalBoostCard } from './IntervalBoostCard';
 export { AccountInfoCard } from './AccountInfoCard';
+export { ActiveMTProtoServicesCard } from './ActiveMTProtoServicesCard';
+export { AvailableMTProtoUpgradesCard } from './AvailableMTProtoUpgradesCard';
+export { MTProtoQuickActionsCard } from './MTProtoQuickActionsCard';
+
+// Legacy exports - kept for backward compatibility but deprecated
+export { WorkerStatusCard } from './WorkerStatusCard';
+export { IntervalBoostCard } from './IntervalBoostCard';

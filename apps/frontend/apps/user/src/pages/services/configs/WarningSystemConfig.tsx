@@ -80,6 +80,7 @@ export const WarningSystemConfig: React.FC<Props> = ({ chatId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingWarnings, setIsLoadingWarnings] = useState(false);
+  const [isNewConfig, setIsNewConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -87,7 +88,7 @@ export const WarningSystemConfig: React.FC<Props> = ({ chatId }) => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const settingsResponse = await apiClient.get(`/bot/moderation/${chatId}/settings`) as WarningSettings;
+        const settingsResponse = await apiClient.get(`/user-bot/service/settings/${chatId}`) as WarningSettings;
         if (settingsResponse) {
           setSettings(prev => ({
             ...prev,
@@ -105,7 +106,12 @@ export const WarningSystemConfig: React.FC<Props> = ({ chatId }) => {
           await fetchWarnings();
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to load settings');
+        // 404 means settings don't exist yet - this is normal for new chats
+        if (err.message?.includes('not found') || err.status === 404) {
+          setIsNewConfig(true);
+        } else {
+          setError(err.message || 'Failed to load settings');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -119,10 +125,10 @@ export const WarningSystemConfig: React.FC<Props> = ({ chatId }) => {
   const fetchWarnings = async () => {
     setIsLoadingWarnings(true);
     try {
-      const response = await apiClient.get(`/bot/moderation/${chatId}/warnings`) as { warnings?: WarningRecord[] };
-      if (response?.warnings) {
-        setWarnings(response.warnings);
-      }
+      // TODO: Backend endpoint /user-bot/service/warnings/{chatId} not yet implemented
+      // For now, we just show that the warning list feature is coming soon
+      console.log('Warning records list endpoint not yet available');
+      setWarnings([]);
     } catch {
       setWarnings([]);
     } finally {
@@ -135,13 +141,12 @@ export const WarningSystemConfig: React.FC<Props> = ({ chatId }) => {
     setError(null);
     setSuccess(false);
     try {
-      await apiClient.patch(`/bot/moderation/${chatId}/settings`, settings);
+      await apiClient.post(`/user-bot/service/settings/${chatId}`, settings);
       setSuccess(true);
+      setIsNewConfig(false);
       setTimeout(() => setSuccess(false), 3000);
       
-      if (settings.warning_system_enabled) {
-        await fetchWarnings();
-      }
+      // Skip fetching warnings since endpoint doesn't exist yet
     } catch (err: any) {
       setError(err.message || 'Failed to save settings');
     } finally {
@@ -149,10 +154,12 @@ export const WarningSystemConfig: React.FC<Props> = ({ chatId }) => {
     }
   };
 
-  const handleClearWarning = async (warningId: number) => {
+  const handleClearWarning = async (_warningId: number) => {
     try {
-      await apiClient.delete(`/bot/moderation/${chatId}/warnings/${warningId}`);
-      setWarnings(prev => prev.filter(w => w.id !== warningId));
+      // TODO: Backend endpoint not yet implemented
+      console.log('Clear warning endpoint not yet available');
+      // await apiClient.delete(`/user-bot/service/warnings/${chatId}/${_warningId}`);
+      // setWarnings(prev => prev.filter(w => w.id !== _warningId));
     } catch (err: any) {
       setError(err.message || 'Failed to clear warning');
     }
@@ -170,6 +177,11 @@ export const WarningSystemConfig: React.FC<Props> = ({ chatId }) => {
     <Box>
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 3 }}>Settings saved successfully!</Alert>}
+      {isNewConfig && !success && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          This chat hasn't been configured yet. Customize your settings and save to get started!
+        </Alert>
+      )}
 
       {/* Main Toggle */}
       <Card sx={{ mb: 3, bgcolor: alpha('#f59e0b', 0.05), border: '1px solid', borderColor: alpha('#f59e0b', 0.2) }}>

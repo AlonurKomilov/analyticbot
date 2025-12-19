@@ -404,6 +404,31 @@ async def setup_mtproto_simple(
         result = await client.send_code_request(phone)
         phone_code_hash = result.phone_code_hash
 
+        # Check if email setup is required (Common issue with new sessions)
+        if type(result.type).__name__ == "SentCodeTypeSetUpEmailRequired":
+            await safe_disconnect(client)
+            logger.warning(
+                f"User {user_id} needs to complete email verification in Telegram account"
+            )
+            
+            detail_msg = (
+                "⚠️ Email Verification Required\n\n"
+                "Telegram requires email verification before API access. "
+                "This is a one-time security check.\n\n"
+                "Steps to fix:\n"
+                "1. Open Telegram app → Settings → Privacy and Security → "
+                "Two-Step Verification → Email\n"
+                "2. If email is already added, check for a verification email "
+                "and click the link\n"
+                "3. Make sure the email shows as 'Verified' (not just added)\n"
+                "4. Wait a few minutes, then try again."
+            )
+            
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=detail_msg,
+            )
+
         # Store session string for later verification
         session_string = session.save()
         store_pending_session(user_id, session_string)

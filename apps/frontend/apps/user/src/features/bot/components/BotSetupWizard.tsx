@@ -18,7 +18,6 @@ import {
   CircularProgress,
   InputAdornment,
   IconButton,
-  Link,
 } from '@mui/material';
 import {
   Visibility,
@@ -324,8 +323,8 @@ export const BotSetupWizard: React.FC = () => {
       </Typography>
 
       <Stepper activeStep={activeStep} sx={{ mt: 4, mb: 4 }}>
-        {steps.map((label) => (
-          <Step key={label}>
+        {steps.map((label, index) => (
+          <Step key={index}>
             <StepLabel>{label}</StepLabel>
           </Step>
         ))}

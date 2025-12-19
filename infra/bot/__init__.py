@@ -1,7 +1,7 @@
 """
-Bot Infrastructure - Multi-tenant bot management implementation.
+Bot Infrastructure - Reserved for system bot implementations.
+
+User bot management is in apps/bot/multi_tenant/
 """
 
-from .multi_tenant_bot_manager import MultiTenantBotManager
-
-__all__ = ["MultiTenantBotManager"]
+__all__: list[str] = []

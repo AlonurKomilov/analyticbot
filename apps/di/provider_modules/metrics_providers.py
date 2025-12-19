@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def create_prometheus_metrics_adapter(**kwargs):
     """Create Prometheus metrics adapter"""
     try:
-        from apps.bot.adapters.metrics import PrometheusMetricsAdapter
+        from apps.bot.system.adapters.metrics import PrometheusMetricsAdapter
 
         return PrometheusMetricsAdapter()
     except ImportError as e:
@@ -24,7 +24,7 @@ def create_prometheus_metrics_adapter(**kwargs):
 def create_system_metrics_adapter(**kwargs):
     """Create system metrics adapter (PSUtil)"""
     try:
-        from apps.bot.adapters.metrics import PSUtilSystemMetricsAdapter
+        from apps.bot.system.adapters.metrics import PSUtilSystemMetricsAdapter
 
         return PSUtilSystemMetricsAdapter()
     except ImportError as e:

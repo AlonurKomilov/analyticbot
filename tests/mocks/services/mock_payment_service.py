@@ -7,8 +7,8 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from apps.bot.models.payment import BillingCycle
-from apps.bot.services.adapters.mock_payment_adapter import MockPaymentAdapter
+from apps.bot.system.models.payment import BillingCycle
+from apps.bot.system.services.adapters.mock_payment_adapter import MockPaymentAdapter
 from core.protocols import PaymentServiceProtocol
 
 logger = logging.getLogger(__name__)

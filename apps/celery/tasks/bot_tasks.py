@@ -4,8 +4,8 @@ from datetime import datetime
 
 # Metrics now via DI (Phase 3.4)
 from apps.bot.metrics_decorators import metrics_timer
-from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
-from apps.bot.utils.task_utils import enhanced_retry_task
+from apps.bot.system.utils.error_handler import ErrorContext, ErrorHandler
+from apps.bot.system.utils.task_utils import enhanced_retry_task
 
 logger = logging.getLogger(__name__)
 from apps.di import get_container

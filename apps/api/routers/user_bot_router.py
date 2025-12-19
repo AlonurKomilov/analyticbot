@@ -14,11 +14,11 @@ from apps.api.middleware.auth import get_current_user_id  # Use existing auth sy
 from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
 from apps.api.services.bot_service_factory import create_admin_bot_service
 from apps.api.utils.error_messages import BotErrorMessages, get_user_friendly_error
-from apps.bot.multi_tenant.token_validator import (
+from apps.bot.user.token_validator import (
     TokenValidationStatus,
     get_token_validator,
 )
-from apps.bot.multi_tenant.webhook_manager import get_webhook_manager
+from apps.bot.user.webhook_manager import get_webhook_manager
 from apps.di import get_container
 from config import settings
 from core.ports.user_bot_repository import IUserBotRepository

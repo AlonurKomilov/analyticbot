@@ -147,7 +147,7 @@ async def lifespan(app: FastAPI):
         # ✅ WEBHOOK SUPPORT: Initialize webhook manager for user bots
         try:
             if settings.WEBHOOK_ENABLED:
-                from apps.bot.multi_tenant.webhook_manager import init_webhook_manager
+                from apps.bot.user.webhook_manager import init_webhook_manager
 
                 webhook_manager = init_webhook_manager(settings.WEBHOOK_BASE_URL)
                 logger.info(f"✅ Webhook manager initialized: {settings.WEBHOOK_BASE_URL}")
@@ -204,7 +204,7 @@ async def lifespan(app: FastAPI):
     try:
         # ✅ OPTIMIZATION: Close shared bot session pool first
         try:
-            from apps.bot.multi_tenant.session_pool import close_session_pool
+            from apps.bot.user.session_pool import close_session_pool
 
             await close_session_pool()
             logger.info("✅ Shared bot session pool closed")

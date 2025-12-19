@@ -183,7 +183,7 @@ async def test_middleware_injection():
     print()
 
     try:
-        from apps.bot.middlewares.dependency_middleware import DependencyMiddleware
+        from apps.bot.system.middlewares.dependency_middleware import DependencyMiddleware
         from apps.di import get_container
 
         container = get_container()

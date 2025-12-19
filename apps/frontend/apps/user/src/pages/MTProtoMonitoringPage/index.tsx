@@ -26,14 +26,12 @@ import {
   Container,
   CircularProgress,
   Button,
-  Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
   Paper,
-  Chip,
   alpha,
 } from '@mui/material';
 import { Refresh, Wifi, WifiOff, SignalCellular4Bar } from '@mui/icons-material';
@@ -71,7 +69,6 @@ export const MTProtoMonitoringPage: React.FC = () => {
     availableServices,
     activeServiceKeys,
     isLoading: isLoadingServices,
-    refetch: refetchServices,
   } = useMTProtoServices();
 
   // MTProto connection testing
@@ -156,14 +153,6 @@ export const MTProtoMonitoringPage: React.FC = () => {
 
   const handleBrowsePowerUps = () => {
     navigate('/marketplace?tab=services&category=mtproto_services');
-  };
-
-  const handleOpenSettings = () => {
-    // Scroll to account card or open settings dialog
-    const accountCard = document.getElementById('account-info-card');
-    if (accountCard) {
-      accountCard.scrollIntoView({ behavior: 'smooth' });
-    }
   };
 
   const handleRemoveMTProto = async () => {

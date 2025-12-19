@@ -21,7 +21,7 @@ from apps.api.middleware.auth import (
     require_admin_user,
 )
 from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
-from apps.bot.multi_tenant.token_validator import (
+from apps.bot.user.token_validator import (
     get_token_validator,
 )
 from apps.di.analytics_container import get_analytics_fusion_service, get_database_pool
@@ -611,7 +611,7 @@ async def get_rate_limiter_statistics(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.global_rate_limiter import GlobalRateLimiter
+        from apps.bot.user.global_rate_limiter import GlobalRateLimiter
 
         # Get rate limiter instance
         limiter = await GlobalRateLimiter.get_instance()
@@ -661,7 +661,7 @@ async def get_bot_health_summary(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.bot_health import get_health_monitor
+        from apps.bot.user.bot_health import get_health_monitor
 
         health_monitor = get_health_monitor()
         summary = health_monitor.get_health_summary()
@@ -700,7 +700,7 @@ async def get_unhealthy_bots(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.bot_health import get_health_monitor
+        from apps.bot.user.bot_health import get_health_monitor
 
         health_monitor = get_health_monitor()
         unhealthy_user_ids = health_monitor.get_unhealthy_bots()
@@ -764,7 +764,7 @@ async def get_bot_health_metrics(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.bot_health import get_health_monitor
+        from apps.bot.user.bot_health import get_health_monitor
 
         health_monitor = get_health_monitor()
         metrics = health_monitor.get_metrics(user_id)
@@ -823,7 +823,7 @@ async def get_circuit_breakers_summary(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry
+        from apps.bot.user.circuit_breaker import get_circuit_breaker_registry
 
         registry = get_circuit_breaker_registry()
         all_states = registry.get_all_states()
@@ -880,7 +880,7 @@ async def get_circuit_breaker_state(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry
+        from apps.bot.user.circuit_breaker import get_circuit_breaker_registry
 
         registry = get_circuit_breaker_registry()
         breaker = registry.get_breaker(user_id)
@@ -923,7 +923,7 @@ async def reset_circuit_breaker(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry
+        from apps.bot.user.circuit_breaker import get_circuit_breaker_registry
 
         registry = get_circuit_breaker_registry()
         registry.reset_breaker(user_id)
@@ -971,7 +971,7 @@ async def get_retry_statistics(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.retry_logic import get_retry_statistics
+        from apps.bot.user.retry_logic import get_retry_statistics
 
         stats = get_retry_statistics()
         statistics = stats.get_statistics()
@@ -1009,7 +1009,7 @@ async def reset_retry_statistics(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.retry_logic import get_retry_statistics
+        from apps.bot.user.retry_logic import get_retry_statistics
 
         stats = get_retry_statistics()
         stats.reset()
@@ -1058,7 +1058,7 @@ async def get_bot_health_history(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.bot_health_persistence import get_persistence_service
+        from apps.bot.user.bot_health_persistence import get_persistence_service
 
         persistence_service = get_persistence_service()
         history = await persistence_service.get_user_history(user_id, hours)
@@ -1112,7 +1112,7 @@ async def get_unhealthy_bot_history(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.bot_health_persistence import get_persistence_service
+        from apps.bot.user.bot_health_persistence import get_persistence_service
 
         persistence_service = get_persistence_service()
         history = await persistence_service.get_unhealthy_history(hours)
@@ -1160,7 +1160,7 @@ async def persist_health_metrics_now(
     try:
         await require_admin_user(current_user)
 
-        from apps.bot.multi_tenant.bot_health_persistence import get_persistence_service
+        from apps.bot.user.bot_health_persistence import get_persistence_service
 
         persistence_service = get_persistence_service()
         await persistence_service.persist_all_metrics()
@@ -1423,7 +1423,7 @@ async def get_mtproto_pool_status(
 
         # Try to get metrics from connection pool (if available)
         try:
-            from apps.mtproto.connection_pool import get_connection_pool
+            from apps.mtproto.system.connection_pool import get_connection_pool
 
             pool = get_connection_pool()
             metrics = pool.get_metrics_summary()

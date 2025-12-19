@@ -14,7 +14,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
-from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
+from apps.bot.system.services.adapters.payment_adapter_factory import PaymentAdapterFactory
 from core.domain.payment import (
     Money,
     Payment,

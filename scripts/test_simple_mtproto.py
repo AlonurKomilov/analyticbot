@@ -22,7 +22,7 @@ async def test_connection():
 
     try:
         # Import required services
-        from apps.mtproto.multi_tenant.user_mtproto_service import get_user_mtproto_service
+        from apps.mtproto.user.user_mtproto_service import get_user_mtproto_service
 
         print("1️⃣ Getting MTProto service...")
         mtproto_service = get_user_mtproto_service()  # Not async

@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
+from apps.bot.system.services.adapters.payment_adapter_factory import PaymentAdapterFactory
 from core.domain.payment import (
     PaymentMethod,
     PaymentMethodData,

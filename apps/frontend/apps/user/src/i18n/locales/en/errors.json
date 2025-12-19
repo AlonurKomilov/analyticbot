@@ -1,4 +1,6 @@
 {
+  "generic": "An error occurred",
+  "notVerified": "Account not verified",
   "general": {
     "somethingWrong": "Something went wrong",
     "tryAgain": "Please try again",

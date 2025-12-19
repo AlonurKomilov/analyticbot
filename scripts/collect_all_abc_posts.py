@@ -28,7 +28,7 @@ async def main():
 
     try:
         from apps.di import get_container
-        from apps.mtproto.services.data_collection_service import MTProtoDataCollectionService
+        from apps.mtproto.system.services.data_collection_service import MTProtoDataCollectionService
 
         # Initialize container
         container = get_container()

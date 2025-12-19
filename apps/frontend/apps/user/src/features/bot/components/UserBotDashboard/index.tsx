@@ -32,7 +32,6 @@ import { BotActionsCard } from './BotActionsCard';
 import { ActiveServicesCard } from './ActiveServicesCard';
 import { AvailableUpgradesCard } from './AvailableUpgradesCard';
 import { convertChannelToChatId } from './utils';
-import { ROUTES } from '@config/routes';
 
 export const UserBotDashboard: React.FC = () => {
   const navigate = useNavigate();

@@ -24,7 +24,7 @@ async def collect_in_batches():
     """Collect posts in multiple batches"""
 
     from apps.di import get_container
-    from apps.mtproto.services.data_collection_service import MTProtoDataCollectionService
+    from apps.mtproto.system.services.data_collection_service import MTProtoDataCollectionService
 
     container = get_container()
     pool = await container.database.asyncpg_pool()

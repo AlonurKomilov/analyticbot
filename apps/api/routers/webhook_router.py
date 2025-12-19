@@ -9,7 +9,7 @@ from typing import Annotated
 from aiogram.types import Update
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 
-from apps.bot.multi_tenant.webhook_manager import get_webhook_manager
+from apps.bot.user.webhook_manager import get_webhook_manager
 from apps.di import get_container
 from core.ports.user_bot_repository import IUserBotRepository
 

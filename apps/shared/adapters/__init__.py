@@ -5,7 +5,7 @@ Adapters in this module provide clean interfaces to core services
 for both API and Bot layers. They handle service coordination and
 provide user-friendly interfaces without framework dependencies.
 
-Moved from apps.bot.services.adapters as part of Phase 2 Option B
+Moved from apps.bot.system.services.adapters as part of Phase 2 Option B
 to enable shared access and break cross-layer dependencies.
 """
 

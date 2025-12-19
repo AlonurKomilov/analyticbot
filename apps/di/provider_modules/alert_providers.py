@@ -58,7 +58,7 @@ def create_alert_event_manager(alert_repository=None, **kwargs):
 def create_telegram_alert_notifier(bot=None, **kwargs):
     """Create Telegram alert notifier (sends alerts via Telegram)"""
     try:
-        from apps.bot.adapters.alert_adapters import TelegramAlertNotifier
+        from apps.bot.system.adapters.alert_adapters import TelegramAlertNotifier
 
         if bot is None:
             logger.warning("Cannot create telegram alert notifier: missing bot")

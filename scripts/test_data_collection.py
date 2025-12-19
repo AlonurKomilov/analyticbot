@@ -33,9 +33,9 @@ async def test_data_collection():
     load_env()
 
     # Import after loading env
-    from apps.mtproto.collectors.history import HistoryCollector
-    from apps.mtproto.config import MTProtoSettings
-    from infra.tg.telethon_client import TelethonTGClient
+    from apps.mtproto.system.collectors.history import HistoryCollector
+    from apps.mtproto.system.config import MTProtoSettings
+    from infra.telegram.telethon import TelethonTGClient
 
     # Mock repositories for testing
     class MockRepository:

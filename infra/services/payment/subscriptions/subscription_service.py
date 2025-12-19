@@ -12,8 +12,8 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
-from apps.bot.models.payment import BillingCycle as AdapterBillingCycle
-from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
+from apps.bot.system.models.payment import BillingCycle as AdapterBillingCycle
+from apps.bot.system.services.adapters.payment_adapter_factory import PaymentAdapterFactory
 from core.domain.payment import (
     BillingCycle,
     Money,

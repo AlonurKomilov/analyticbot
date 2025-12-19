@@ -14,6 +14,7 @@
   "search": "Search",
   "filter": "Filter",
   "sort": "Sort",
+  "sortBy": "Sort By",
   "refresh": "Refresh",
   "export": "Export",
   "import": "Import",
@@ -79,6 +80,7 @@
   "reactions": "Reactions",
   "comments": "Comments",
   "shares": "Shares",
+  "forwards": "Forwards",
   "engagement": "Engagement",
   "reach": "Reach",
   "impressions": "Impressions",
@@ -99,9 +101,7 @@
   "removeConfig": "Remove Configuration",
   "status": "Status",
   "ready": "Ready",
-  "today": "Today",
   "channels": "channels",
   "errors": "Errors",
-  "total": "Total",
-  "back": "Back"
+  "debug": "Debug"
 }

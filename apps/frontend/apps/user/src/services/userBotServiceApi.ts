@@ -96,7 +96,7 @@ export class UserBotServiceApiService {
    * Add a banned word to a chat
    */
   async addBannedWord(
-    chatId: number,
+    _chatId: number,
     data: BannedWordCreate
   ): Promise<BannedWord> {
     const response = await this.client.post<BannedWord>(
@@ -109,7 +109,7 @@ export class UserBotServiceApiService {
   /**
    * Delete a banned word
    */
-  async deleteBannedWord(chatId: number, wordId: number): Promise<void> {
+  async deleteBannedWord(_chatId: number, wordId: number): Promise<void> {
     await this.client.delete(
       `${this.basePath}/banned-words/${wordId}`
     );

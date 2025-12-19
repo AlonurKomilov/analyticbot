@@ -249,7 +249,7 @@ export type {
   Warning,
   UserWarningsResponse,
   ModerationChatItem,
-} from './userBotModeration';
+} from './userBotService';
 
 // Note: All types are exported above via re-exports
 // No need for convenience re-exports to avoid duplicates

@@ -40,7 +40,7 @@ def sync_channel_metadata_task():
         errors = 0
         
         try:
-            from apps.mtproto.config import MTProtoSettings
+            from apps.mtproto.system.config import MTProtoSettings
             
             settings = MTProtoSettings()
             if not settings.MTPROTO_ENABLED:
@@ -63,7 +63,7 @@ def sync_channel_metadata_task():
             logger.info(f"🔄 Syncing metadata for {len(channels)} channels...")
             
             # Import MTProto service
-            from apps.mtproto.services.user_mtproto_service import UserMTProtoService
+            from apps.mtproto.system.services.user_mtproto_service import UserMTProtoService
             
             user_bot_repo = await container.database.user_bot_repo()
             mtproto_service = UserMTProtoService(user_bot_repo)

@@ -14,10 +14,10 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from apps.mtproto.collectors.history import HistoryCollector
-from apps.mtproto.collectors.updates import UpdatesCollector
-from apps.mtproto.config import MTProtoSettings
-from apps.mtproto.di import create_tg_client, get_repositories
+from apps.mtproto.system.collectors.history import HistoryCollector
+from apps.mtproto.system.collectors.updates import UpdatesCollector
+from apps.mtproto.system.config import MTProtoSettings
+from apps.mtproto.system.di import create_tg_client, get_repositories
 
 
 async def verify_mtproto_credentials():

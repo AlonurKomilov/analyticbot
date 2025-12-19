@@ -109,7 +109,7 @@ async def test_di_wiring():
             )
             print("  ✅ Protocols import successfully")
 
-            from apps.bot.adapters.scheduling_adapters import (
+            from apps.bot.system.adapters.scheduling_adapters import (
                 AiogramMarkupBuilder,
                 AiogramMessageSender,
             )

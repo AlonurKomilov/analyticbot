@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import Any
 
 # Import MTProto components
-from apps.mtproto.config import MTProtoSettings
-from apps.mtproto.di import (
+from apps.mtproto.system.config import MTProtoSettings
+from apps.mtproto.system.di import (
     MTProtoApplication,
     initialize_application,
     shutdown_application,

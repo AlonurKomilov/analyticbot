@@ -39,8 +39,6 @@ import {
   ContentCopy,
   Settings as SettingsIcon,
   Warning as WarningIcon,
-  Refresh as RefreshIcon,
-  Store as MarketplaceIcon,
   Security as SecurityIcon,
 } from '@mui/icons-material';
 import { apiClient } from '@/api/client';
@@ -103,12 +101,8 @@ const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color = '#8b5cf
 
 export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({ 
   onStatusChange,
-  onTestConnection,
-  onBrowsePowerUps,
-  onOpenSettings,
-  isTestingConnection = false,
 }) => {
-  const { t } = useTranslation(['mtproto', 'common']);
+  const { t } = useTranslation(['mtproto', 'common', 'errors']);
   const [status, setStatus] = useState<MTProtoStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

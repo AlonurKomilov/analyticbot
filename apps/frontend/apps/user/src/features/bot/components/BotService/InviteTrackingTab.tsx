@@ -196,7 +196,7 @@ export const InviteTrackingTab: React.FC<InviteTrackingTabProps> = ({ chatId }) 
                 </TableRow>
               </TableHead>
               <TableBody>
-                {inviteStats.leaderboard.map((inviter, index) => {
+                {inviteStats.leaderboard.map((inviter: { inviter_tg_id: number; inviter_username: string | null; inviter_name: string | null; total_invited: number; still_members: number; left_members: number }, index: number) => {
                   const retention = inviter.total_invited > 0
                     ? Math.round((inviter.still_members / inviter.total_invited) * 100)
                     : 0;

@@ -16,7 +16,7 @@ import asyncio
 import os
 import sys
 
-from apps.bot.multi_tenant.token_validator import TokenValidator
+from apps.bot.user.token_validator import TokenValidator
 
 
 async def test_real_token():

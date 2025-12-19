@@ -313,7 +313,7 @@ async def get_user_mtproto_service():
     Returns:
         UserMTProtoService: The MTProto service instance
     """
-    from apps.mtproto.multi_tenant.user_mtproto_service import UserMTProtoService
+    from apps.mtproto.user.user_mtproto_service import UserMTProtoService
 
     container = get_container()
     service = await container.mtproto.user_mtproto_service()

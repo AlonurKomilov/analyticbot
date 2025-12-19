@@ -152,8 +152,8 @@ async def main():
     load_env()
 
     # Import after loading env
-    from apps.mtproto.config import MTProtoSettings
-    from infra.tg.telethon_client import TelethonTGClient
+    from apps.mtproto.system.config import MTProtoSettings
+    from infra.telegram.telethon import TelethonTGClient
 
     # Setup logging
     logging.basicConfig(level=logging.INFO)

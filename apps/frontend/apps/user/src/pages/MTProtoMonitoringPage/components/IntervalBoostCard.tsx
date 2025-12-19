@@ -90,7 +90,7 @@ export const IntervalBoostCard: React.FC<IntervalBoostCardProps> = ({
       setError(null);
       setSuccess(null);
 
-      const response = await apiClient.post('/credits/interval-boost/purchase', {
+      const response = await apiClient.post<{ new_interval: number; credits_spent: number }>('/credits/interval-boost/purchase', {
         boost_count: boostCount,
       });
 

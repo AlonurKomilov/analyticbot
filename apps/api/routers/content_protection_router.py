@@ -13,17 +13,17 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from apps.api.middleware.auth import get_current_user
-from apps.bot.models.content_protection import (
+from apps.bot.system.models.content_protection import (
     ContentProtectionResponse as APIContentProtectionResponse,
 )
-from apps.bot.models.content_protection import (
+from apps.bot.system.models.content_protection import (
     CustomEmojiRequest,
     CustomEmojiResponse,
     PremiumFeatureLimits,
     ProtectionLevel,
     UserTier,
 )
-from apps.bot.services.premium_emoji_service import PremiumEmojiService
+from apps.bot.system.services.premium_emoji_service import PremiumEmojiService
 
 # ✅ Phase 3.3: Use DI container to get services
 from apps.di import get_content_protection_service

@@ -38,16 +38,16 @@ def test_new_imports():
             print(f"❌ {component} from {module} - {e}")
         total_tests += 1
     try:
-        print("✅ All components from apps.bot.analytics")
+        print("✅ All components from apps.bot.system.analytics")
         success_count += 1
     except Exception as e:
-        print(f"❌ All components from apps.bot.analytics - {e}")
+        print(f"❌ All components from apps.bot.system.analytics - {e}")
     total_tests += 1
     try:
-        print("✅ Factory functions from apps.bot.analytics")
+        print("✅ Factory functions from apps.bot.system.analytics")
         success_count += 1
     except Exception as e:
-        print(f"❌ Factory functions from apps.bot.analytics - {e}")
+        print(f"❌ Factory functions from apps.bot.system.analytics - {e}")
     total_tests += 1
     print("=" * 50)
     print(

@@ -84,7 +84,7 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
     onFormDataChange,
     onClearError
 }) => {
-    const { t } = useTranslation('channels');
+    const { t } = useTranslation(['channels', 'errors']);
     const [lookupResult, setLookupResult] = useState<ChannelLookupResult | null>(null);
     const [isLookingUp, setIsLookingUp] = useState(false);
     const [lookupError, setLookupError] = useState<string | null>(null);
@@ -128,7 +128,7 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
                 setLookupError(result.error_message || t('dialog.notFound'));
             }
         } catch (error: any) {
-            setLookupError(error.message || t('errors.generic'));
+            setLookupError(error.message || t('errors:generic'));
         } finally {
             setIsLookingUp(false);
         }

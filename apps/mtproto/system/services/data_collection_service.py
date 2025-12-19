@@ -1,0 +1,1190 @@
+"""
+MTProto Data Collection Service
+
+Multi-tenant service that automatically collects channel data for all users
+by reading their configured channels from the database.
+"""
+
+import asyncio
+import logging
+import signal
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
+from typing import Any
+
+from apps.di import get_container
+from apps.mtproto.system.collectors.history import HistoryCollector
+from apps.mtproto.system.config import MTProtoSettings
+from apps.mtproto.system.connection_pool import get_connection_pool
+from apps.mtproto.user.user_mtproto_service import UserMTProtoService
+
+logger = logging.getLogger(__name__)
+
+
+class TelegramClientAdapter:
+    """Adapter to wrap Telethon TelegramClient to match TGClient protocol."""
+
+    def __init__(self, telegram_client: Any):
+        """Initialize adapter with existing TelegramClient.
+
+        Args:
+            telegram_client: Telethon TelegramClient instance
+        """
+        self._client = telegram_client
+
+    async def start(self) -> None:
+        """Start client (no-op as client is already started)."""
+        pass
+
+    async def stop(self) -> None:
+        """Stop client (handled by UserMTProtoClient)."""
+        pass
+
+    async def is_connected(self) -> bool:
+        """Check if client is connected."""
+        return self._client.is_connected() if self._client else False
+
+    async def iter_history(
+        self, peer: Any, *, offset_id: int = 0, limit: int = 200
+    ) -> AsyncIterator[Any]:
+        """Iterate through message history.
+
+        Args:
+            peer: The target peer (username or ID)
+            offset_id: Start from this message ID
+            limit: Maximum messages to fetch
+
+        Yields:
+            Message objects
+        """
+        # Resolve entity first to ensure it's in cache
+        # Try multiple ID formats for robustness
+        entity = None
+        try:
+            entity = await self._client.get_entity(peer)
+        except Exception as e1:
+            logger.warning(f"Could not resolve entity for {peer}: {e1}")
+
+            # If peer is an int, try alternate formats
+            if isinstance(peer, int):
+                # Try negative format
+                try:
+                    negative_id = -abs(peer)
+                    entity = await self._client.get_entity(negative_id)
+                    logger.info(f"Resolved entity using negative ID: {negative_id}")
+                except Exception as e2:
+                    logger.debug(f"Negative ID failed: {e2}")
+
+                    # Try without 100 prefix if present
+                    id_str = str(abs(peer))
+                    if len(id_str) > 10 and id_str.startswith("100"):
+                        try:
+                            raw_id = int(id_str[3:])
+                            entity = await self._client.get_entity(raw_id)
+                            logger.info(f"Resolved entity using raw ID: {raw_id}")
+                        except Exception as e3:
+                            logger.debug(f"Raw ID failed: {e3}")
+
+        if entity:
+            peer = entity  # Use resolved entity for iteration
+        # Continue with original peer if resolution failed, might still work
+
+        async for message in self._client.iter_messages(peer, offset_id=offset_id, limit=limit):
+            yield message
+
+    async def get_broadcast_stats(self, channel: Any) -> Any:
+        """Get broadcast statistics for a channel."""
+        return await self._client.get_broadcast_stats(channel)
+
+    async def get_megagroup_stats(self, channel: Any) -> Any:
+        """Get megagroup statistics for a channel."""
+        return await self._client.get_megagroup_stats(channel)
+
+    async def load_async_graph(self, token: str, x: int = 0) -> Any:
+        """Load async graph data."""
+        return await self._client.load_async_graph(token, x)
+
+    async def get_full_channel(self, channel: Any) -> Any:
+        """Get full channel information including participant count."""
+        from telethon.tl.functions.channels import GetFullChannelRequest
+
+        # Resolve entity first with fallback formats
+        entity = None
+        try:
+            entity = await self._client.get_entity(channel)
+        except Exception:
+            if isinstance(channel, int):
+                # Try alternate formats
+                try:
+                    entity = await self._client.get_entity(-abs(channel))
+                except Exception:
+                    id_str = str(abs(channel))
+                    if len(id_str) > 10 and id_str.startswith("100"):
+                        entity = await self._client.get_entity(int(id_str[3:]))
+
+        if not entity:
+            entity = channel  # Fallback to original
+
+        # Get full channel info
+        full_channel = await self._client(GetFullChannelRequest(entity))
+        return full_channel
+
+    async def get_me(self) -> Any:
+        """Get information about the current user."""
+        return await self._client.get_me()
+
+    async def disconnect(self) -> None:
+        """Disconnect the client."""
+        if self._client:
+            await self._client.disconnect()
+
+    async def iter_updates(self) -> AsyncIterator[Any]:
+        """Iterate through updates (not used in current implementation)."""
+        if False:  # pragma: no cover
+            yield None
+
+
+class MTProtoDataCollectionService:
+    """Service for automatic multi-tenant MTProto data collection."""
+
+    def __init__(self):
+        self.settings = MTProtoSettings()
+        self.container: Any = None
+        self.channel_repo: Any = None
+        self.user_bot_repo: Any = None
+        self.user_mtproto_service: UserMTProtoService | None = None
+        self.running = False
+        self.tasks: list = []
+
+    async def _get_last_collection_time(self) -> datetime | None:
+        """Get the timestamp of the last collection_end event from audit log.
+
+        Returns:
+            The timestamp of the last collection, or None if no collections found.
+        """
+        try:
+            db_pool = await self.container.database.asyncpg_pool()
+            async with db_pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    """
+                    SELECT timestamp
+                    FROM mtproto_audit_log
+                    WHERE action = 'collection_end'
+                    ORDER BY timestamp DESC
+                    LIMIT 1
+                    """
+                )
+                if row:
+                    return row["timestamp"]
+                return None
+        except Exception as e:
+            logger.warning(f"Failed to get last collection time: {e}")
+            return None
+
+    async def _is_collection_in_progress(self) -> tuple[bool, datetime | None]:
+        """Check if there's a collection currently in progress (started but not ended).
+
+        Returns:
+            Tuple of (is_in_progress, start_timestamp)
+        """
+        try:
+            db_pool = await self.container.database.asyncpg_pool()
+            async with db_pool.acquire() as conn:
+                # Get the most recent collection_start
+                last_start = await conn.fetchrow(
+                    """
+                    SELECT timestamp
+                    FROM mtproto_audit_log
+                    WHERE action = 'collection_start'
+                    ORDER BY timestamp DESC
+                    LIMIT 1
+                    """
+                )
+
+                if not last_start:
+                    return False, None
+
+                # Get the most recent collection_end
+                last_end = await conn.fetchrow(
+                    """
+                    SELECT timestamp
+                    FROM mtproto_audit_log
+                    WHERE action = 'collection_end'
+                    ORDER BY timestamp DESC
+                    LIMIT 1
+                    """
+                )
+
+                start_time = last_start["timestamp"]
+
+                # If no end or start is after end, collection is in progress
+                if not last_end or start_time > last_end["timestamp"]:
+                    return True, start_time
+
+                return False, None
+        except Exception as e:
+            logger.warning(f"Failed to check collection in progress: {e}")
+            return False, None
+
+    async def _should_skip_collection(
+        self, interval_minutes: int, min_gap_ratio: float = 0.5
+    ) -> tuple[bool, float]:
+        """Check if collection should be skipped because one was completed recently or is in progress.
+
+        This prevents duplicate collections when the worker is restarted.
+
+        Args:
+            interval_minutes: The configured collection interval in minutes
+            min_gap_ratio: Minimum ratio of interval that must pass before allowing collection.
+                          Default 0.5 means skip if less than 50% of interval has passed.
+
+        Returns:
+            Tuple of (should_skip, seconds_until_next_collection)
+        """
+        now = datetime.now(UTC)
+        interval_seconds = interval_minutes * 60
+        min_gap_seconds = interval_seconds * min_gap_ratio
+
+        # First, check if a collection is currently in progress
+        in_progress, start_time = await self._is_collection_in_progress()
+        if in_progress and start_time:
+            # Handle timezone-naive timestamps
+            if start_time.tzinfo is None:
+                start_time = start_time.replace(tzinfo=UTC)
+
+            time_since_start = (now - start_time).total_seconds()
+
+            # If started less than 5 minutes ago, assume it's still running (or crashed recently)
+            # Wait for the remaining interval time
+            if time_since_start < 300:  # 5 minutes
+                logger.info(
+                    f"🔄 Collection appears to be in progress (started {time_since_start:.0f}s ago)"
+                )
+                wait_seconds = min_gap_seconds - time_since_start
+                if wait_seconds > 0:
+                    return True, wait_seconds
+            else:
+                # Started more than 5 minutes ago without ending - likely a crashed collection
+                # We can proceed but log a warning
+                logger.warning(
+                    f"⚠️  Previous collection started {time_since_start/60:.1f}min ago but never ended. "
+                    f"May have crashed. Proceeding with new collection."
+                )
+
+        # Check when the last collection completed
+        last_collection = await self._get_last_collection_time()
+
+        if last_collection is None:
+            # No previous collection found, don't skip
+            return False, 0
+
+        # Handle timezone-naive timestamps from database
+        if last_collection.tzinfo is None:
+            last_collection = last_collection.replace(tzinfo=UTC)
+
+        time_since_last = (now - last_collection).total_seconds()
+
+        if time_since_last < min_gap_seconds:
+            # Collection was too recent, calculate wait time
+            wait_seconds = min_gap_seconds - time_since_last
+            return True, wait_seconds
+
+        return False, 0
+
+    async def _get_users_due_for_collection(self) -> list[dict]:
+        """Get users who are due for collection based on their individual plan intervals.
+
+        This method implements tiered collection intervals:
+        - Free users: 60 min interval (24 collections/day)
+        - Pro users: 20 min interval (72 collections/day)
+        - Business users: 10 min interval (144 collections/day)
+        - Enterprise users: 5 min interval (288 collections/day)
+
+        A user is "due" if their last collection was >= their interval ago.
+
+        Returns:
+            List of user dicts who need collection, sorted by priority (longest wait first)
+        """
+        try:
+            db_pool = await self.container.database.asyncpg_pool()
+
+            # Get all MTProto-enabled users with their intervals and last collection time
+            query = """
+                WITH user_intervals AS (
+                    SELECT
+                        ubc.user_id,
+                        ubc.mtproto_phone,
+                        COALESCE(
+                            u.mtproto_interval_override,
+                            p.mtproto_interval_minutes,
+                            60
+                        ) as interval_minutes,
+                        COALESCE(p.name, 'free') as plan_name
+                    FROM user_bot_credentials ubc
+                    JOIN users u ON ubc.user_id = u.id
+                    LEFT JOIN plans p ON u.plan_id = p.id
+                    WHERE ubc.mtproto_enabled = TRUE
+                ),
+                last_collections AS (
+                    SELECT
+                        user_id,
+                        MAX(timestamp) as last_collection_time
+                    FROM mtproto_audit_log
+                    WHERE action = 'collection_end'
+                    GROUP BY user_id
+                )
+                SELECT
+                    ui.user_id,
+                    ui.mtproto_phone,
+                    ui.interval_minutes,
+                    ui.plan_name,
+                    lc.last_collection_time,
+                    EXTRACT(EPOCH FROM (NOW() - COALESCE(lc.last_collection_time, '1970-01-01'::timestamp))) as seconds_since_last,
+                    (ui.interval_minutes * 60) as interval_seconds
+                FROM user_intervals ui
+                LEFT JOIN last_collections lc ON ui.user_id = lc.user_id
+                WHERE
+                    -- User is due if never collected OR last collection was >= interval ago
+                    lc.last_collection_time IS NULL
+                    OR EXTRACT(EPOCH FROM (NOW() - lc.last_collection_time)) >= (ui.interval_minutes * 60)
+                ORDER BY
+                    -- Priority: users waiting longest (relative to their interval) first
+                    COALESCE(
+                        EXTRACT(EPOCH FROM (NOW() - lc.last_collection_time)) / (ui.interval_minutes * 60),
+                        999
+                    ) DESC
+            """
+
+            async with db_pool.acquire() as conn:
+                rows = await conn.fetch(query)
+
+            users_due = [dict(row) for row in rows]
+
+            if users_due:
+                logger.info(
+                    f"📋 {len(users_due)} users due for collection: "
+                    + ", ".join(
+                        [
+                            f"{u['user_id']}({u['plan_name']}/{u['interval_minutes']}min)"
+                            for u in users_due[:5]  # Show first 5
+                        ]
+                    )
+                    + (f"... and {len(users_due) - 5} more" if len(users_due) > 5 else "")
+                )
+
+            return users_due
+
+        except Exception as e:
+            logger.error(f"Error getting users due for collection: {e}")
+            return []
+
+    async def _get_next_collection_wait_time(self) -> int:
+        """Calculate how long to wait until the next user is due for collection.
+
+        Returns:
+            Seconds to wait (minimum 60, maximum 300)
+        """
+        try:
+            db_pool = await self.container.database.asyncpg_pool()
+
+            # Find the user who will be due soonest
+            query = """
+                WITH user_intervals AS (
+                    SELECT
+                        ubc.user_id,
+                        COALESCE(
+                            u.mtproto_interval_override,
+                            p.mtproto_interval_minutes,
+                            60
+                        ) as interval_minutes
+                    FROM user_bot_credentials ubc
+                    JOIN users u ON ubc.user_id = u.id
+                    LEFT JOIN plans p ON u.plan_id = p.id
+                    WHERE ubc.mtproto_enabled = TRUE
+                ),
+                last_collections AS (
+                    SELECT
+                        user_id,
+                        MAX(timestamp) as last_collection_time
+                    FROM mtproto_audit_log
+                    WHERE action = 'collection_end'
+                    GROUP BY user_id
+                )
+                SELECT
+                    MIN(
+                        GREATEST(
+                            0,
+                            (ui.interval_minutes * 60) -
+                            COALESCE(
+                                EXTRACT(EPOCH FROM (NOW() - lc.last_collection_time)),
+                                ui.interval_minutes * 60  -- If never collected, due now
+                            )
+                        )
+                    ) as seconds_until_next
+                FROM user_intervals ui
+                LEFT JOIN last_collections lc ON ui.user_id = lc.user_id
+            """
+
+            async with db_pool.acquire() as conn:
+                row = await conn.fetchrow(query)
+
+            if row and row["seconds_until_next"] is not None:
+                wait_time = int(row["seconds_until_next"])
+                # Clamp between 60 and 300 seconds
+                return max(60, min(300, wait_time))
+
+            return 60  # Default 1 minute check interval
+
+        except Exception as e:
+            logger.warning(f"Error calculating next collection wait: {e}")
+            return 60  # Default fallback
+        time_since_last = (now - last_collection).total_seconds()
+
+        if time_since_last < min_gap_seconds:
+            # Collection was too recent, calculate wait time
+            wait_seconds = min_gap_seconds - time_since_last
+            return True, wait_seconds
+
+        return False, 0
+
+    async def initialize(self):
+        """Initialize all components."""
+        logger.info("🔧 Initializing MTProto Data Collection Service...")
+
+        # Check configuration
+        if not self.settings.MTPROTO_ENABLED:
+            raise RuntimeError("MTProto is disabled. Set MTPROTO_ENABLED=true in .env")
+
+        # Get main DI container
+        self.container = get_container()
+
+        # Initialize repositories
+        self.channel_repo = await self.container.database.channel_repo()
+        self.user_bot_repo = await self.container.database.user_bot_repo()
+
+        # Initialize user MTProto service for multi-tenant support
+        self.user_mtproto_service = UserMTProtoService(self.user_bot_repo)
+
+        logger.info("✅ MTProto Data Collection Service initialized")
+
+    async def _log_collection_start(self, user_id: int, total_channels: int):
+        """Log collection start event to audit log.
+
+        Args:
+            user_id: User ID
+            total_channels: Total number of channels to collect from
+        """
+        try:
+            from infra.db.models.user_bot_orm import MTProtoAuditLog
+
+            session_factory = await self.container.database.async_session_maker()
+            async with session_factory() as audit_session:
+                # Create audit log entry directly
+                log_entry = MTProtoAuditLog(
+                    user_id=user_id,
+                    action="collection_start",
+                    event_metadata={
+                        "total_channels": total_channels,
+                        "start_time": datetime.now(UTC).isoformat(),
+                    },
+                    timestamp=datetime.now(UTC),
+                )
+                audit_session.add(log_entry)
+                await audit_session.commit()
+        except Exception as e:
+            logger.warning(f"Failed to log collection start for user {user_id}: {e}")
+
+    async def _log_collection_progress(
+        self,
+        user_id: int,
+        channel_id: int,
+        channel_name: str,
+        messages_collected: int,
+        channels_processed: int,
+        total_channels: int,
+        errors: int = 0,
+    ):
+        """Log collection progress event to audit log.
+
+        Args:
+            user_id: User ID
+            channel_id: Channel ID
+            channel_name: Channel name
+            messages_collected: Messages collected for this channel
+            channels_processed: Number of channels processed so far
+            total_channels: Total number of channels
+            errors: Error count for this channel
+        """
+        try:
+            from infra.db.models.user_bot_orm import MTProtoAuditLog
+
+            session_factory = await self.container.database.async_session_maker()
+            async with session_factory() as audit_session:
+                # Create audit log entry directly
+                log_entry = MTProtoAuditLog(
+                    user_id=user_id,
+                    channel_id=channel_id,
+                    action="collection_progress",
+                    event_metadata={
+                        "channel_name": channel_name,
+                        "messages_collected": messages_collected,
+                        "channels_processed": channels_processed,
+                        "total_channels": total_channels,
+                        "errors": errors,
+                        "progress_time": datetime.now(UTC).isoformat(),
+                    },
+                    timestamp=datetime.now(UTC),
+                )
+                audit_session.add(log_entry)
+                await audit_session.commit()
+        except Exception as e:
+            logger.warning(
+                f"Failed to log collection progress for user {user_id}, channel {channel_id}: {e}"
+            )
+
+    async def _log_collection_end(
+        self,
+        user_id: int,
+        total_messages: int,
+        channels_synced: int,
+        total_channels: int,
+        errors: int = 0,
+    ):
+        """Log collection end event to audit log.
+
+        Args:
+            user_id: User ID
+            total_messages: Total messages collected across all channels
+            channels_synced: Number of channels successfully synced
+            total_channels: Total number of channels
+            errors: Total error count
+        """
+        try:
+            from infra.db.models.user_bot_orm import MTProtoAuditLog
+
+            session_factory = await self.container.database.async_session_maker()
+            async with session_factory() as audit_session:
+                # Create audit log entry directly
+                log_entry = MTProtoAuditLog(
+                    user_id=user_id,
+                    action="collection_end",
+                    event_metadata={
+                        "total_messages": total_messages,
+                        "channels_synced": channels_synced,
+                        "total_channels": total_channels,
+                        "errors": errors,
+                        "end_time": datetime.now(UTC).isoformat(),
+                    },
+                    timestamp=datetime.now(UTC),
+                )
+                audit_session.add(log_entry)
+                await audit_session.commit()
+        except Exception as e:
+            logger.warning(f"Failed to log collection end for user {user_id}: {e}")
+
+    async def collect_user_channel_history(self, user_id: int, limit_per_channel: int = 50) -> dict:
+        """Collect history for all channels of a specific user.
+
+        Args:
+            user_id: The user ID
+            limit_per_channel: Maximum messages to fetch per channel
+
+        Returns:
+            Dictionary with collection results
+        """
+        # Get connection pool
+        pool = get_connection_pool()
+
+        # Try to acquire session (will fail if user already has active session)
+        if not await pool.acquire_session(user_id):
+            logger.warning(f"⏭️  Skipping user {user_id} - already has active collection session")
+            return {
+                "success": False,
+                "user_id": user_id,
+                "reason": "session_already_active",
+                "channels_synced": 0,
+                "total_messages": 0,
+            }
+
+        session_start = datetime.now(UTC)
+        total_messages = 0
+        synced_channels = 0
+        errors = 0
+
+        try:
+            # Get user's MTProto client
+            user_client = await self.user_mtproto_service.get_user_client(user_id)  # type: ignore
+            if not user_client:
+                logger.warning(f"User {user_id} has no MTProto credentials configured")
+                return {
+                    "success": False,
+                    "user_id": user_id,
+                    "reason": "no_mtproto_credentials",
+                    "channels_synced": 0,
+                    "total_messages": 0,
+                }
+
+            # Connect to Telegram
+            await user_client.connect()
+            logger.info(f"🔌 Connected MTProto for user {user_id}")
+
+            # Get user's channels from database
+            channels = await self.channel_repo.get_user_channels(user_id)
+
+            if not channels:
+                logger.info(f"User {user_id} has no channels configured")
+                return {
+                    "success": True,
+                    "user_id": user_id,
+                    "reason": "no_channels",
+                    "channels_synced": 0,
+                    "total_messages": 0,
+                }
+
+            # 🔒 FILTER: Check per-channel MTProto settings
+            # Only collect from channels where MTProto is explicitly enabled or no setting exists (default enabled)
+            channels_to_collect = []
+            skipped_channels = []
+
+            # Get database pool from container
+            db_pool = await self.container.database.asyncpg_pool()
+
+            async with db_pool.acquire() as conn:
+                for channel in channels:
+                    channel_id = channel.get("id") or channel.get("telegram_id")
+
+                    # Check if channel has per-channel MTProto setting
+                    setting = await conn.fetchrow(
+                        """
+                        SELECT mtproto_enabled
+                        FROM channel_mtproto_settings
+                        WHERE channel_id = $1 AND user_id = $2
+                        """,
+                        channel_id,
+                        user_id,
+                    )
+
+                    if setting is None:
+                        # No explicit setting = default ENABLED (backward compatibility)
+                        channels_to_collect.append(channel)
+                        logger.debug(
+                            f"  ✅ Channel {channel.get('title')} - no setting (default enabled)"
+                        )
+                    elif setting["mtproto_enabled"]:
+                        # Explicitly enabled
+                        channels_to_collect.append(channel)
+                        logger.debug(f"  ✅ Channel {channel.get('title')} - explicitly enabled")
+                    else:
+                        # Explicitly disabled - SKIP
+                        skipped_channels.append(channel.get("title", "Unknown"))
+                        logger.info(
+                            f"  ⏭️  Skipping channel {channel.get('title')} - MTProto disabled per channel setting"
+                        )
+
+            if skipped_channels:
+                logger.info(
+                    f"📛 Skipped {len(skipped_channels)} channels with MTProto disabled: {', '.join(skipped_channels)}"
+                )
+
+            if not channels_to_collect:
+                logger.info(f"User {user_id} has no channels with MTProto enabled")
+                return {
+                    "success": True,
+                    "user_id": user_id,
+                    "reason": "no_enabled_channels",
+                    "channels_synced": 0,
+                    "total_messages": 0,
+                    "skipped_channels": len(skipped_channels),
+                }
+
+            logger.info(
+                f"📥 Collecting history for user {user_id}: {len(channels_to_collect)} channels (skipped {len(skipped_channels)})"
+            )
+
+            # Log collection start (with actual channels to collect)
+            await self._log_collection_start(user_id, len(channels_to_collect))
+
+            # Create a repos object for the collector
+            class ReposWrapper:
+                def __init__(self, channel_repo, post_repo, metrics_repo):
+                    self.channel_repo = channel_repo
+                    self.post_repo = post_repo
+                    self.post_metrics_repo = metrics_repo
+                    self.metrics_repo = metrics_repo  # Alias for compatibility
+
+            # Get repositories from DI container
+            channel_repo = await self.container.database.channel_repo()
+            post_repo = await self.container.database.post_repo()
+            metrics_repo = await self.container.database.metrics_repo()
+
+            repos = ReposWrapper(channel_repo, post_repo, metrics_repo)
+
+            # Wrap the TelegramClient with our adapter to match TGClient protocol
+            tg_client_adapter = TelegramClientAdapter(user_client._client)
+
+            # Create collector with adapted client and user_id for multi-tenant ownership
+            collector = HistoryCollector(tg_client_adapter, repos, self.settings, user_id=user_id)  # type: ignore
+
+            error_list = []
+
+            # Collect from each channel (only MTProto-enabled channels)
+            for idx, channel in enumerate(channels_to_collect):
+                channel_name = "Unknown"
+                channel_id = None
+                channel_errors = 0
+                try:
+                    channel_id = channel.get("id") or channel.get("telegram_id")
+                    channel_name = channel.get("title") or channel.get("name", "Unknown")
+
+                    # Convert channel ID to Telethon format
+                    # Telegram channel IDs in our DB already include the "100" prefix (e.g., 1002678877654)
+                    # We just need to make them negative for the API (e.g., -1002678877654)
+                    channel_id_str = str(channel_id)
+                    if channel_id_str.startswith("-"):
+                        # Already negative
+                        peer_identifier = int(channel_id_str)
+                    else:
+                        # Make negative
+                        peer_identifier = -int(channel_id_str)
+
+                    logger.info(
+                        f"  📡 Syncing channel: {channel_name} (DB ID: {channel_id}, Telegram ID: {peer_identifier})"
+                    )
+
+                    # Use _process_peer_history for storage (internal method handles DB upserts)
+                    stats = await collector._process_peer_history(
+                        peer=peer_identifier, limit=limit_per_channel
+                    )
+
+                    messages_collected = stats.get("ingested", 0) + stats.get("updated", 0)
+                    total_messages += messages_collected
+                    synced_channels += 1
+
+                    logger.info(
+                        f"  ✅ Channel {channel_name}: {messages_collected} messages stored (ingested: {stats.get('ingested', 0)}, updated: {stats.get('updated', 0)})"
+                    )
+
+                    # Log progress for this channel
+                    await self._log_collection_progress(
+                        user_id=user_id,
+                        channel_id=channel_id,
+                        channel_name=channel_name,
+                        messages_collected=messages_collected,
+                        channels_processed=idx + 1,
+                        total_channels=len(channels_to_collect),
+                        errors=channel_errors,
+                    )
+
+                except Exception as e:
+                    logger.error(f"  ❌ Error syncing channel {channel_name}: {e}")
+                    error_list.append(f"Channel {channel_name}: {str(e)}")
+                    channel_errors = 1
+                    errors += 1
+
+                    # Still log progress even on error
+                    if channel_id:
+                        await self._log_collection_progress(
+                            user_id=user_id,
+                            channel_id=channel_id,
+                            channel_name=channel_name,
+                            messages_collected=0,
+                            channels_processed=idx + 1,
+                            total_channels=len(channels_to_collect),
+                            errors=channel_errors,
+                        )
+
+            # Disconnect user client - AUTO CLOSE after collection
+            await user_client.disconnect()
+            logger.info(f"🔌 Disconnected MTProto for user {user_id}")
+
+            # Log collection end
+            await self._log_collection_end(
+                user_id=user_id,
+                total_messages=total_messages,
+                channels_synced=synced_channels,
+                total_channels=len(channels_to_collect),
+                errors=len(error_list),
+            )
+
+            session_duration = (datetime.now(UTC) - session_start).total_seconds()
+            logger.info(
+                f"✅ User {user_id} collection complete: "
+                f"{synced_channels}/{len(channels_to_collect)} channels, "
+                f"{total_messages} messages in {session_duration:.1f}s"
+            )
+
+            return {
+                "success": len(error_list) < len(channels_to_collect),
+                "user_id": user_id,
+                "channels_synced": synced_channels,
+                "total_channels": len(channels_to_collect),
+                "total_messages": total_messages,
+                "errors": error_list,
+                "sync_time": datetime.now(UTC).isoformat(),
+                "duration_seconds": session_duration,
+            }
+
+        except Exception as e:
+            logger.error(f"❌ Error collecting data for user {user_id}: {e}")
+            errors += 1
+            # Try to log the error end state
+            try:
+                await self._log_collection_end(
+                    user_id=user_id, total_messages=0, channels_synced=0, total_channels=0, errors=1
+                )
+            except Exception:
+                # Ignore any logging errors during error handling to avoid cascading failures
+                pass
+
+            return {
+                "success": False,
+                "user_id": user_id,
+                "reason": f"error: {str(e)}",
+                "channels_synced": 0,
+                "total_messages": 0,
+            }
+
+        finally:
+            # ALWAYS release session in connection pool
+            await pool.release_session(
+                user_id=user_id,
+                channels_processed=synced_channels,
+                messages_collected=total_messages,
+                errors=errors,
+            )
+
+    async def collect_all_users(self, limit_per_channel: int = 50) -> dict:
+        """Collect channel history for all users with MTProto enabled.
+
+        Args:
+            limit_per_channel: Maximum messages to fetch per channel
+
+        Returns:
+            Dictionary with collection results for all users
+        """
+        try:
+            # Get all users with MTProto enabled
+            users = await self.user_bot_repo.get_all_mtproto_enabled_users()
+
+            if not users:
+                logger.info("No users with MTProto enabled")
+                return {
+                    "success": True,
+                    "reason": "no_users",
+                    "users_processed": 0,
+                    "total_messages": 0,
+                }
+
+            logger.info(f"🚀 Collecting data for {len(users)} users with MTProto enabled")
+
+            total_messages = 0
+            users_processed = 0
+            all_results = []
+
+            # Process each user
+            for user in users:
+                user_id = user.get("user_id") or user.get(
+                    "id"
+                )  # user_id is the actual user ID, not record ID
+                logger.info(f"📊 Processing user {user_id}...")
+
+                result = await self.collect_user_channel_history(user_id, limit_per_channel)
+
+                if result.get("success"):
+                    users_processed += 1
+                    total_messages += result.get("total_messages", 0)
+
+                all_results.append(result)
+
+            logger.info(
+                f"🎉 Collection complete: {users_processed}/{len(users)} users, "
+                f"{total_messages} total messages"
+            )
+
+            return {
+                "success": True,
+                "users_processed": users_processed,
+                "total_users": len(users),
+                "total_messages": total_messages,
+                "results": all_results,
+                "sync_time": datetime.now(UTC).isoformat(),
+            }
+
+        except Exception as e:
+            logger.error(f"❌ Error collecting data for all users: {e}")
+            return {
+                "success": False,
+                "reason": f"error: {str(e)}",
+                "users_processed": 0,
+                "total_messages": 0,
+            }
+
+    async def run_continuous_service(self, interval_minutes: int = 10, process_manager=None):
+        """Run continuous data collection service.
+
+        Args:
+            interval_minutes: Interval between collection runs in minutes
+            process_manager: Optional ProcessManager for lifecycle management
+        """
+        logger.info(
+            f"🚀 Starting continuous MTProto data collection service "
+            f"(interval: {interval_minutes} minutes)..."
+        )
+
+        self.running = True
+
+        # Use process_manager if provided, otherwise set up own signal handlers
+        if not process_manager:
+            # Set up signal handlers for graceful shutdown
+            def signal_handler(signum, frame):
+                logger.info(f"🛑 Received signal {signum}, shutting down...")
+                self.running = False
+
+            signal.signal(signal.SIGINT, signal_handler)
+            signal.signal(signal.SIGTERM, signal_handler)
+
+        interval_seconds = interval_minutes * 60
+
+        # Helper function to check if collection should continue
+        def should_run() -> bool:
+            """Check if collection loop should continue running"""
+            if process_manager:
+                return process_manager.should_continue()
+            return self.running
+
+        try:
+            # Check if we should skip initial collection due to recent restart
+            should_skip, wait_seconds = await self._should_skip_collection(interval_minutes)
+
+            if should_skip:
+                logger.info(
+                    f"⏭️  Skipping initial collection - previous collection was {wait_seconds:.0f}s ago. "
+                    f"Waiting {wait_seconds:.0f}s to maintain interval spacing..."
+                )
+                # Wait the remaining time before first collection
+                for i in range(int(wait_seconds)):
+                    if not should_run():
+                        logger.info("🛑 Shutdown requested during initial wait")
+                        return
+                    if process_manager and i % 60 == 0:
+                        process_manager.heartbeat()
+                    await asyncio.sleep(1)
+                logger.info("✅ Initial wait complete, starting regular collection cycle")
+
+            while should_run():
+                collection_start = datetime.now(UTC)
+                logger.info(
+                    f"🔄 Starting collection cycle at {collection_start.strftime('%H:%M:%S')}..."
+                )
+
+                # Update heartbeat if using process_manager
+                if process_manager:
+                    process_manager.heartbeat()
+
+                # Run collection for all users using configured limit
+                limit = self.settings.MTPROTO_HISTORY_LIMIT_PER_RUN
+                logger.info(f"📊 Using history limit: {limit} messages per channel")
+                result = await self.collect_all_users(limit_per_channel=limit)
+
+                collection_end = datetime.now(UTC)
+                collection_duration = (collection_end - collection_start).total_seconds()
+
+                if result.get("success"):
+                    logger.info(
+                        f"✅ Collection cycle complete: "
+                        f"{result.get('users_processed', 0)} users, "
+                        f"{result.get('total_messages', 0)} messages, "
+                        f"took {collection_duration:.1f}s"
+                    )
+                else:
+                    logger.error(f"❌ Collection cycle failed: {result.get('reason', 'unknown')}")
+
+                # Calculate wait time: ensure minimum gap between collections
+                # If collection took 5 minutes and interval is 10 minutes, wait only 5 more minutes
+                # This maintains 10-minute intervals between START times, not END times
+                remaining_wait = max(
+                    60, interval_seconds - collection_duration
+                )  # Minimum 60 seconds cooldown
+
+                logger.info(
+                    f"⏳ Collection took {collection_duration:.1f}s, "
+                    f"waiting {remaining_wait:.1f}s until next cycle... "
+                    f"(target interval: {interval_minutes}min between starts)"
+                )
+
+                if collection_duration > interval_seconds:
+                    logger.warning(
+                        f"⚠️  Collection took {collection_duration/60:.1f}min, "
+                        f"longer than configured interval of {interval_minutes}min! "
+                        f"Collections will run back-to-back with {remaining_wait}s cooldown."
+                    )
+
+                # Sleep in small chunks to respond quickly to shutdown signals
+                # and update heartbeat periodically to prevent timeout
+                for i in range(int(remaining_wait)):
+                    if not should_run():
+                        break
+
+                    # Update heartbeat every 60 seconds during wait to prevent timeout
+                    if process_manager and i % 60 == 0:
+                        process_manager.heartbeat()
+
+                    await asyncio.sleep(1)
+
+        except Exception as e:
+            logger.error(f"❌ Service error: {e}")
+
+        finally:
+            await self.shutdown()
+
+    async def run_continuous_service_tiered(self, process_manager=None):
+        """Run continuous data collection service with per-user tiered intervals.
+
+        This is the new architecture that respects each user's plan-based interval:
+        - Free users: 60 min interval
+        - Pro users: 20 min interval
+        - Business users: 10 min interval
+        - Enterprise users: 5 min interval
+
+        Instead of collecting all users at a fixed global interval, this method:
+        1. Checks which users are "due" for collection based on their interval
+        2. Only collects those users
+        3. Calculates smart wait times based on when next user is due
+
+        Args:
+            process_manager: Optional ProcessManager for lifecycle management
+        """
+        logger.info(
+            "🚀 Starting continuous MTProto data collection service "
+            "(TIERED mode - per-user intervals based on plan)..."
+        )
+
+        self.running = True
+
+        # Use process_manager if provided, otherwise set up own signal handlers
+        if not process_manager:
+
+            def signal_handler(signum, frame):
+                logger.info(f"🛑 Received signal {signum}, shutting down...")
+                self.running = False
+
+            signal.signal(signal.SIGINT, signal_handler)
+            signal.signal(signal.SIGTERM, signal_handler)
+
+        def should_run() -> bool:
+            if process_manager:
+                return process_manager.should_continue()
+            return self.running
+
+        try:
+            while should_run():
+                cycle_start = datetime.now(UTC)
+
+                # Update heartbeat if using process_manager
+                if process_manager:
+                    process_manager.heartbeat()
+
+                # Get users who are due for collection
+                users_due = await self._get_users_due_for_collection()
+
+                if users_due:
+                    logger.info(
+                        f"🔄 Collection cycle: {len(users_due)} users due at "
+                        f"{cycle_start.strftime('%H:%M:%S')}"
+                    )
+
+                    total_messages = 0
+                    users_processed = 0
+                    limit = self.settings.MTPROTO_HISTORY_LIMIT_PER_RUN
+
+                    # Process each due user
+                    for user in users_due:
+                        if not should_run():
+                            break
+
+                        user_id = user["user_id"]
+                        plan_name = user.get("plan_name", "free")
+                        interval = user.get("interval_minutes", 60)
+
+                        logger.info(
+                            f"📊 Processing user {user_id} "
+                            f"(plan: {plan_name}, interval: {interval}min)..."
+                        )
+
+                        result = await self.collect_user_channel_history(user_id, limit)
+
+                        if result.get("success"):
+                            users_processed += 1
+                            total_messages += result.get("total_messages", 0)
+
+                    cycle_duration = (datetime.now(UTC) - cycle_start).total_seconds()
+                    logger.info(
+                        f"✅ Cycle complete: {users_processed}/{len(users_due)} users, "
+                        f"{total_messages} messages, took {cycle_duration:.1f}s"
+                    )
+                else:
+                    logger.debug("😴 No users due for collection")
+
+                # Calculate wait time until next user is due
+                wait_seconds = await self._get_next_collection_wait_time()
+
+                logger.info(f"⏳ Waiting {wait_seconds}s until next collection check...")
+
+                # Sleep in small chunks for responsive shutdown
+                for i in range(wait_seconds):
+                    if not should_run():
+                        break
+                    if process_manager and i % 60 == 0:
+                        process_manager.heartbeat()
+                    await asyncio.sleep(1)
+
+        except Exception as e:
+            logger.error(f"❌ Service error: {e}")
+
+        finally:
+            await self.shutdown()
+
+    async def get_status(self):
+        """Get status of the data collection service."""
+        status = {
+            "mtproto_enabled": self.settings.MTPROTO_ENABLED,
+            "history_enabled": self.settings.MTPROTO_HISTORY_ENABLED,
+            "updates_enabled": self.settings.MTPROTO_UPDATES_ENABLED,
+            "running": self.running,
+            "running_tasks": len(self.tasks),
+        }
+
+        # Get user count
+        if self.user_bot_repo:
+            try:
+                users = await self.user_bot_repo.get_all_mtproto_enabled_users()
+                status["mtproto_enabled_users"] = len(users)
+            except Exception as e:
+                logger.error(f"Error getting user count: {e}")
+                status["mtproto_enabled_users"] = "error"
+
+        return status
+
+    async def shutdown(self):
+        """Gracefully shutdown all services."""
+        logger.info("🛑 Shutting down MTProto Data Collection Service...")
+
+        self.running = False
+
+        # Cancel all tasks
+        for task in self.tasks:
+            if not task.done():
+                task.cancel()
+
+        # Wait for tasks to complete
+        if self.tasks:
+            await asyncio.gather(*self.tasks, return_exceptions=True)
+
+        # Stop user MTProto service
+        if self.user_mtproto_service:
+            try:
+                await self.user_mtproto_service.cleanup_idle_clients()
+            except Exception as e:
+                logger.warning(f"Warning: Error cleaning up user clients: {e}")
+
+        logger.info("✅ MTProto Data Collection Service shutdown complete")

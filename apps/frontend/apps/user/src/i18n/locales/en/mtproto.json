@@ -122,6 +122,13 @@
     "loadStatusFailed": "Failed to load MTProto status",
     "confirmRemoveAll": "Are you sure you want to remove all MTProto configuration?"
   },
+  "services": {
+    "expiresIn": "Expires in {{days}} days",
+    "expiresInDays": "Expires in {{days}} days",
+    "activeServices": "Active MTProto Services",
+    "noActiveServices": "No active MTProto services",
+    "configure": "Configure"
+  },
   "boost": {
     "title": "Speed Up Collection",
     "description": "Purchase interval boosts to collect data more frequently",

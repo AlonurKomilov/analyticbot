@@ -41,7 +41,7 @@ const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
     title,
     showIcon = false
 }) => {
-    const { t } = useTranslation('filters');
+    const { t } = useTranslation(['filters', 'common']);
     const handleTimeFrameChange = (event: SelectChangeEvent) => {
         setTimeFrame(event.target.value as TimeFrame);
     };
@@ -113,8 +113,8 @@ const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
                         <MenuItem value="7d">{t('timePeriods.last7Days')}</MenuItem>
                         <MenuItem value="30d">{t('timePeriods.last30Days')}</MenuItem>
                         <MenuItem value="90d">{t('timePeriods.last90Days')}</MenuItem>
-                        <MenuItem value="180d">{t('common.last180Days')}</MenuItem>
-                        <MenuItem value="1y">{t('common.lastYear')}</MenuItem>
+                        <MenuItem value="180d">{t('common:last180Days')}</MenuItem>
+                        <MenuItem value="1y">{t('common:lastYear')}</MenuItem>
                         <MenuItem value="all">{t('timePeriods.allTime')}</MenuItem>
                     </Select>
                 </FormControl>

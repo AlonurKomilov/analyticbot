@@ -11,7 +11,7 @@ Single Responsibility: Gateway management and coordination only.
 import logging
 from typing import Any
 
-from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory, PaymentGateway
+from apps.bot.system.services.adapters.payment_adapter_factory import PaymentAdapterFactory, PaymentGateway
 from core.protocols.payment.payment_protocols import PaymentGatewayManagerProtocol
 
 logger = logging.getLogger(__name__)

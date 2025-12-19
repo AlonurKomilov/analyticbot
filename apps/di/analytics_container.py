@@ -424,7 +424,7 @@ async def get_telethon_client():
         import importlib.util
 
         # Import directly from config module to avoid DI container initialization
-        from infra.tg.telethon_client import TelethonTGClient
+        from infra.telegram.telethon import TelethonTGClient
 
         # Load MTProtoSettings directly without triggering __init__.py
         config_path = os.path.join(

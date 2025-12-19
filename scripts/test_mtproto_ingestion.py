@@ -98,7 +98,7 @@ async def test_mtproto_ingestion():
     # Step 2: Check if we can initialize MTProto client
     print("2️⃣ Checking MTProto client initialization...")
     try:
-        from apps.mtproto.multi_tenant.user_mtproto_service import UserMTProtoService
+        from apps.mtproto.user.user_mtproto_service import UserMTProtoService
         from core.services.system.encryption_service import EncryptionService
         from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
 

@@ -21,7 +21,7 @@ async def create_user_mtproto_service(database):
     Returns:
         UserMTProtoService configured with repository factory
     """
-    from apps.mtproto.multi_tenant.user_mtproto_service import UserMTProtoService
+    from apps.mtproto.user.user_mtproto_service import UserMTProtoService
     from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
 
     # Get async session factory from database container

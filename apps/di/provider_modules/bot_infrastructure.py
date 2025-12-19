@@ -9,7 +9,7 @@ import logging
 import os
 from typing import Any
 
-from apps.bot.config import Settings as BotSettings
+from apps.bot.system.config import Settings as BotSettings
 
 logger = logging.getLogger(__name__)
 

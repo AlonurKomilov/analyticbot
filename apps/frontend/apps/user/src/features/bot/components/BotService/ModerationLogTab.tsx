@@ -138,7 +138,7 @@ export const ModerationLogTab: React.FC<ModerationLogTabProps> = ({ chatId }) =>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {moderationLog.logs.map((entry) => (
+                  {moderationLog.logs.map((entry: { id: number; action: ModerationAction; created_at: string; target_name: string | null; target_username: string | null; reason: string | null; message_content: string | null }) => (
                     <TableRow key={entry.id} hover>
                       <TableCell>
                         <Typography variant="caption">

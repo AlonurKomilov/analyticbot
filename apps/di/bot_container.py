@@ -10,7 +10,7 @@ Factory functions now organized in apps/di/providers/ by functionality.
 
 from dependency_injector import containers, providers
 
-from apps.bot.config import Settings as BotSettings
+from apps.bot.system.config import Settings as BotSettings
 
 # Import all provider factories from modular packages
 from apps.di.provider_modules import (
@@ -323,12 +323,12 @@ class BotContainer(containers.DeclarativeContainer):
     )
 
     # ============================================================================
-    # MULTI-TENANT BOT MANAGER (Infra Layer Implementation)
+    # USER BOT MANAGER (Multi-tenant user bots)
     # ============================================================================
 
     bot_manager = providers.Singleton(
         lambda user_bot_repo: __import__(
-            "infra.bot.multi_tenant_bot_manager", fromlist=["MultiTenantBotManager"]
+            "apps.bot.user.bot_manager", fromlist=["MultiTenantBotManager"]
         ).MultiTenantBotManager(
             repository=user_bot_repo,
             max_active_bots=100,

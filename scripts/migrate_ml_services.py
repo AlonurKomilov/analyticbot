@@ -105,7 +105,7 @@ class MLServicesMigrator:
     def _find_ml_import_references(self) -> list[Path]:
         """Find all files that import legacy ML services"""
         references = []
-        search_patterns = ["from apps.bot.services.ml", "import apps.bot.services.ml"]
+        search_patterns = ["from apps.bot.system.services.ml", "import apps.bot.services.ml"]
 
         for py_file in self.project_root.rglob("*.py"):
             try:
@@ -126,7 +126,7 @@ class MLServicesMigrator:
             sys.path.insert(0, str(self.project_root))
 
             try:
-                from apps.bot.services.ml_coordinator import (
+                from apps.bot.system.services.ml_coordinator import (
                     create_ml_coordinator,
                 )
 
@@ -136,7 +136,7 @@ class MLServicesMigrator:
                 return False
 
             try:
-                from apps.bot.services.bot_ml_facade import create_bot_ml_facade
+                from apps.bot.system.services.bot_ml_facade import create_bot_ml_facade
 
                 self.log_action("FACADE_IMPORT_SUCCESS", "Bot ML Facade imported successfully")
             except Exception as e:
@@ -225,10 +225,10 @@ class MLServicesMigrator:
             # Define import replacements
             replacements = {
                 # Legacy → New adapter
-                "from apps.bot.services.bot_ml_facade import create_bot_ml_facade": "from apps.bot.services.bot_ml_facade import create_bot_ml_facade",
-                "from apps.bot.services.ml_coordinator import create_ml_coordinator": "from apps.bot.services.ml_coordinator import create_ml_coordinator",
-                "from apps.bot.services.bot_ml_facade import create_bot_ml_facade": "from apps.bot.services.bot_ml_facade import create_bot_ml_facade",
-                "from apps.bot.services.bot_ml_facade import create_bot_ml_facade": "from apps.bot.services.bot_ml_facade import create_bot_ml_facade",
+                "from apps.bot.system.services.bot_ml_facade import create_bot_ml_facade": "from apps.bot.system.services.bot_ml_facade import create_bot_ml_facade",
+                "from apps.bot.system.services.ml_coordinator import create_ml_coordinator": "from apps.bot.system.services.ml_coordinator import create_ml_coordinator",
+                "from apps.bot.system.services.bot_ml_facade import create_bot_ml_facade": "from apps.bot.system.services.bot_ml_facade import create_bot_ml_facade",
+                "from apps.bot.system.services.bot_ml_facade import create_bot_ml_facade": "from apps.bot.system.services.bot_ml_facade import create_bot_ml_facade",
                 "# TODO: Implement churn prediction in core services": "# TODO: Implement churn prediction in core services",
                 # Class usage replacements
                 "# Use create_ml_coordinator() instead": "# Use create_ml_coordinator() instead",
@@ -284,8 +284,8 @@ Legacy ML Services - DEPRECATED
 These services have been migrated to core microservices architecture.
 
 New Usage:
-    from apps.bot.services.ml_coordinator import create_ml_coordinator
-    from apps.bot.services.bot_ml_facade import create_bot_ml_facade
+    from apps.bot.system.services.ml_coordinator import create_ml_coordinator
+    from apps.bot.system.services.bot_ml_facade import create_bot_ml_facade
 
 Migration Date: {}
 Archived Location: archive/legacy_ml_services/
@@ -308,8 +308,8 @@ Archived Location: archive/legacy_ml_services/
             self.log_action("PHASE_5_START", "Verifying migration success")
 
             # Test new adapters work
-            from apps.bot.services.bot_ml_facade import create_bot_ml_facade
-            from apps.bot.services.ml_coordinator import create_ml_coordinator
+            from apps.bot.system.services.bot_ml_facade import create_bot_ml_facade
+            from apps.bot.system.services.ml_coordinator import create_ml_coordinator
 
             coordinator = create_ml_coordinator()
             facade = create_bot_ml_facade()

@@ -21,6 +21,10 @@ declare module 'i18next' {
       errors: typeof import('./locales/en/errors.json');
       navigation: typeof import('./locales/en/navigation.json');
       mtproto: typeof import('./locales/en/mtproto.json');
+      moderation: typeof import('./locales/en/moderation.json');
+      storage: typeof import('./locales/en/storage.json');
+      filters: typeof import('./locales/en/filters.json');
+      datasource: typeof import('./locales/en/datasource.json');
     };
   }
 }

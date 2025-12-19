@@ -20,10 +20,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # Set environment to only load MTProto-specific settings
 os.environ.setdefault("MTPROTO_STANDALONE", "true")
 
-from apps.mtproto.collectors.history import HistoryCollector
-from apps.mtproto.collectors.updates import UpdatesCollector
-from apps.mtproto.config import MTProtoSettings
-from apps.mtproto.di import (
+from apps.mtproto.system.collectors.history import HistoryCollector
+from apps.mtproto.system.collectors.updates import UpdatesCollector
+from apps.mtproto.system.config import MTProtoSettings
+from apps.mtproto.system.di import (
     RepositoryContainer,
     ScalingContainer,
     create_tg_client,

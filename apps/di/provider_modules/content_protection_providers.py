@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def create_image_processor(**kwargs):
     """Create PIL image processor adapter"""
     try:
-        from apps.bot.adapters.content import PILImageProcessor
+        from apps.bot.system.adapters.content import PILImageProcessor
 
         return PILImageProcessor()
     except ImportError as e:
@@ -24,7 +24,7 @@ def create_image_processor(**kwargs):
 def create_video_processor(**kwargs):
     """Create FFmpeg video processor adapter"""
     try:
-        from apps.bot.adapters.content import FFmpegVideoProcessor
+        from apps.bot.system.adapters.content import FFmpegVideoProcessor
 
         return FFmpegVideoProcessor()
     except ImportError as e:
@@ -35,7 +35,7 @@ def create_video_processor(**kwargs):
 def create_file_system_adapter(**kwargs):
     """Create local file system adapter"""
     try:
-        from apps.bot.adapters.content import LocalFileSystem
+        from apps.bot.system.adapters.content import LocalFileSystem
 
         return LocalFileSystem()
     except ImportError as e:
@@ -51,7 +51,7 @@ def create_subscription_adapter(**kwargs):
     SubscriptionAdapter that integrates with payment domain subscription service.
     """
     try:
-        from apps.bot.adapters.content import SubscriptionAdapter
+        from apps.bot.system.adapters.content import SubscriptionAdapter
         from infra.services.payment import SubscriptionService
 
         # Get subscription service from infra layer (payment domain)
@@ -75,7 +75,7 @@ def create_subscription_adapter(**kwargs):
         )
         # Fallback to stub for backward compatibility
         try:
-            from apps.bot.adapters.content import StubSubscriptionService
+            from apps.bot.system.adapters.content import StubSubscriptionService
 
             return StubSubscriptionService()
         except ImportError:

@@ -54,7 +54,7 @@ const PostTableFilters: React.FC<PostTableFiltersProps> = ({
     limit,
     setLimit
 }) => {
-    const { t } = useTranslation('filters');
+    const { t } = useTranslation(['filters', 'common', 'posts']);
     
     const handleTimeFilterChange = (event: SelectChangeEvent) => {
         setTimeFilter(event.target.value as TimeFilter);
@@ -98,29 +98,29 @@ const PostTableFilters: React.FC<PostTableFiltersProps> = ({
             </FormControl>
 
             <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="sort-by-label">{t('common.sortBy')}</InputLabel>
+                <InputLabel id="sort-by-label">{t('common:sortBy')}</InputLabel>
                 <Select
                     labelId="sort-by-label"
                     id="sort-by"
                     value={sortBy}
-                    label={t('common.sortBy')}
+                    label={t('common:sortBy')}
                     onChange={handleSortByChange}
                 >
-                    <MenuItem value="views">{t('common.views')}</MenuItem>
-                    <MenuItem value="reactions">{t('common.reactions')}</MenuItem>
-                    <MenuItem value="shares">{t('common.shares')}</MenuItem>
-                    <MenuItem value="comments">{t('common.comments')}</MenuItem>
-                    <MenuItem value="engagement">{t('posts.engagementRate')}</MenuItem>
+                    <MenuItem value="views">{t('common:views')}</MenuItem>
+                    <MenuItem value="reactions">{t('common:reactions')}</MenuItem>
+                    <MenuItem value="shares">{t('common:shares')}</MenuItem>
+                    <MenuItem value="comments">{t('common:comments')}</MenuItem>
+                    <MenuItem value="engagement">{t('posts:engagementRate')}</MenuItem>
                 </Select>
             </FormControl>
 
             <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="limit-label">{t('posts.top')}</InputLabel>
+                <InputLabel id="limit-label">{t('posts:top')}</InputLabel>
                 <Select
                     labelId="limit-label"
                     id="limit"
                     value={limit.toString()}
-                    label={t('posts.top')}
+                    label={t('posts:top')}
                     onChange={handleLimitChange}
                 >
                     <MenuItem value="10">10 Posts</MenuItem>

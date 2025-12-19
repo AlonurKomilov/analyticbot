@@ -35,7 +35,7 @@ def create_service_with_deps(ServiceCls: type, **provided_kwargs) -> Any:
 def create_guard_service(user_repository=None, **kwargs):
     """Create guard service with cache adapter for content moderation"""
     try:
-        from apps.bot.services.guard_service import GuardService
+        from apps.bot.system.services.guard_service import GuardService
         from infra.cache.redis_cache_adapter import create_redis_cache_adapter
 
         # Use in-memory cache by default (Redis optional)
@@ -49,7 +49,7 @@ def create_guard_service(user_repository=None, **kwargs):
 def create_subscription_service(user_repository=None, plan_repository=None, **kwargs):
     """Create subscription service"""
     try:
-        from apps.bot.services.subscription_service import SubscriptionService
+        from apps.bot.system.services.subscription_service import SubscriptionService
 
         return create_service_with_deps(
             SubscriptionService,

@@ -40,7 +40,7 @@ interface SettingsTabProps {
 }
 
 export const SettingsTab: React.FC<SettingsTabProps> = ({ chatId }) => {
-  const { t } = useTranslation('moderation');
+  const { t } = useTranslation(['moderation', 'common']);
   const {
     settings,
     isSaving,
@@ -106,7 +106,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ chatId }) => {
   const handleToggle = (key: keyof ChatSettingsUpdate) => (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setLocalSettings((prev) => ({
+    setLocalSettings((prev: ChatSettingsUpdate) => ({
       ...prev,
       [key]: event.target.checked,
     }));
@@ -117,7 +117,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ chatId }) => {
     event: React.ChangeEvent<HTMLInputElement | { value: unknown }>
   ) => {
     const value = event.target.value;
-    setLocalSettings((prev) => ({
+    setLocalSettings((prev: ChatSettingsUpdate) => ({
       ...prev,
       [key]: typeof value === 'string' && !isNaN(Number(value)) ? Number(value) : value,
     }));
@@ -135,12 +135,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ chatId }) => {
   };
 
   const handleDelete = async () => {
-    if (window.confirm(t('common.confirmDelete'))) {
+    if (window.confirm(t('common:confirmDelete'))) {
       try {
         await deleteSettings(chatId);
-        toast.success(t('common.deleteSuccess'));
+        toast.success(t('common:deleteSuccess'));
       } catch (err) {
-        toast.error(t('common.deleteError'));
+        toast.error(t('common:deleteError'));
       }
     }
   };
@@ -244,7 +244,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ chatId }) => {
       {/* Content Protection */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
-          {t('common.contentProtection')}
+          {t('common:contentProtection')}
         </Typography>
         <Divider sx={{ mb: 2 }} />
 
@@ -345,7 +345,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ chatId }) => {
                   value={localSettings.spam_action || 'delete'}
                   label="Spam Action"
                   onChange={(e) => {
-                    setLocalSettings((prev) => ({
+                    setLocalSettings((prev: ChatSettingsUpdate) => ({
                       ...prev,
                       spam_action: e.target.value as ModerationAction,
                     }));
@@ -381,7 +381,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ chatId }) => {
                   value={localSettings.warning_action || 'mute'}
                   label="Warning Action"
                   onChange={(e) => {
-                    setLocalSettings((prev) => ({
+                    setLocalSettings((prev: ChatSettingsUpdate) => ({
                       ...prev,
                       warning_action: e.target.value as ModerationAction,
                     }));
@@ -498,7 +498,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ chatId }) => {
           onClick={handleDelete}
           disabled={!settings || isSaving}
         >
-          {t('common.deleteSettings')}
+          {t('common:deleteSettings')}
         </Button>
 
         <Button

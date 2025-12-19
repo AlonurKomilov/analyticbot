@@ -28,7 +28,8 @@ interface DataSourceSettingsProps {
 type ApiStatus = 'unknown' | 'online' | 'offline';
 
 const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceChange }) => {
-  const { t } = useTranslation(['datasource', 'common']);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { t } = useTranslation(['datasource', 'common']) as { t: (key: string) => string };
   const [useRealAPI, setUseRealAPI] = useState<boolean>(() => {
     // If user has token, they're using real API
     const token = localStorage.getItem('token');
@@ -210,12 +211,12 @@ const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceCha
             label={
               <Box>
                 <Typography variant="body1" fontWeight="medium">
-                  {useRealAPI ? t('datasource:realApi') : t('datasource:demoData')}
+                  {useRealAPI ? t('realApi') : t('demoData')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {useRealAPI
-                    ? t('datasource:realApiDesc')
-                    : t('datasource:demoDataDesc')
+                    ? t('realApiDesc')
+                    : t('demoDataDesc')
                   }
                 </Typography>
               </Box>

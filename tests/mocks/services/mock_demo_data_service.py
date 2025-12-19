@@ -8,7 +8,7 @@ import random
 from datetime import datetime
 from typing import Any
 
-from apps.bot.models.twa import Channel, InitialDataResponse
+from apps.bot.system.models.twa import Channel, InitialDataResponse
 from core.protocols import DemoDataServiceProtocol
 from tests.mocks.constants import DEMO_API_DELAY_MS
 
@@ -37,7 +37,7 @@ class MockDemoDataService(DemoDataServiceProtocol):
         # Import here to avoid circular import
 
         # Import the models we need
-        from apps.bot.models.twa import Plan, User
+        from apps.bot.system.models.twa import Plan, User
 
         # Generate demo user data
         user_id_int = int(user_id) if isinstance(user_id, str) else user_id or 1

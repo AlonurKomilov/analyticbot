@@ -33,7 +33,6 @@ import {
     CheckCircle as ActiveIcon,
     Cancel as CancelIcon,
     Refresh as RefreshIcon,
-    TrendingUp as UsageIcon,
     CalendarToday as CalendarIcon,
     Autorenew as AutoRenewIcon,
     Info as InfoIcon,
@@ -68,7 +67,7 @@ interface UserServiceSubscription {
 }
 
 // Get icon component for a service (use registry or fallback)
-const getServiceIcon = (iconName: string | null, serviceKey: string): React.ReactNode => {
+const getServiceIcon = (_iconName: string | null, serviceKey: string): React.ReactNode => {
     // Try getting from registry first
     const registryIcon = getServiceIconFromRegistry(serviceKey);
     if (registryIcon) {
@@ -461,7 +460,7 @@ const MyServicesPage: React.FC = () => {
                 <DialogContent>
                     <Typography>
                         Are you sure you want to cancel your subscription to{' '}
-                        <strong>{cancelDialog.subscription?.service.name}</strong>?
+                        <strong>{cancelDialog.subscription?.service_name}</strong>?
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                         Your subscription will remain active until {cancelDialog.subscription?.expires_at ? formatDate(cancelDialog.subscription.expires_at) : 'expiry'}. No refunds will be issued.

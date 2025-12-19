@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 async def create_bot_analytics_adapter(core_analytics_service=None, bot=None, **kwargs):
     """Create bot analytics adapter (thin layer over core service)"""
     try:
-        from apps.bot.adapters.analytics_adapter import BotAnalyticsAdapter
+        from apps.bot.system.adapters.analytics_adapter import BotAnalyticsAdapter
         from infra.adapters.analytics.aiogram_bot_adapter import AiogramBotAdapter
 
         # Only create if core service is available
@@ -34,7 +34,7 @@ async def create_bot_analytics_adapter(core_analytics_service=None, bot=None, **
 async def create_bot_reporting_adapter(core_reporting_service=None, **kwargs):
     """Create bot reporting adapter (thin layer over core service)"""
     try:
-        from apps.bot.adapters.reporting_adapter import BotReportingAdapter
+        from apps.bot.system.adapters.reporting_adapter import BotReportingAdapter
 
         # Only create if core service is available
         if core_reporting_service is None:
@@ -49,7 +49,7 @@ async def create_bot_reporting_adapter(core_reporting_service=None, **kwargs):
 async def create_bot_dashboard_adapter(core_dashboard_service=None, **kwargs):
     """Create bot dashboard adapter (thin layer over core service)"""
     try:
-        from apps.bot.adapters.dashboard_adapter import BotDashboardAdapter
+        from apps.bot.system.adapters.dashboard_adapter import BotDashboardAdapter
 
         return BotDashboardAdapter(dashboard=core_dashboard_service)
     except ImportError as e:
@@ -60,7 +60,7 @@ async def create_bot_dashboard_adapter(core_dashboard_service=None, **kwargs):
 def create_aiogram_message_sender(bot=None, **kwargs):
     """Create Aiogram message sender adapter"""
     try:
-        from apps.bot.adapters.scheduling_adapters import AiogramMessageSender
+        from apps.bot.system.adapters.scheduling_adapters import AiogramMessageSender
 
         if bot is None:
             logger.warning("Cannot create message sender: bot is None")
@@ -75,7 +75,7 @@ def create_aiogram_message_sender(bot=None, **kwargs):
 def create_aiogram_markup_builder(**kwargs):
     """Create Aiogram markup builder adapter"""
     try:
-        from apps.bot.adapters.scheduling_adapters import AiogramMarkupBuilder
+        from apps.bot.system.adapters.scheduling_adapters import AiogramMarkupBuilder
 
         return AiogramMarkupBuilder()
     except ImportError as e:

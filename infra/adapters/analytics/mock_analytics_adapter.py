@@ -170,7 +170,10 @@ class MockAnalyticsAdapter(AnalyticsAdapter):
                     "45-54": random.randint(10, 20),
                     "55+": random.randint(5, 15),
                 },
-                "gender": {"male": random.randint(45, 65), "female": random.randint(35, 55)},
+                "gender": {
+                    "male": random.randint(45, 65),
+                    "female": random.randint(35, 55),
+                },
                 "top_locations": [
                     {"country": "United States", "percentage": random.randint(20, 35)},
                     {"country": "United Kingdom", "percentage": random.randint(10, 20)},
@@ -375,9 +378,11 @@ class MockAnalyticsAdapter(AnalyticsAdapter):
                 "average_daily_growth": round(
                     (followers_data[-1]["value"] - followers_data[0]["value"]) / days, 2
                 ),
-                "best_growth_day": max(growth_rates, key=lambda x: x["new_followers"])["date"]
-                if growth_rates
-                else None,
+                "best_growth_day": (
+                    max(growth_rates, key=lambda x: x["new_followers"])["date"]
+                    if growth_rates
+                    else None
+                ),
             },
             "acquisition_channels": {
                 "organic_search": random.randint(30, 45),
@@ -392,7 +397,10 @@ class MockAnalyticsAdapter(AnalyticsAdapter):
                 "90_day_retention": round(random.uniform(40, 60), 2),
                 "churn_rate": round(random.uniform(5, 15), 2),
             },
-            "time_series": {"followers_count": followers_data, "growth_rates": growth_rates},
+            "time_series": {
+                "followers_count": followers_data,
+                "growth_rates": growth_rates,
+            },
             "metadata": {
                 "generated_at": datetime.now().isoformat(),
                 "adapter": "mock_analytics",
@@ -412,19 +420,52 @@ class MockAnalyticsAdapter(AnalyticsAdapter):
             "channel_id": channel_id,
             "analysis_period": "last_30_days",
             "best_hours": [
-                {"hour": 9, "engagement_score": round(random.uniform(7.5, 9.5), 2), "time": "09:00"},
-                {"hour": 13, "engagement_score": round(random.uniform(7.0, 9.0), 2), "time": "13:00"},
-                {"hour": 18, "engagement_score": round(random.uniform(8.0, 9.5), 2), "time": "18:00"},
-                {"hour": 21, "engagement_score": round(random.uniform(7.5, 9.0), 2), "time": "21:00"},
+                {
+                    "hour": 9,
+                    "engagement_score": round(random.uniform(7.5, 9.5), 2),
+                    "time": "09:00",
+                },
+                {
+                    "hour": 13,
+                    "engagement_score": round(random.uniform(7.0, 9.0), 2),
+                    "time": "13:00",
+                },
+                {
+                    "hour": 18,
+                    "engagement_score": round(random.uniform(8.0, 9.5), 2),
+                    "time": "18:00",
+                },
+                {
+                    "hour": 21,
+                    "engagement_score": round(random.uniform(7.5, 9.0), 2),
+                    "time": "21:00",
+                },
             ],
             "best_days": [
-                {"day": "Tuesday", "engagement_score": round(random.uniform(8.0, 9.5), 2)},
-                {"day": "Wednesday", "engagement_score": round(random.uniform(7.5, 9.0), 2)},
-                {"day": "Thursday", "engagement_score": round(random.uniform(7.8, 9.2), 2)},
+                {
+                    "day": "Tuesday",
+                    "engagement_score": round(random.uniform(8.0, 9.5), 2),
+                },
+                {
+                    "day": "Wednesday",
+                    "engagement_score": round(random.uniform(7.5, 9.0), 2),
+                },
+                {
+                    "day": "Thursday",
+                    "engagement_score": round(random.uniform(7.8, 9.2), 2),
+                },
             ],
             "worst_hours": [
-                {"hour": 3, "engagement_score": round(random.uniform(2.0, 4.0), 2), "time": "03:00"},
-                {"hour": 5, "engagement_score": round(random.uniform(2.5, 4.5), 2), "time": "05:00"},
+                {
+                    "hour": 3,
+                    "engagement_score": round(random.uniform(2.0, 4.0), 2),
+                    "time": "03:00",
+                },
+                {
+                    "hour": 5,
+                    "engagement_score": round(random.uniform(2.5, 4.5), 2),
+                    "time": "05:00",
+                },
             ],
             "recommendations": [
                 "Post between 6 PM and 9 PM for maximum engagement",
@@ -466,4 +507,3 @@ class MockAnalyticsAdapter(AnalyticsAdapter):
     async def close(self):
         """Close mock analytics adapter (no-op for mock)"""
         logger.info("MockAnalyticsAdapter closed")
-        pass

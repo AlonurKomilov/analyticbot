@@ -187,7 +187,10 @@ class EngagementPredictorService:
             }
 
             # Cache result
-            self.prediction_cache[cache_key] = {"result": result, "timestamp": datetime.utcnow()}
+            self.prediction_cache[cache_key] = {
+                "result": result,
+                "timestamp": datetime.utcnow(),
+            }
 
             # Update counters
             self.prediction_count += 1
@@ -251,7 +254,11 @@ class EngagementPredictorService:
                 else:
                     # Add error result for invalid request
                     valid_requests.append(
-                        {**request, "error": "Invalid features", "service": "engagement_predictor"}
+                        {
+                            **request,
+                            "error": "Invalid features",
+                            "service": "engagement_predictor",
+                        }
                     )
 
             if not batch_tensors:
@@ -282,7 +289,10 @@ class EngagementPredictorService:
                         "channel_id": channel_id,
                         "predicted_engagement": predicted_engagement,
                         "confidence_score": 0.8,  # Default for batch processing
-                        "model_info": {"version": self.model.version, "architecture": "LSTM"},
+                        "model_info": {
+                            "version": self.model.version,
+                            "architecture": "LSTM",
+                        },
                         "prediction_metadata": {
                             "timestamp": datetime.utcnow(),
                             "prediction_id": f"eng_batch_{channel_id}_{i}",

@@ -13,10 +13,9 @@ Revises: 0047_user_bot_moderation_features
 Create Date: 2025-12-14
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
-
 
 # revision identifiers, used by Alembic
 revision = "0048_marketplace_services"
@@ -233,9 +232,7 @@ def upgrade() -> None:
         sa.Column("resource_id", sa.String(255), nullable=True),  # chat_id, message_id, etc.
         sa.Column("usage_count", sa.Integer(), server_default="1", nullable=False),  # Usually 1
         # Result
-        sa.Column(
-            "success", sa.Boolean(), nullable=False
-        ),  # Whether action succeeded
+        sa.Column("success", sa.Boolean(), nullable=False),  # Whether action succeeded
         sa.Column("error_message", sa.Text(), nullable=True),
         # Performance metrics
         sa.Column("response_time_ms", sa.Integer(), nullable=True),

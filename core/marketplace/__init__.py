@@ -30,8 +30,8 @@ Related Modules
 - apps/api/marketplace/ - API endpoints and schemas
 """
 
-from core.marketplace.services.marketplace_service import MarketplaceService
 from core.marketplace.services.feature_gate_service import FeatureGateService
+from core.marketplace.services.marketplace_service import MarketplaceService
 
 __all__ = [
     "MarketplaceService",

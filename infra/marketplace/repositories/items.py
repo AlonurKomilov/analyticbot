@@ -4,7 +4,7 @@ Marketplace Items Repository
 
 Database repository for marketplace items (one-time purchases):
 - Themes
-- Widgets  
+- Widgets
 - AI Models
 - Bundles
 
@@ -14,7 +14,7 @@ as opposed to subscription services.
 
 import json
 from datetime import datetime, timedelta
-from typing import Any, Optional, List, Dict
+from typing import Any
 
 import asyncpg
 
@@ -30,14 +30,14 @@ class MarketplaceItemRepository:
 
     async def get_items(
         self,
-        category: Optional[str] = None,
-        subcategory: Optional[str] = None,
-        is_featured: Optional[bool] = None,
-        is_premium: Optional[bool] = None,
-        search: Optional[str] = None,
+        category: str | None = None,
+        subcategory: str | None = None,
+        is_featured: bool | None = None,
+        is_premium: bool | None = None,
+        search: str | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get marketplace items with filters."""
 
         conditions = ["is_active = TRUE"]
@@ -86,7 +86,7 @@ class MarketplaceItemRepository:
             rows = await conn.fetch(query, *params)
             return [dict(row) for row in rows]
 
-    async def get_item_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
+    async def get_item_by_slug(self, slug: str) -> dict[str, Any] | None:
         """Get a single marketplace item by slug."""
 
         async with self.pool.acquire() as conn:
@@ -102,7 +102,7 @@ class MarketplaceItemRepository:
             )
             return dict(row) if row else None
 
-    async def get_item_by_id(self, item_id: int) -> Optional[Dict[str, Any]]:
+    async def get_item_by_id(self, item_id: int) -> dict[str, Any] | None:
         """Get a single marketplace item by ID."""
 
         async with self.pool.acquire() as conn:
@@ -118,36 +118,34 @@ class MarketplaceItemRepository:
             )
             return dict(row) if row else None
 
-    async def get_item_by_key(self, unique_key: str) -> Optional[Dict[str, Any]]:
+    async def get_item_by_key(self, unique_key: str) -> dict[str, Any] | None:
         """Get a single marketplace item by unique key."""
         return await self.get_item_by_slug(unique_key)
 
-    async def get_categories(self) -> List[Dict[str, Any]]:
+    async def get_categories(self) -> list[dict[str, Any]]:
         """Get all unique categories with item counts."""
 
         async with self.pool.acquire() as conn:
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT category, COUNT(*) as item_count
                 FROM marketplace_items
                 WHERE is_active = TRUE
                 GROUP BY category
                 ORDER BY item_count DESC
-            """)
+            """
+            )
             return [dict(row) for row in rows]
 
-    async def get_featured_items(self, limit: int = 10) -> List[Dict[str, Any]]:
+    async def get_featured_items(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get featured items."""
         return await self.get_items(is_featured=True, limit=limit)
 
     # ==================== PURCHASES ====================
 
     async def purchase_item(
-        self, 
-        user_id: int, 
-        item_id: int, 
-        price: int, 
-        expires_at: Optional[datetime] = None
-    ) -> Dict[str, Any]:
+        self, user_id: int, item_id: int, price: int, expires_at: datetime | None = None
+    ) -> dict[str, Any]:
         """Purchase a marketplace item."""
 
         async with self.pool.acquire() as conn:
@@ -219,9 +217,13 @@ class MarketplaceItemRepository:
                     item_id,
                 )
 
-                return {"success": True, "purchase_id": purchase_id, "credits_spent": price}
+                return {
+                    "success": True,
+                    "purchase_id": purchase_id,
+                    "credits_spent": price,
+                }
 
-    async def get_user_purchases(self, user_id: int) -> List[Dict[str, Any]]:
+    async def get_user_purchases(self, user_id: int) -> list[dict[str, Any]]:
         """Get all purchases for a user."""
 
         async with self.pool.acquire() as conn:
@@ -259,12 +261,8 @@ class MarketplaceItemRepository:
     # ==================== REVIEWS ====================
 
     async def add_review(
-        self, 
-        user_id: int, 
-        item_id: int, 
-        rating: int, 
-        review_text: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, user_id: int, item_id: int, rating: int, review_text: str | None = None
+    ) -> dict[str, Any]:
         """Add or update a review for an item."""
 
         async with self.pool.acquire() as conn:
@@ -305,7 +303,7 @@ class MarketplaceItemRepository:
 
     async def get_item_reviews(
         self, item_id: int, limit: int = 20, offset: int = 0
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get reviews for an item."""
 
         async with self.pool.acquire() as conn:
@@ -328,12 +326,12 @@ class MarketplaceItemRepository:
     # ==================== CREDIT GIFTING ====================
 
     async def send_gift(
-        self, 
-        sender_id: int, 
-        recipient_username: str, 
-        amount: int, 
-        message: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self,
+        sender_id: int,
+        recipient_username: str,
+        amount: int,
+        message: str | None = None,
+    ) -> dict[str, Any]:
         """Send credits as a gift to another user."""
 
         async with self.pool.acquire() as conn:
@@ -350,7 +348,10 @@ class MarketplaceItemRepository:
                     return {"success": False, "error": "User not found"}
 
                 if recipient["id"] == sender_id:
-                    return {"success": False, "error": "Cannot send credits to yourself"}
+                    return {
+                        "success": False,
+                        "error": "Cannot send credits to yourself",
+                    }
 
                 # Check sender balance
                 balance = await conn.fetchval(
@@ -424,9 +425,7 @@ class MarketplaceItemRepository:
                     "amount": amount,
                 }
 
-    async def get_gift_history(
-        self, user_id: int, direction: str = "all"
-    ) -> List[Dict[str, Any]]:
+    async def get_gift_history(self, user_id: int, direction: str = "all") -> list[dict[str, Any]]:
         """Get gift history for a user."""
 
         async with self.pool.acquire() as conn:
@@ -457,7 +456,7 @@ class MarketplaceItemRepository:
 
     # ==================== BUNDLES ====================
 
-    async def get_bundles(self, featured_only: bool = False) -> List[Dict[str, Any]]:
+    async def get_bundles(self, featured_only: bool = False) -> list[dict[str, Any]]:
         """Get available service bundles."""
 
         async with self.pool.acquire() as conn:
@@ -465,16 +464,18 @@ class MarketplaceItemRepository:
             if featured_only:
                 condition += " AND is_featured = TRUE"
 
-            rows = await conn.fetch(f"""
+            rows = await conn.fetch(
+                f"""
                 SELECT id, name, slug, description, price_credits, original_price,
                        discount_percent, is_featured, valid_days
                 FROM service_bundles
                 WHERE {condition}
                 ORDER BY is_featured DESC, discount_percent DESC
-            """)
+            """
+            )
             return [dict(row) for row in rows]
 
-    async def get_bundle_items(self, bundle_id: int) -> List[Dict[str, Any]]:
+    async def get_bundle_items(self, bundle_id: int) -> list[dict[str, Any]]:
         """Get services included in a bundle."""
 
         async with self.pool.acquire() as conn:
@@ -490,7 +491,7 @@ class MarketplaceItemRepository:
             )
             return [dict(row) for row in rows]
 
-    async def purchase_bundle(self, user_id: int, bundle_id: int) -> Dict[str, Any]:
+    async def purchase_bundle(self, user_id: int, bundle_id: int) -> dict[str, Any]:
         """Purchase a service bundle."""
 
         async with self.pool.acquire() as conn:
@@ -573,7 +574,7 @@ class MarketplaceItemRepository:
                     "credits_spent": bundle["price_credits"],
                 }
 
-    async def get_user_bundles(self, user_id: int) -> List[Dict[str, Any]]:
+    async def get_user_bundles(self, user_id: int) -> list[dict[str, Any]]:
         """Get user's purchased bundles."""
 
         async with self.pool.acquire() as conn:

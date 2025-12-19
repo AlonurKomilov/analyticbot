@@ -12,8 +12,15 @@ Usage:
 - Clean separation of concerns
 """
 
-from .optimization_adapter import OptimizationServiceAdapter, create_optimization_adapter
-from .optimization_protocols import AlertsProtocol, OptimizationProtocol, PredictiveProtocol
+from .optimization_adapter import (
+    OptimizationServiceAdapter,
+    create_optimization_adapter,
+)
+from .optimization_protocols import (
+    AlertsProtocol,
+    OptimizationProtocol,
+    PredictiveProtocol,
+)
 
 __all__ = [
     "OptimizationProtocol",

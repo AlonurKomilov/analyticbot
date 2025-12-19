@@ -8,7 +8,12 @@ suspending/activating bots, and updating rate limits.
 import logging
 from datetime import datetime
 
-from core.models.user_bot_domain import AdminBotAction, BotStatus, BotRole, UserBotCredentials
+from core.models.user_bot_domain import (
+    AdminBotAction,
+    BotRole,
+    BotStatus,
+    UserBotCredentials,
+)
 from core.ports.bot_manager_port import IBotManager
 from core.ports.user_bot_repository import IUserBotRepository
 
@@ -122,7 +127,7 @@ class AdminBotService:
 
         # Save to database
         created = await self.repository.create(credentials)
-        
+
         logger.info(f"Created bot @{bot_username} for user {user_id}")
         return created
 
@@ -404,18 +409,26 @@ class AdminBotService:
         # Verify with Telegram
         try:
             import aiohttp
-            
+
             async with aiohttp.ClientSession() as session:
                 # Get bot info from Telegram
                 url = f"https://api.telegram.org/bot{credentials.bot_token}/getMe"
                 async with session.get(url) as response:
                     if response.status != 200:
-                        return False, "Invalid bot token - could not connect to Telegram", None
-                    
+                        return (
+                            False,
+                            "Invalid bot token - could not connect to Telegram",
+                            None,
+                        )
+
                     data = await response.json()
                     if not data.get("ok"):
-                        return False, f"Bot verification failed: {data.get('description', 'Unknown error')}", None
-                    
+                        return (
+                            False,
+                            f"Bot verification failed: {data.get('description', 'Unknown error')}",
+                            None,
+                        )
+
                     bot_info = data.get("result", {})
                     bot_username = bot_info.get("username")
                     bot_id = bot_info.get("id")
@@ -426,7 +439,7 @@ class AdminBotService:
             credentials.status = BotStatus.ACTIVE
             credentials.is_verified = True
             credentials.updated_at = datetime.utcnow()
-            
+
             await self.repository.update(credentials)
 
             # Send test message if requested
@@ -435,21 +448,26 @@ class AdminBotService:
                     async with aiohttp.ClientSession() as session:
                         msg = test_message or "Hello! Your bot is now configured."
                         url = f"https://api.telegram.org/bot{credentials.bot_token}/sendMessage"
-                        async with session.post(url, json={
-                            "chat_id": test_chat_id,
-                            "text": msg
-                        }) as response:
+                        async with session.post(
+                            url, json={"chat_id": test_chat_id, "text": msg}
+                        ) as response:
                             if response.status != 200:
-                                logger.warning(f"Failed to send test message: {await response.text()}")
+                                logger.warning(
+                                    f"Failed to send test message: {await response.text()}"
+                                )
                 except Exception as e:
                     logger.warning(f"Failed to send test message: {e}")
 
             logger.info(f"Bot verified for user {user_id}: @{bot_username}")
-            return True, "Bot verified successfully", {
-                "bot_id": bot_id,
-                "bot_username": bot_username,
-                "is_verified": True,
-            }
+            return (
+                True,
+                "Bot verified successfully",
+                {
+                    "bot_id": bot_id,
+                    "bot_username": bot_username,
+                    "is_verified": True,
+                },
+            )
 
         except Exception as e:
             logger.error(f"Error verifying bot for user {user_id}: {e}")
@@ -481,7 +499,7 @@ class AdminBotService:
         if not deleted:
             logger.warning(f"Failed to delete bot credentials for user {user_id}")
             return False
-        
+
         logger.info(f"Removed bot for user {user_id}")
         return True
 
@@ -510,12 +528,14 @@ class AdminBotService:
             credentials.rate_limit_rps = max_requests_per_second
         if max_concurrent_requests is not None:
             credentials.max_concurrent_requests = max_concurrent_requests
-        
+
         credentials.updated_at = datetime.utcnow()
-        
+
         await self.repository.update(credentials)
-        
-        logger.info(f"Updated rate limits for user {user_id}: rps={credentials.rate_limit_rps}, concurrent={credentials.max_concurrent_requests}")
+
+        logger.info(
+            f"Updated rate limits for user {user_id}: rps={credentials.rate_limit_rps}, concurrent={credentials.max_concurrent_requests}"
+        )
         return credentials
 
 

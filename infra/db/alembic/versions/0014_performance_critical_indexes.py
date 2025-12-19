@@ -21,73 +21,93 @@ def upgrade() -> None:
     """Add critical performance indexes based on audit analysis."""
 
     # High-Priority Analytics Queries - Missing from previous migrations
-    op.execute("""
+    op.execute(
+        """
     CREATE INDEX IF NOT EXISTS idx_sent_posts_sent_at_interval
     ON sent_posts (sent_at DESC)
-    """)
+    """
+    )
 
     # User lookup optimizations with covering indexes
-    op.execute("""
+    op.execute(
+        """
     CREATE INDEX IF NOT EXISTS idx_users_telegram_id_plan_cover
     ON users (id)
     INCLUDE (username, plan_id)
     WHERE plan_id IS NOT NULL;
-    """)
+    """
+    )
 
     # Channel repository optimization with covering index
-    op.execute("""
+    op.execute(
+        """
     CREATE INDEX IF NOT EXISTS idx_channels_user_lookup_cover
     ON channels (user_id)
     INCLUDE (id, title, username, created_at);
-    """)
+    """
+    )
 
     # View tracking optimizations for analytics
-    op.execute("""
+    op.execute(
+        """
     CREATE INDEX IF NOT EXISTS idx_scheduled_posts_view_tracking_cover
     ON scheduled_posts (status, views DESC NULLS LAST)
     INCLUDE (id, channel_id, created_at)
     WHERE status = 'sent' AND views IS NOT NULL;
-    """)
+    """
+    )
 
     # Join optimization for analytics queries
-    op.execute("""
+    op.execute(
+        """
     CREATE INDEX IF NOT EXISTS idx_sent_posts_join_optimization
     ON sent_posts (scheduled_post_id, channel_id, message_id, sent_at DESC);
-    """)
+    """
+    )
 
     # Analytics aggregation optimization
-    op.execute("""
+    op.execute(
+        """
     CREATE INDEX IF NOT EXISTS idx_scheduled_posts_analytics_agg
     ON scheduled_posts (channel_id, created_at DESC, views DESC NULLS LAST)
-    """)
+    """
+    )
 
     # User activity tracking
-    op.execute("""
+    op.execute(
+        """
     CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_activity
     ON scheduled_posts (user_id, status, schedule_time DESC)
     WHERE status IN ('sent', 'pending');
-    """)
+    """
+    )
 
     # Channel performance tracking
-    op.execute("""
+    op.execute(
+        """
     CREATE INDEX IF NOT EXISTS idx_channels_performance_lookup
     ON channels (user_id, created_at DESC)
     WHERE username IS NOT NULL;
-    """)
+    """
+    )
 
     # Composite index for complex analytics queries
-    op.execute("""
+    op.execute(
+        """
     CREATE INDEX IF NOT EXISTS idx_sent_posts_analytics_composite
     ON sent_posts (channel_id, sent_at DESC)
     INCLUDE (scheduled_post_id, message_id);
-    """)
+    """
+    )
 
     # Optimize user subscription queries
-    op.execute("""
+    op.execute(
+        """
     CREATE INDEX IF NOT EXISTS idx_users_subscription_lookup
     ON users (plan_id, created_at DESC)
     WHERE plan_id IS NOT NULL;
-    """)
+    """
+    )
 
 
 def downgrade() -> None:

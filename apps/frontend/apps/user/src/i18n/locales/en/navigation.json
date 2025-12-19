@@ -21,7 +21,8 @@
   "workers": {
     "bot": "Bot Worker",
     "botModeration": "Bot Moderation",
-    "mtproto": "MTProto Worker"
+    "mtproto": "MTProto Worker",
+    "ai": "AI Worker"
   },
   "header": {
     "search": "Search...",

@@ -69,10 +69,10 @@ const NAV_ITEMS: NavItem[] = [
     { labelKey: 'sidebar.analytics', path: ROUTES.ANALYTICS, icon: <AnalyticsIcon /> },
     { labelKey: 'sidebar.channels', path: ROUTES.CHANNELS, icon: <ChannelIcon /> },
     { labelKey: 'sidebar.posts', path: ROUTES.POSTS, icon: <ArticleIcon /> },
-    { labelKey: 'aiServices', path: ROUTES.AI_SERVICES, icon: <AIIcon /> },
     // Workers Section
     { labelKey: 'workers.bot', path: ROUTES.WORKERS_BOT, icon: <BotIcon />, dividerBefore: true, sectionLabel: 'Workers' },
     { labelKey: 'workers.mtproto', path: ROUTES.WORKERS_MTPROTO, icon: <MTProtoIcon /> },
+    { labelKey: 'workers.ai', path: ROUTES.AI_SERVICES, icon: <AIIcon /> },
     // Credits & Payments Section
     { labelKey: 'credits', path: ROUTES.CREDITS, icon: <CreditsIcon />, dividerBefore: true },
     { labelKey: 'rewards', path: ROUTES.REWARDS, icon: <TrophyIcon /> },

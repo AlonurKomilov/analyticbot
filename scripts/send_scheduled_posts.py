@@ -83,13 +83,17 @@ async def process_scheduled_posts():
     db_url = DATABASE_URL.replace("postgresql://", "").replace("postgresql+asyncpg://", "")
 
     try:
-        # Connect to database
+        # Parse DATABASE_URL for connection params
+        # Format: user:password@host:port/database
+        import urllib.parse
+        parsed = urllib.parse.urlparse(DATABASE_URL)
+        
         conn = await asyncpg.connect(
-            host="localhost",
-            port=10100,
-            user="analytic",
-            password="change_me",
-            database="analytic_bot",
+            host=parsed.hostname or "localhost",
+            port=parsed.port or 10100,
+            user=parsed.username or "analytic",
+            password=parsed.password,
+            database=parsed.path.lstrip('/') if parsed.path else "analytic_bot",
         )
 
         logger.info("✅ Connected to database")

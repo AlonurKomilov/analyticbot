@@ -68,10 +68,22 @@ async def verify_channel_access(bot_token: str, channel_username: str):
 
 async def main():
     # Get bot token from database
+    import os
     import psycopg2
+    
+    # Get DB credentials from environment
+    db_host = os.getenv("DB_HOST", "localhost")
+    db_port = int(os.getenv("DB_PORT", "10100"))
+    db_name = os.getenv("DB_NAME", "analytic_bot")
+    db_user = os.getenv("DB_USER", "analytic")
+    db_password = os.getenv("DB_PASSWORD")
+    
+    if not db_password:
+        print("❌ DB_PASSWORD environment variable required")
+        return
 
     conn = psycopg2.connect(
-        host="localhost", port=10100, database="analytic_bot", user="analytic", password="change_me"
+        host=db_host, port=db_port, database=db_name, user=db_user, password=db_password
     )
 
     cur = conn.cursor()

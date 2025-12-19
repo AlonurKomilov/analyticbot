@@ -21,6 +21,8 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any
 
+from cachetools import TTLCache
+
 from ..behavioral_analysis_service import BehavioralAnalysisService
 from ..churn_prediction_service import ChurnPredictionService
 from ..protocols.churn_protocols import (
@@ -35,6 +37,11 @@ from ..protocols.churn_protocols import (
 from ..retention_strategy_service import RetentionStrategyService
 
 logger = logging.getLogger(__name__)
+
+
+# Cache configuration for analysis results
+ANALYSIS_CACHE_MAX_SIZE = 5000  # Max 5000 cached analyses
+ANALYSIS_CACHE_TTL = 14400  # 4 hours in seconds
 
 
 class ChurnIntelligenceOrchestratorService(ChurnOrchestratorProtocol):
@@ -66,9 +73,12 @@ class ChurnIntelligenceOrchestratorService(ChurnOrchestratorProtocol):
             config_manager
         )
 
-        # Orchestrator state
+        # Orchestrator state with bounded cache
         self.service_health_status: dict[str, Any] = {}
-        self.analysis_cache: dict[str, Any] = {}
+        # Use TTLCache to prevent unbounded memory growth at 100K+ users
+        self.analysis_cache: TTLCache[str, Any] = TTLCache(
+            maxsize=ANALYSIS_CACHE_MAX_SIZE, ttl=ANALYSIS_CACHE_TTL
+        )
         self.cache_ttl_hours = 4
 
         # Performance tracking

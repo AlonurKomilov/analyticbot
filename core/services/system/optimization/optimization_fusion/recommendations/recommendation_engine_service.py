@@ -12,6 +12,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from cachetools import TTLCache
+
 from core.protocols.optimization_protocols import (
     OptimizationPriority,
     OptimizationRecommendation,
@@ -21,6 +23,13 @@ from core.protocols.optimization_protocols import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# Cache configuration for recommendations
+RECOMMENDATION_CACHE_MAX_SIZE = 5000  # Max 5000 channels cached
+RECOMMENDATION_CACHE_TTL = 3600  # 1 hour TTL
+BASELINE_CACHE_MAX_SIZE = 5000
+BASELINE_CACHE_TTL = 3600
 
 
 class RecommendationCategory(Enum):
@@ -56,8 +65,13 @@ class RecommendationEngineService(RecommendationEngineProtocol):
     """
 
     def __init__(self):
-        self.recommendation_cache: dict[int, list[OptimizationRecommendation]] = {}
-        self.baseline_cache: dict[int, PerformanceBaseline] = {}
+        # Use TTLCache to prevent unbounded memory growth at 100K+ users
+        self.recommendation_cache: TTLCache[int, list[OptimizationRecommendation]] = TTLCache(
+            maxsize=RECOMMENDATION_CACHE_MAX_SIZE, ttl=RECOMMENDATION_CACHE_TTL
+        )
+        self.baseline_cache: TTLCache[int, PerformanceBaseline] = TTLCache(
+            maxsize=BASELINE_CACHE_MAX_SIZE, ttl=BASELINE_CACHE_TTL
+        )
         self.recommendation_history: dict[str, dict[str, Any]] = {}
 
     async def generate_recommendations(self, channel_id: int) -> list[OptimizationRecommendation]:

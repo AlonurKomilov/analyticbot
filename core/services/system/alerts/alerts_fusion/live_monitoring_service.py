@@ -12,7 +12,14 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from cachetools import TTLCache
+
 logger = logging.getLogger(__name__)
+
+
+# Cache configuration for live monitoring
+METRICS_CACHE_MAX_SIZE = 50000  # Max 50K channels cached
+METRICS_CACHE_TTL = 900  # 15 minutes TTL
 
 
 class AlertSeverity(Enum):
@@ -91,7 +98,10 @@ class LiveMonitoringService:
     def __init__(self, post_repository=None):
         self.alert_rules: dict[str, AlertRule] = {}
         self.active_alerts: dict[str, MonitoringAlert] = {}
-        self.metrics_cache: dict[int, LiveMetrics] = {}
+        # Use TTLCache to prevent unbounded memory growth at 100K+ users
+        self.metrics_cache: TTLCache[int, LiveMetrics] = TTLCache(
+            maxsize=METRICS_CACHE_MAX_SIZE, ttl=METRICS_CACHE_TTL
+        )
         self.monitoring_enabled = True
         self.post_repo = post_repository  # Inject repository for DB access
         self._setup_default_rules()

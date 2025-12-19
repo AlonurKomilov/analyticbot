@@ -10,10 +10,15 @@ Optimizes MTProto worker performance by:
 
 import asyncio
 import logging
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
+
+
+# Maximum metrics history to keep (prevents unbounded memory growth)
+MAX_METRICS_HISTORY = 1000
 
 
 @dataclass
@@ -97,7 +102,8 @@ class MTProtoConnectionPool:
         self._session_locks: dict[int, asyncio.Lock] = {}
         self._total_connections_semaphore = asyncio.Semaphore(self.config.MAX_TOTAL_CONNECTIONS)
         self._cleanup_task: asyncio.Task | None = None
-        self._metrics_history: list[SessionMetrics] = []
+        # Use deque with maxlen to prevent unbounded memory growth
+        self._metrics_history: deque[SessionMetrics] = deque(maxlen=MAX_METRICS_HISTORY)
 
     async def acquire_session(self, user_id: int) -> bool:
         """
@@ -172,19 +178,17 @@ class MTProtoConnectionPool:
         session.errors = errors
         session.connection_closed = True
 
-        # Move to history
+        # Move to history (deque auto-evicts old entries with maxlen)
         self._metrics_history.append(session)
-
-        # Keep only last 1000 sessions in history
-        if len(self._metrics_history) > 1000:
-            self._metrics_history = self._metrics_history[-1000:]
 
         # Remove from active
         del self._active_sessions[user_id]
 
-        # Release locks
+        # Release locks and cleanup lock if no longer needed
         if user_id in self._session_locks:
             self._session_locks[user_id].release()
+            # Clean up the lock to prevent lock dictionary leak
+            del self._session_locks[user_id]
 
         self._total_connections_semaphore.release()
 

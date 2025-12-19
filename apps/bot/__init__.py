@@ -8,13 +8,47 @@ Structure:
 """
 
 import logging
+from datetime import timedelta
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.base import BaseStorage, DefaultKeyBuilder
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config.settings import Settings
 
 logger = logging.getLogger(__name__)
+
+
+def _create_fsm_storage(settings: Settings) -> BaseStorage:
+    """
+    Create FSM storage - Redis for production scalability, Memory for development.
+    
+    Redis storage is required for:
+    - Multi-instance deployments (100K+ users)
+    - State persistence across restarts
+    - Horizontal scaling
+    """
+    redis_url = getattr(settings, 'REDIS_URL', None)
+    
+    if redis_url:
+        try:
+            from aiogram.fsm.storage.redis import RedisStorage
+            
+            storage = RedisStorage.from_url(
+                str(redis_url),
+                key_builder=DefaultKeyBuilder(with_bot_id=True, with_destiny=True),
+                state_ttl=timedelta(hours=24),  # Auto-expire old state
+                data_ttl=timedelta(hours=24),
+            )
+            logger.info("✅ FSM using Redis storage (production-ready)")
+            return storage
+        except ImportError:
+            logger.warning("⚠️ aiogram Redis storage not available, falling back to memory")
+        except Exception as e:
+            logger.warning(f"⚠️ Redis connection failed ({e}), falling back to memory")
+    
+    logger.warning("⚠️ FSM using MemoryStorage - NOT suitable for production scaling!")
+    return MemoryStorage()
 
 
 class AnalyticBot:
@@ -27,9 +61,12 @@ class AnalyticBot:
         from apps.bot.system.middlewares.suspension_middleware import SuspensionCheckMiddleware
         from apps.bot.system.middlewares.throttle import ThrottleMiddleware
         
-        self.bot = Bot(token=token)
-        self.dp = Dispatcher(storage=MemoryStorage())
         self.settings = Settings()
+        self.bot = Bot(token=token)
+        
+        # Use Redis storage for production scalability
+        storage = _create_fsm_storage(self.settings)
+        self.dp = Dispatcher(storage=storage)
 
         # Setup middleware
         # Suspension check runs first to block suspended users

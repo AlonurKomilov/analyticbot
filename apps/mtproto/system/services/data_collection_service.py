@@ -20,9 +20,103 @@ from apps.mtproto.user.user_mtproto_service import UserMTProtoService
 
 logger = logging.getLogger(__name__)
 
+# FloodWait handling constants
+MAX_FLOOD_WAIT_SECONDS = 300  # Max 5 minutes wait, skip if longer
+FLOOD_WAIT_RETRY_COUNT = 2  # Retry twice after FloodWait
+
+
+class FloodWaitHandler:
+    """
+    Centralized FloodWait handling for Telegram API calls.
+    
+    At scale (100K+ users), FloodWait errors become frequent.
+    This handler:
+    - Respects Telegram's rate limits
+    - Automatically waits and retries for short waits
+    - Skips operations with excessive wait times
+    - Logs for monitoring/alerting
+    """
+    
+    @staticmethod
+    async def execute_with_flood_handling(
+        operation: Any,
+        operation_name: str = "operation",
+        max_wait: int = MAX_FLOOD_WAIT_SECONDS,
+        max_retries: int = FLOOD_WAIT_RETRY_COUNT,
+    ) -> Any:
+        """
+        Execute an async operation with FloodWait error handling.
+        
+        Args:
+            operation: Async callable or coroutine to execute
+            operation_name: Name for logging
+            max_wait: Maximum seconds to wait before skipping
+            max_retries: Maximum retry attempts after FloodWait
+            
+        Returns:
+            Result of the operation
+            
+        Raises:
+            Original exception if not FloodWait or exceeded retries
+        """
+        try:
+            from telethon.errors import FloodWaitError
+        except ImportError:
+            FloodWaitError = type("FloodWaitError", (Exception,), {})  # Dummy
+        
+        retries = 0
+        last_error = None
+        
+        while retries <= max_retries:
+            try:
+                # Handle both coroutines and callables
+                if asyncio.iscoroutine(operation):
+                    return await operation
+                elif callable(operation):
+                    result = operation()
+                    if asyncio.iscoroutine(result):
+                        return await result
+                    return result
+                else:
+                    raise TypeError(f"Operation must be callable or coroutine, got {type(operation)}")
+                    
+            except FloodWaitError as e:
+                wait_seconds = getattr(e, "seconds", 60)
+                last_error = e
+                
+                if wait_seconds > max_wait:
+                    logger.warning(
+                        f"⏸️  FloodWait for {operation_name}: {wait_seconds}s exceeds max {max_wait}s - SKIPPING"
+                    )
+                    raise  # Let caller handle long waits
+                
+                retries += 1
+                if retries > max_retries:
+                    logger.warning(
+                        f"⏸️  FloodWait for {operation_name}: exceeded max retries ({max_retries})"
+                    )
+                    raise
+                
+                logger.info(
+                    f"⏳ FloodWait for {operation_name}: waiting {wait_seconds}s (retry {retries}/{max_retries})"
+                )
+                await asyncio.sleep(wait_seconds + 1)  # Add 1s buffer
+                
+                # For callables, we can retry; for consumed coroutines, we can't
+                if asyncio.iscoroutine(operation):
+                    raise  # Can't retry consumed coroutine
+        
+        if last_error:
+            raise last_error
+        raise RuntimeError(f"Unexpected state in FloodWait handler for {operation_name}")
+
 
 class TelegramClientAdapter:
-    """Adapter to wrap Telethon TelegramClient to match TGClient protocol."""
+    """Adapter to wrap Telethon TelegramClient to match TGClient protocol.
+    
+    Includes automatic FloodWait handling for all Telegram API calls
+    to ensure scalability at 100K+ users.
+    """
 
     def __init__(self, telegram_client: Any):
         """Initialize adapter with existing TelegramClient.
@@ -31,6 +125,14 @@ class TelegramClientAdapter:
             telegram_client: Telethon TelegramClient instance
         """
         self._client = telegram_client
+        self._flood_handler = FloodWaitHandler()
+        
+        # Import FloodWaitError for use in methods
+        try:
+            from telethon.errors import FloodWaitError
+            self._flood_wait_error = FloodWaitError
+        except ImportError:
+            self._flood_wait_error = type("FloodWaitError", (Exception,), {})
 
     async def start(self) -> None:
         """Start client (no-op as client is already started)."""
@@ -44,10 +146,62 @@ class TelegramClientAdapter:
         """Check if client is connected."""
         return self._client.is_connected() if self._client else False
 
+    async def _resolve_entity_with_flood_handling(self, peer: Any) -> Any:
+        """Resolve entity with FloodWait handling and fallback formats.
+        
+        Args:
+            peer: The peer to resolve (ID or username)
+            
+        Returns:
+            Resolved entity or None
+        """
+        entity = None
+        
+        try:
+            entity = await FloodWaitHandler.execute_with_flood_handling(
+                self._client.get_entity(peer),
+                operation_name=f"get_entity({peer})"
+            )
+        except self._flood_wait_error:
+            logger.warning(f"FloodWait while resolving entity {peer} - skipping")
+            return None
+        except Exception as e1:
+            logger.warning(f"Could not resolve entity for {peer}: {e1}")
+
+            # If peer is an int, try alternate formats
+            if isinstance(peer, int):
+                # Try negative format
+                try:
+                    negative_id = -abs(peer)
+                    entity = await FloodWaitHandler.execute_with_flood_handling(
+                        self._client.get_entity(negative_id),
+                        operation_name=f"get_entity({negative_id})"
+                    )
+                    logger.info(f"Resolved entity using negative ID: {negative_id}")
+                except self._flood_wait_error:
+                    logger.warning(f"FloodWait with negative ID format")
+                except Exception as e2:
+                    logger.debug(f"Negative ID failed: {e2}")
+
+                    # Try without 100 prefix if present
+                    id_str = str(abs(peer))
+                    if len(id_str) > 10 and id_str.startswith("100"):
+                        try:
+                            raw_id = int(id_str[3:])
+                            entity = await FloodWaitHandler.execute_with_flood_handling(
+                                self._client.get_entity(raw_id),
+                                operation_name=f"get_entity({raw_id})"
+                            )
+                            logger.info(f"Resolved entity using raw ID: {raw_id}")
+                        except Exception as e3:
+                            logger.debug(f"Raw ID failed: {e3}")
+        
+        return entity
+
     async def iter_history(
         self, peer: Any, *, offset_id: int = 0, limit: int = 200
     ) -> AsyncIterator[Any]:
-        """Iterate through message history.
+        """Iterate through message history with FloodWait handling.
 
         Args:
             peer: The target peer (username or ID)
@@ -58,80 +212,71 @@ class TelegramClientAdapter:
             Message objects
         """
         # Resolve entity first to ensure it's in cache
-        # Try multiple ID formats for robustness
-        entity = None
-        try:
-            entity = await self._client.get_entity(peer)
-        except Exception as e1:
-            logger.warning(f"Could not resolve entity for {peer}: {e1}")
-
-            # If peer is an int, try alternate formats
-            if isinstance(peer, int):
-                # Try negative format
-                try:
-                    negative_id = -abs(peer)
-                    entity = await self._client.get_entity(negative_id)
-                    logger.info(f"Resolved entity using negative ID: {negative_id}")
-                except Exception as e2:
-                    logger.debug(f"Negative ID failed: {e2}")
-
-                    # Try without 100 prefix if present
-                    id_str = str(abs(peer))
-                    if len(id_str) > 10 and id_str.startswith("100"):
-                        try:
-                            raw_id = int(id_str[3:])
-                            entity = await self._client.get_entity(raw_id)
-                            logger.info(f"Resolved entity using raw ID: {raw_id}")
-                        except Exception as e3:
-                            logger.debug(f"Raw ID failed: {e3}")
+        entity = await self._resolve_entity_with_flood_handling(peer)
 
         if entity:
             peer = entity  # Use resolved entity for iteration
         # Continue with original peer if resolution failed, might still work
 
-        async for message in self._client.iter_messages(peer, offset_id=offset_id, limit=limit):
-            yield message
+        # iter_messages is a generator, FloodWait can occur during iteration
+        try:
+            async for message in self._client.iter_messages(peer, offset_id=offset_id, limit=limit):
+                yield message
+        except self._flood_wait_error as e:
+            wait_seconds = getattr(e, "seconds", 60)
+            if wait_seconds <= MAX_FLOOD_WAIT_SECONDS:
+                logger.info(f"⏳ FloodWait during iter_history: waiting {wait_seconds}s")
+                await asyncio.sleep(wait_seconds + 1)
+                # Retry iteration
+                async for message in self._client.iter_messages(peer, offset_id=offset_id, limit=limit):
+                    yield message
+            else:
+                logger.warning(f"⏸️  FloodWait during iter_history: {wait_seconds}s exceeds max - skipping channel")
+                raise
 
     async def get_broadcast_stats(self, channel: Any) -> Any:
-        """Get broadcast statistics for a channel."""
-        return await self._client.get_broadcast_stats(channel)
+        """Get broadcast statistics for a channel with FloodWait handling."""
+        return await FloodWaitHandler.execute_with_flood_handling(
+            self._client.get_broadcast_stats(channel),
+            operation_name="get_broadcast_stats"
+        )
 
     async def get_megagroup_stats(self, channel: Any) -> Any:
-        """Get megagroup statistics for a channel."""
-        return await self._client.get_megagroup_stats(channel)
+        """Get megagroup statistics for a channel with FloodWait handling."""
+        return await FloodWaitHandler.execute_with_flood_handling(
+            self._client.get_megagroup_stats(channel),
+            operation_name="get_megagroup_stats"
+        )
 
     async def load_async_graph(self, token: str, x: int = 0) -> Any:
-        """Load async graph data."""
-        return await self._client.load_async_graph(token, x)
+        """Load async graph data with FloodWait handling."""
+        return await FloodWaitHandler.execute_with_flood_handling(
+            self._client.load_async_graph(token, x),
+            operation_name="load_async_graph"
+        )
 
     async def get_full_channel(self, channel: Any) -> Any:
         """Get full channel information including participant count."""
         from telethon.tl.functions.channels import GetFullChannelRequest
 
-        # Resolve entity first with fallback formats
-        entity = None
-        try:
-            entity = await self._client.get_entity(channel)
-        except Exception:
-            if isinstance(channel, int):
-                # Try alternate formats
-                try:
-                    entity = await self._client.get_entity(-abs(channel))
-                except Exception:
-                    id_str = str(abs(channel))
-                    if len(id_str) > 10 and id_str.startswith("100"):
-                        entity = await self._client.get_entity(int(id_str[3:]))
+        # Resolve entity first with fallback formats  
+        entity = await self._resolve_entity_with_flood_handling(channel)
 
         if not entity:
             entity = channel  # Fallback to original
 
-        # Get full channel info
-        full_channel = await self._client(GetFullChannelRequest(entity))
-        return full_channel
+        # Get full channel info with FloodWait handling
+        return await FloodWaitHandler.execute_with_flood_handling(
+            self._client(GetFullChannelRequest(entity)),
+            operation_name="GetFullChannelRequest"
+        )
 
     async def get_me(self) -> Any:
-        """Get information about the current user."""
-        return await self._client.get_me()
+        """Get information about the current user with FloodWait handling."""
+        return await FloodWaitHandler.execute_with_flood_handling(
+            self._client.get_me(),
+            operation_name="get_me"
+        )
 
     async def disconnect(self) -> None:
         """Disconnect the client."""

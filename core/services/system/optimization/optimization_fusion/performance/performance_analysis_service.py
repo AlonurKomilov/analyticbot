@@ -15,12 +15,17 @@ Core capabilities extracted from AutonomousOptimizationService performance analy
 """
 
 import logging
+from collections import deque
 from datetime import datetime
 from typing import Any
 
 from ..protocols.optimization_protocols import PerformanceAnalysisProtocol, PerformanceBaseline
 
 logger = logging.getLogger(__name__)
+
+
+# Maximum history per metric to prevent unbounded memory growth
+MAX_METRIC_HISTORY_SIZE = 1000
 
 
 class PerformanceAnalysisService(PerformanceAnalysisProtocol):
@@ -46,11 +51,17 @@ class PerformanceAnalysisService(PerformanceAnalysisProtocol):
             "network_latency_ms": 200,
         }
 
-        # Historical data retention
-        self.metrics_history: dict[str, list[float]] = {}
+        # Historical data retention with bounded deque to prevent memory leaks
+        self.metrics_history: dict[str, deque[float]] = {}
         self.analysis_window_hours = 24
 
         logger.info("📊 Performance Analysis Service initialized - metrics collection focus")
+
+    def _get_metric_history(self, metric_name: str) -> deque[float]:
+        """Get or create bounded history deque for a metric"""
+        if metric_name not in self.metrics_history:
+            self.metrics_history[metric_name] = deque(maxlen=MAX_METRIC_HISTORY_SIZE)
+        return self.metrics_history[metric_name]
 
     async def analyze_system_performance(self) -> dict[str, PerformanceBaseline]:
         """
@@ -363,12 +374,12 @@ class PerformanceAnalysisService(PerformanceAnalysisProtocol):
 
     def _get_historical_average(self, metric_name: str) -> float:
         """Get historical average for a metric"""
-        history = self.metrics_history.get(metric_name, [])
+        history = self._get_metric_history(metric_name)
         return sum(history) / len(history) if history else 0.0
 
     def _calculate_trend(self, metric_name: str) -> str:
         """Calculate trend direction for a metric"""
-        history = self.metrics_history.get(metric_name, [])
+        history = list(self._get_metric_history(metric_name))
 
         if len(history) < 2:
             return "insufficient_data"
@@ -384,17 +395,12 @@ class PerformanceAnalysisService(PerformanceAnalysisProtocol):
             return "stable"
 
     def _update_metrics_history(self, metrics: dict[str, Any]) -> None:
-        """Update historical metrics data"""
+        """Update historical metrics data with bounded deques"""
         for metric_name, value in metrics.items():
             if isinstance(value, (int, float)):
-                if metric_name not in self.metrics_history:
-                    self.metrics_history[metric_name] = []
-
-                self.metrics_history[metric_name].append(value)
-
-                # Keep only recent history (last 100 data points)
-                if len(self.metrics_history[metric_name]) > 100:
-                    self.metrics_history[metric_name] = self.metrics_history[metric_name][-100:]
+                # Use bounded deque that auto-evicts old entries
+                history = self._get_metric_history(metric_name)
+                history.append(value)
 
     async def health_check(self) -> dict[str, Any]:
         """Health check for performance analysis service"""

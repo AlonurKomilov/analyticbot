@@ -323,9 +323,11 @@ async def send_post_now(
         else:
             # Original logic for text-only or URL-based media using Bot API
             # Get Telegram bot token
-            bot_token = os.getenv(
-                "TELEGRAM_BOT_TOKEN", "7603888301:AAHsmvb846iBbiGPzTda7wA1_RCimuowo3o"
-            )
+            bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+            if not bot_token:
+                raise HTTPException(
+                    status_code=500, detail="TELEGRAM_BOT_TOKEN not configured"
+                )
 
             # Text-only message (or URL-based media, though not implemented yet)
             telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"

@@ -152,6 +152,32 @@ async def verify_mtproto(
             f"MTProto user ID for user {user_id}: {mtproto_id}, username: {mtproto_username}"
         )
 
+        # Check if this MTProto Telegram account is the same as user's login account
+        # Get user's telegram_id from database to compare
+        from core.repositories.user_repository import UserRepository
+        from apps.di.database_container import get_db_session
+        
+        async with get_db_session() as session_db:
+            user_repo = UserRepository(session_db)
+            user_data = await user_repo.get_user_by_id(user_id)
+            
+            if user_data and user_data.get("telegram_id"):
+                user_telegram_id = user_data.get("telegram_id")
+                
+                # Warn if using same Telegram account for both login and MTProto
+                if mtproto_id == user_telegram_id:
+                    logger.warning(
+                        f"User {user_id} is using the SAME Telegram account "
+                        f"(ID: {mtproto_id}) for both login and MTProto. "
+                        f"This is allowed but may cause confusion."
+                    )
+                    # Note: We allow it but log a warning
+                else:
+                    logger.info(
+                        f"User {user_id} is using a DIFFERENT Telegram account for MTProto "
+                        f"(Login ID: {user_telegram_id}, MTProto ID: {mtproto_id})"
+                    )
+
         await safe_disconnect(client)
 
         # Clear pending session (no longer needed)

@@ -413,6 +413,13 @@ async def setup_mtproto_simple(
 
         # Check if email setup is required (Common issue with new sessions)
         if type(result.type).__name__ == "SentCodeTypeSetUpEmailRequired":
+            # Even if email is required, we can sometimes proceed if we handle it correctly
+            # But usually this means we MUST stop and tell user to verify
+            
+            # However, if the user insists they have verified, it might be a Telethon/Telegram API quirk
+            # where we need to catch the specific error during sign-in, not here.
+            # But send_code_request returning this type is pretty definitive.
+            
             await safe_disconnect(client)
             logger.warning(
                 f"User {user_id} needs to complete email verification in Telegram account"

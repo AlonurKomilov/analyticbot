@@ -38,7 +38,7 @@ class UpdatesCollector:
         self.parsers = getattr(repos, "parsers", None)
         self._running = False
         self._shutdown_event = asyncio.Event()
-        self._stats: dict[str, int | datetime | None] = {
+        self._stats: dict[str, int | float | datetime | None] = {
             "updates_processed": 0,
             "updates_skipped": 0,
             "updates_errors": 0,

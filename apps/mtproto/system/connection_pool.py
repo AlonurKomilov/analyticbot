@@ -78,17 +78,6 @@ class ConnectionPoolConfig:
         config.DB_POOL_MAX_SIZE = settings.MTPROTO_DB_POOL_MAX_SIZE
         return config
 
-    @classmethod
-    def from_settings(cls, settings):
-        """Create config from MTProtoSettings"""
-        config = cls()
-        config.MAX_CONNECTIONS_PER_USER = settings.MTPROTO_MAX_CONNECTIONS_PER_USER
-        config.MAX_TOTAL_CONNECTIONS = settings.MTPROTO_MAX_CONCURRENT_USERS
-        config.CONNECTION_TIMEOUT = settings.MTPROTO_CONNECTION_TIMEOUT
-        config.SESSION_TIMEOUT = settings.MTPROTO_SESSION_TIMEOUT
-        config.IDLE_TIMEOUT = settings.MTPROTO_IDLE_TIMEOUT
-        return config
-
 
 class MTProtoConnectionPool:
     """

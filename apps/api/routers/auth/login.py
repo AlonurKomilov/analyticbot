@@ -215,6 +215,7 @@ async def logout(
     response: Response,
     current_user: dict[str, Any] = Depends(get_current_user),
     security_manager: SecurityManager = Depends(get_security_manager),
+    auth_utils: FastAPIAuthUtils = Depends(get_auth_utils),
 ):
     """
     Logout user and invalidate tokens.

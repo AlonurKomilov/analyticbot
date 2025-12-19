@@ -57,7 +57,7 @@ def get_ip_whitelist() -> set[str]:
     """
     whitelist_env = os.getenv("RATE_LIMIT_WHITELIST", "")
 
-    whitelist = set()
+    whitelist: set[str] = set()
 
     # Add IPs from environment variable
     if whitelist_env:

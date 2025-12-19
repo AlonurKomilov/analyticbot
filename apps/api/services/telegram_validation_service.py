@@ -234,10 +234,10 @@ class TelegramValidationService:
             )
 
         except Exception as e:
-            self.logger.error(f"Error validating channel @{username}: {e}")
+            self.logger.error(f"Error validating channel @{clean_username}: {e}")
             return ChannelValidationResult(
                 is_valid=False,
-                username=username,
+                username=clean_username,
                 error_message=f"Validation error: {str(e)}",
             )
 

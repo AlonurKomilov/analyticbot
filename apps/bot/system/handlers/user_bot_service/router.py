@@ -46,9 +46,9 @@ def create_service_router(
     router = Router(name=f"moderation_{user_id}")
     
     # Create handlers
-    message_handler = MessageModerationHandler(bot, user_id, moderation_service)
-    member_handler = MemberModerationHandler(bot, user_id, moderation_service)
-    admin_handler = AdminCommandHandler(bot, user_id, moderation_service)
+    message_handler = MessageModerationHandler(bot, user_id, service)
+    member_handler = MemberModerationHandler(bot, user_id, service)
+    admin_handler = AdminCommandHandler(bot, user_id, service)
     
     # Store features manager for use in handlers
     router.bot_features_manager = bot_features_manager  # type: ignore
@@ -238,6 +238,6 @@ def register_moderation_handlers(
         user_id: Bot owner's user ID
         service: The moderation service instance
     """
-    router = create_service_router(bot, user_id, moderation_service)
+    router = create_service_router(bot, user_id, service)
     dp.include_router(router)
     logger.info(f"Registered moderation handlers on dispatcher for user {user_id}")

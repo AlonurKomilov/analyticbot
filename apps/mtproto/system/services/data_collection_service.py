@@ -438,14 +438,6 @@ class MTProtoDataCollectionService:
         except Exception as e:
             logger.warning(f"Error calculating next collection wait: {e}")
             return 60  # Default fallback
-        time_since_last = (now - last_collection).total_seconds()
-
-        if time_since_last < min_gap_seconds:
-            # Collection was too recent, calculate wait time
-            wait_seconds = min_gap_seconds - time_since_last
-            return True, wait_seconds
-
-        return False, 0
 
     async def initialize(self):
         """Initialize all components."""

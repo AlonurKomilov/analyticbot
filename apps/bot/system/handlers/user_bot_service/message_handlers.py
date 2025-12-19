@@ -37,7 +37,7 @@ class MessageModerationHandler:
     ):
         self.bot = bot
         self.user_id = user_id
-        self.service = moderation_service
+        self.service = service
 
     async def handle_message(self, message: Message) -> bool:
         """
@@ -95,6 +95,9 @@ class MessageModerationHandler:
 
     async def _execute_action(self, message: Message, result: Any) -> None:
         """Execute moderation action based on check result."""
+        if not message.chat or not message.from_user:
+            return
+        
         chat_id = message.chat.id
         sender_id = message.from_user.id
         sender_name = message.from_user.full_name

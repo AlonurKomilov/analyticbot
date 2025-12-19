@@ -536,7 +536,7 @@ class TelegramStorageService:
                 and_(
                     TelegramMedia.id == media_id,
                     TelegramMedia.user_id == user_id,
-                    not TelegramMedia.is_deleted,
+                    TelegramMedia.is_deleted == False,  # noqa: E712
                 )
             )
         )
@@ -566,7 +566,7 @@ class TelegramStorageService:
         """
         # Build query
         query = select(TelegramMedia).where(
-            and_(TelegramMedia.user_id == user_id, not TelegramMedia.is_deleted)
+            and_(TelegramMedia.user_id == user_id, TelegramMedia.is_deleted == False)  # noqa: E712
         )
 
         if file_type:
@@ -611,7 +611,7 @@ class TelegramStorageService:
                 and_(
                     TelegramMedia.id == media_id,
                     TelegramMedia.user_id == user_id,
-                    not TelegramMedia.is_deleted,
+                    TelegramMedia.is_deleted == False,  # noqa: E712
                 )
             )
         )
@@ -670,7 +670,7 @@ class TelegramStorageService:
                 and_(
                     TelegramMedia.id == media_id,
                     TelegramMedia.user_id == user_id,
-                    not TelegramMedia.is_deleted,
+                    TelegramMedia.is_deleted == False,  # noqa: E712
                 )
             )
         )

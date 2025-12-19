@@ -12,7 +12,7 @@ Tracks health metrics for all user bots including:
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar
+from typing import Any, ClassVar
 
 
 class BotHealthStatus(Enum):
@@ -235,7 +235,7 @@ class BotHealthMonitor:
             in [BotHealthStatus.DEGRADED, BotHealthStatus.UNHEALTHY]
         ]
 
-    def get_health_summary(self) -> dict[str, any]:
+    def get_health_summary(self) -> dict[str, Any]:
         """
         Get overall health summary
 

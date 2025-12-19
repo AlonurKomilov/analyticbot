@@ -14,6 +14,8 @@ import re
 from datetime import datetime, timedelta
 from typing import Any
 
+from cachetools import TTLCache
+
 from core.models.user_bot_service_domain import (
     BannedWord,
     ChatSettings,
@@ -39,6 +41,11 @@ from infra.db.repositories.user_bot_service_repository import (
 logger = logging.getLogger(__name__)
 
 
+# Constants for flood detection cache
+FLOOD_CACHE_MAX_SIZE = 50000  # Max 50K unique user+chat combinations
+FLOOD_CACHE_TTL = 300  # 5 minutes TTL
+
+
 class UserBotService:
     """
     Service for user bot moderation operations.
@@ -54,9 +61,12 @@ class UserBotService:
     def __init__(self, repository: UserBotServiceRepository):
         self.repository = repository
         
-        # In-memory flood detection cache (per user per chat)
+        # Bounded flood detection cache with TTL (per user per chat)
         # Key: (user_id, chat_id, sender_tg_id) -> list of message timestamps
-        self._flood_cache: dict[tuple[int, int, int], list[datetime]] = {}
+        # Uses TTLCache to prevent unbounded memory growth at scale
+        self._flood_cache: TTLCache[tuple[int, int, int], list[datetime]] = TTLCache(
+            maxsize=FLOOD_CACHE_MAX_SIZE, ttl=FLOOD_CACHE_TTL
+        )
         
         # Spam detection patterns
         self._spam_patterns = [

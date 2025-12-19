@@ -40,7 +40,7 @@ class TokenValidationResult:
     message: str
     bot_username: str | None = None
     bot_id: int | None = None
-    validated_at: datetime = None
+    validated_at: datetime | None = None
 
     def __post_init__(self):
         if self.validated_at is None:

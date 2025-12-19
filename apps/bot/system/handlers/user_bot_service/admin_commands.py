@@ -46,7 +46,7 @@ class AdminCommandHandler:
     ):
         self.bot = bot
         self.user_id = user_id
-        self.service = moderation_service
+        self.service = service
 
     async def _is_admin(self, message: Message) -> bool:
         """Check if user is admin or bot owner."""

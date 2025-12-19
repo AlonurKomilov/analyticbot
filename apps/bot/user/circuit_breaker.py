@@ -106,7 +106,7 @@ class CircuitBreaker:
                 self.success_count = 0
             else:
                 # Still in timeout, reject request
-                timeout_remaining = self.timeout_seconds - (time.time() - self.opened_at)
+                timeout_remaining = self.timeout_seconds - (time.time() - (self.opened_at or 0))
                 raise CircuitBreakerOpenError(
                     user_id=kwargs.get("user_id", 0), timeout_remaining=timeout_remaining
                 )

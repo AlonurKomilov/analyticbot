@@ -60,7 +60,7 @@ class HealthCheckServer:
             }
 
             # Run custom health checks
-            checks = {}
+            checks: dict[str, dict[str, Any]] = {}
             overall_healthy = True
 
             for name, check_func in self.custom_health_checks.items():

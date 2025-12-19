@@ -77,6 +77,11 @@ aiofiles>=23.2.0
 # Reporting
 reportlab>=4.0.7
 
+# Scalability & Resilience (100K+ users)
+cachetools>=5.3.0  # Bounded TTL/LRU caches
+circuitbreaker>=2.0.0  # Circuit breaker pattern
+tenacity>=8.2.0  # Retry with backoff
+
 # Utilities
 python-dotenv>=1.0.0
 pytz>=2023.3

@@ -41,7 +41,7 @@ class MemberModerationHandler:
     ):
         self.bot = bot
         self.user_id = user_id
-        self.service = moderation_service
+        self.service = service
 
     async def handle_new_member(
         self,

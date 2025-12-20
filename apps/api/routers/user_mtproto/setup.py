@@ -186,7 +186,7 @@ async def setup_mtproto(
             success=True,
             phone_code_hash=phone_code_hash,
             message=(
-                "Verification code sent! Check your Telegram app " "for a message from 'Telegram'."
+                "Verification code sent! Check your Telegram app for a message from 'Telegram'."
             ),
         )
 
@@ -302,8 +302,7 @@ async def resend_mtproto_code(
                 success=True,
                 phone_code_hash=phone_code_hash,
                 message=(
-                    "Verification code sent! Check your Telegram app "
-                    "for a message from 'Telegram'."
+                    "Verification code sent! Check your Telegram app for a message from 'Telegram'."
                 ),
             )
 
@@ -408,23 +407,23 @@ async def setup_mtproto_simple(
         delivery_info = f"code_type={type(result.type).__name__}"
         if hasattr(result, "next_type") and result.next_type:
             delivery_info += f", next_type={type(result.next_type).__name__}"
-        
+
         logger.info(f"[Simple Setup] Code sent via: {delivery_info}")
 
         # Check if email setup is required (Common issue with new sessions)
         if type(result.type).__name__ == "SentCodeTypeSetUpEmailRequired":
             # Even if email is required, we can sometimes proceed if we handle it correctly
             # But usually this means we MUST stop and tell user to verify
-            
+
             # However, if the user insists they have verified, it might be a Telethon/Telegram API quirk
             # where we need to catch the specific error during sign-in, not here.
             # But send_code_request returning this type is pretty definitive.
-            
+
             await safe_disconnect(client)
             logger.warning(
                 f"User {user_id} needs to complete email verification in Telegram account"
             )
-            
+
             detail_msg = (
                 "⚠️ Email Verification Required\n\n"
                 "Telegram requires email verification before API access. "
@@ -437,7 +436,7 @@ async def setup_mtproto_simple(
                 "3. Make sure the email shows as 'Verified' (not just added)\n"
                 "4. Wait a few minutes, then try again."
             )
-            
+
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=detail_msg,
@@ -698,7 +697,9 @@ async def check_qr_login_status(
         try:
             result = await client(
                 ExportLoginTokenRequest(
-                    api_id=pending["api_id"], api_hash=pending["api_hash"], except_ids=[]
+                    api_id=pending["api_id"],
+                    api_hash=pending["api_hash"],
+                    except_ids=[],
                 )
             )
 
@@ -737,7 +738,10 @@ async def check_qr_login_status(
                     credentials.is_verified = True
                     await repository.update(credentials)
                 else:
-                    from core.models.user_bot_domain import BotStatus, UserBotCredentials
+                    from core.models.user_bot_domain import (
+                        BotStatus,
+                        UserBotCredentials,
+                    )
 
                     credentials = UserBotCredentials(
                         id=None,

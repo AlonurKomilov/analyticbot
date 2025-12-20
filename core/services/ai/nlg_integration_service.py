@@ -59,14 +59,18 @@ class NLGIntegrationService:
             # Performance narrative
             if insights.get("performance_insights"):
                 performance_narrative = await self._nlg_service.generate_insight_narrative(
-                    insights["performance_insights"], InsightType.PERFORMANCE, narrative_style
+                    insights["performance_insights"],
+                    InsightType.PERFORMANCE,
+                    narrative_style,
                 )
                 narratives["performance"] = performance_narrative
 
             # Content pattern narrative
             if insights.get("content_insights"):
                 content_narrative = await self._nlg_service.generate_insight_narrative(
-                    insights["content_insights"], InsightType.ENGAGEMENT, narrative_style
+                    insights["content_insights"],
+                    InsightType.ENGAGEMENT,
+                    narrative_style,
                 )
                 narratives["content"] = content_narrative
 
@@ -150,7 +154,10 @@ class NLGIntegrationService:
             }
 
     async def generate_narrative_summary(
-        self, insights: dict, summary_type: str = "executive", target_audience: str = "general"
+        self,
+        insights: dict,
+        summary_type: str = "executive",
+        target_audience: str = "general",
     ) -> dict:
         """
         📋 Generate Focused Narrative Summary
@@ -192,7 +199,10 @@ class NLGIntegrationService:
 
         except Exception as e:
             logger.error(f"Narrative summary generation failed: {e}")
-            return {"summary": "Summary generation temporarily unavailable", "error": str(e)}
+            return {
+                "summary": "Summary generation temporarily unavailable",
+                "error": str(e),
+            }
 
     async def _generate_custom_summary(
         self, insights: dict, summary_type: str, narrative_style: NarrativeStyle

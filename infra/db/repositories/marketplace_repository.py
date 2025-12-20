@@ -113,13 +113,15 @@ class MarketplaceRepository:
         """Get all unique categories with item counts."""
 
         async with self.pool.acquire() as conn:
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT category, COUNT(*) as item_count
                 FROM marketplace_items
                 WHERE is_active = TRUE
                 GROUP BY category
                 ORDER BY item_count DESC
-            """)
+            """
+            )
             return [dict(row) for row in rows]
 
     # ==================== PURCHASES ====================
@@ -198,7 +200,11 @@ class MarketplaceRepository:
                     item_id,
                 )
 
-                return {"success": True, "purchase_id": purchase_id, "credits_spent": price}
+                return {
+                    "success": True,
+                    "purchase_id": purchase_id,
+                    "credits_spent": price,
+                }
 
     async def get_user_purchases(self, user_id: int) -> list[dict[str, Any]]:
         """Get all purchases for a user."""
@@ -303,7 +309,11 @@ class MarketplaceRepository:
     # ==================== CREDIT GIFTING ====================
 
     async def send_gift(
-        self, sender_id: int, recipient_username: str, amount: int, message: str | None = None
+        self,
+        sender_id: int,
+        recipient_username: str,
+        amount: int,
+        message: str | None = None,
     ) -> dict[str, Any]:
         """Send credits as a gift to another user."""
 
@@ -321,7 +331,10 @@ class MarketplaceRepository:
                     return {"success": False, "error": "User not found"}
 
                 if recipient["id"] == sender_id:
-                    return {"success": False, "error": "Cannot send credits to yourself"}
+                    return {
+                        "success": False,
+                        "error": "Cannot send credits to yourself",
+                    }
 
                 # Check sender balance
                 balance = await conn.fetchval(
@@ -434,13 +447,15 @@ class MarketplaceRepository:
             if featured_only:
                 condition += " AND is_featured = TRUE"
 
-            rows = await conn.fetch(f"""
+            rows = await conn.fetch(
+                f"""
                 SELECT id, name, slug, description, price_credits, original_price,
                        discount_percent, is_featured, valid_days
                 FROM service_bundles
                 WHERE {condition}
                 ORDER BY is_featured DESC, discount_percent DESC
-            """)
+            """
+            )
             return [dict(row) for row in rows]
 
     async def get_bundle_items(self, bundle_id: int) -> list[dict[str, Any]]:

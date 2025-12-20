@@ -305,9 +305,9 @@ class AlertsOrchestratorService(AlertsOrchestratorProtocol):
                 "healthy_services": len(
                     [h for h in health_checks.values() if h.get("status") != "error"]
                 ),
-                "last_request": self.last_request_time.isoformat()
-                if self.last_request_time
-                else None,
+                "last_request": (
+                    self.last_request_time.isoformat() if self.last_request_time else None
+                ),
                 "request_count": self.request_count,
             }
 
@@ -364,7 +364,9 @@ class AlertsOrchestratorService(AlertsOrchestratorProtocol):
             "responsibility": "alerts_coordination",
             "coordinated_services": list(self.services.keys()),
             "request_count": self.request_count,
-            "last_request": self.last_request_time.isoformat() if self.last_request_time else None,
+            "last_request": (
+                self.last_request_time.isoformat() if self.last_request_time else None
+            ),
             "services_health": services_health,
             "capabilities": [
                 "live_monitoring_coordination",

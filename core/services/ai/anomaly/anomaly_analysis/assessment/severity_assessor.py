@@ -39,7 +39,12 @@ class SeverityAssessor:
             Severity assessment with score and impact details
         """
         try:
-            severity_factors = {"magnitude": 0, "duration": 0, "trend": 0, "impact_scope": 0}
+            severity_factors = {
+                "magnitude": 0,
+                "duration": 0,
+                "trend": 0,
+                "impact_scope": 0,
+            }
 
             # Magnitude assessment
             deviation = abs(anomaly_data.get("deviation_percentage", 0))
@@ -73,7 +78,9 @@ class SeverityAssessor:
                 "severity_score": severity_percentage,
                 "factors": severity_factors,
                 "impact_assessment": self._assess_business_impact(anomaly_data, overall_severity),
-                "urgency": "immediate" if overall_severity in ["critical", "high"] else "moderate",
+                "urgency": (
+                    "immediate" if overall_severity in ["critical", "high"] else "moderate"
+                ),
             }
 
         except Exception as e:
@@ -127,7 +134,11 @@ class SeverityAssessor:
         return {
             "service": "SeverityAssessor",
             "status": "healthy",
-            "capabilities": ["severity_assessment", "impact_analysis", "urgency_determination"],
+            "capabilities": [
+                "severity_assessment",
+                "impact_analysis",
+                "urgency_determination",
+            ],
             "severity_levels": ["critical", "high", "medium", "low"],
             "assessment_factors": ["magnitude", "duration", "trend", "impact_scope"],
             "timestamp": datetime.now().isoformat(),

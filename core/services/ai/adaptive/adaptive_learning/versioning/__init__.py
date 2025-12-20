@@ -23,7 +23,6 @@ Usage:
 from .comparison.version_comparator import VersionComparator
 from .deployment.deployment_manager import DeploymentManager
 from .management.version_manager import VersionManager
-from .models import DeploymentStage, ModelStatus, ModelVersion, ModelVersioningConfig
 from .orchestrator.versioning_orchestrator import (
     ModelVersioningService,  # Backward compatibility alias
     VersioningOrchestrator,

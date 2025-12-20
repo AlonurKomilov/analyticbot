@@ -118,7 +118,9 @@ def upgrade() -> None:
     op.create_index("ix_credit_transactions_type", "credit_transactions", ["type"])
     op.create_index("ix_credit_transactions_created_at", "credit_transactions", ["created_at"])
     op.create_index(
-        "ix_credit_transactions_user_created", "credit_transactions", ["user_id", "created_at"]
+        "ix_credit_transactions_user_created",
+        "credit_transactions",
+        ["user_id", "created_at"],
     )
 
     # ============================================
@@ -173,7 +175,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
-        "ix_credit_services_service_key", "credit_services", ["service_key"], unique=True
+        "ix_credit_services_service_key",
+        "credit_services",
+        ["service_key"],
+        unique=True,
     )
     op.create_index("ix_credit_services_category", "credit_services", ["category"])
     op.create_index("ix_credit_services_active", "credit_services", ["is_active"])

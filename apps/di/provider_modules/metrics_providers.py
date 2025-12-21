@@ -98,7 +98,10 @@ def create_system_metrics_service(metrics_backend=None, system_monitor=None, **k
         from typing import cast
 
         from core.services.bot.metrics import SystemMetricsService
-        from core.services.bot.metrics.protocols import MetricsBackendPort, SystemMetricsPort
+        from core.services.bot.metrics.protocols import (
+            MetricsBackendPort,
+            SystemMetricsPort,
+        )
 
         if not metrics_backend or not system_monitor:
             logger.warning("Cannot create system metrics service: missing dependencies")

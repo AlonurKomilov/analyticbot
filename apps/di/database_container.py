@@ -26,7 +26,10 @@ from core.protocols import (
 )
 
 # Import other repositories (no protocols yet)
-from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
+from core.repositories.alert_repository import (
+    AlertSentRepository,
+    AlertSubscriptionRepository,
+)
 from core.repositories.shared_reports_repository import SharedReportsRepository
 
 # Still need concrete implementation for instantiation
@@ -37,7 +40,11 @@ from infra.db.repositories.admin_repository import AsyncpgAdminRepository
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.channel_daily_repository import ChannelDailyRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+from infra.db.repositories.credit_repository import CreditRepository
 from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
+from infra.db.repositories.marketplace_service_repository import (
+    MarketplaceServiceRepository,
+)
 from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
 from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
@@ -45,10 +52,10 @@ from infra.db.repositories.post_repository import AsyncpgPostRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
 from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
 from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
+from infra.db.repositories.user_bot_service_repository_factory import (
+    UserBotServiceRepositoryFactory,
+)
 from infra.db.repositories.user_repository import AsyncpgUserRepository
-from infra.db.repositories.user_bot_service_repository_factory import UserBotServiceRepositoryFactory
-from infra.db.repositories.credit_repository import CreditRepository
-from infra.db.repositories.marketplace_service_repository import MarketplaceServiceRepository
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +137,9 @@ async def _create_sqlalchemy_engine(
     )
 
 
-async def _create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
+async def _create_session_factory(
+    engine: AsyncEngine,
+) -> async_sessionmaker[AsyncSession]:
     """Create SQLAlchemy session factory"""
     return async_sessionmaker(engine, expire_on_commit=False)
 
@@ -191,7 +200,8 @@ class DatabaseContainer(containers.DeclarativeContainer):
     # Database URL from environment or configuration
     database_url = providers.Callable(
         lambda: os.getenv(
-            "DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot"
+            "DATABASE_URL",
+            "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot",
         )
     )
 
@@ -204,7 +214,10 @@ class DatabaseContainer(containers.DeclarativeContainer):
     asyncpg_pool = providers.Resource(_create_asyncpg_pool, database_url=database_url, pool_size=10)
 
     sqlalchemy_engine = providers.Resource(
-        _create_sqlalchemy_engine, database_url=database_url, pool_size=10, max_overflow=20
+        _create_sqlalchemy_engine,
+        database_url=database_url,
+        pool_size=10,
+        max_overflow=20,
     )
 
     session_factory = providers.Resource(_create_session_factory, engine=sqlalchemy_engine)

@@ -16,15 +16,16 @@ Services:
 - AutoDeleteJoinsService: Auto-delete join/leave messages
 """
 
+from core.services.bot.moderation.anti_spam_service import AntiSpamService
+from core.services.bot.moderation.auto_delete_joins_service import (
+    AutoDeleteJoinsService,
+)
 from core.services.bot.moderation.base_bot_service import BaseBotService
 from core.services.bot.moderation.bot_features_manager import BotFeaturesManager
-from core.services.bot.moderation.anti_spam_service import AntiSpamService
-from core.services.bot.moderation.auto_delete_joins_service import AutoDeleteJoinsService
 
 __all__ = [
     "BaseBotService",
-    "BotFeaturesManager", 
+    "BotFeaturesManager",
     "AntiSpamService",
     "AutoDeleteJoinsService",
 ]
-

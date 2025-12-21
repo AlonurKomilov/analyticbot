@@ -274,24 +274,21 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
             if self.db_pool:
                 try:
                     # Count total users
-                    total_users = await self.db_pool.fetchval(
-                        "SELECT COUNT(*) FROM users"
-                    ) or 0
+                    total_users = await self.db_pool.fetchval("SELECT COUNT(*) FROM users") or 0
 
                     # Count total channels
-                    total_channels = await self.db_pool.fetchval(
-                        "SELECT COUNT(*) FROM channels"
-                    ) or 0
+                    total_channels = (
+                        await self.db_pool.fetchval("SELECT COUNT(*) FROM channels") or 0
+                    )
 
                     # Count total posts (from posts table - actual tracked posts)
-                    total_posts = await self.db_pool.fetchval(
-                        "SELECT COUNT(*) FROM posts"
-                    ) or 0
+                    total_posts = await self.db_pool.fetchval("SELECT COUNT(*) FROM posts") or 0
 
                     # Sum total views from post_metrics (latest views per post)
                     # Use a subquery to get the most recent view count for each post
-                    total_views = await self.db_pool.fetchval(
-                        """
+                    total_views = (
+                        await self.db_pool.fetchval(
+                            """
                         SELECT COALESCE(SUM(latest_views.views), 0)
                         FROM (
                             SELECT DISTINCT ON (channel_id, msg_id) views
@@ -300,16 +297,21 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
                             ORDER BY channel_id, msg_id, snapshot_time DESC
                         ) latest_views
                         """
-                    ) or 0
+                        )
+                        or 0
+                    )
 
                     # Count active channels (channels with activity in last 30 days)
-                    active_channels = await self.db_pool.fetchval(
-                        """
+                    active_channels = (
+                        await self.db_pool.fetchval(
+                            """
                         SELECT COUNT(DISTINCT channel_id) 
                         FROM posts 
                         WHERE created_at >= NOW() - INTERVAL '30 days'
                         """
-                    ) or 0
+                        )
+                        or 0
+                    )
 
                     logger.info(
                         f"✅ Real DB stats: users={total_users}, channels={total_channels}, "
@@ -363,10 +365,10 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
                 for i in range(min(limit, 10)):
                     audit_logs.append(
                         {
-                            "id": f"audit_{i+1}",
-                            "action": f"admin_action_{i+1}",
-                            "user_id": f"admin_user_{i+1}",
-                            "details": f"Administrative action details {i+1}",
+                            "id": f"audit_{i + 1}",
+                            "action": f"admin_action_{i + 1}",
+                            "user_id": f"admin_user_{i + 1}",
+                            "details": f"Administrative action details {i + 1}",
                             "timestamp": (datetime.utcnow().timestamp() - i * 3600),
                             "ip_address": f"192.168.1.{100 + i}",
                             "success": True,
@@ -398,9 +400,9 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
                 "orchestrator": {
                     "running": self.is_running,
                     "request_count": self.request_count,
-                    "last_request": self.last_request_time.isoformat()
-                    if self.last_request_time
-                    else None,
+                    "last_request": (
+                        self.last_request_time.isoformat() if self.last_request_time else None
+                    ),
                 },
                 "summary": {
                     "total_services": len(service_health),
@@ -420,7 +422,11 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
                 "error": str(e),
                 "services": {},
                 "orchestrator": {"running": False},
-                "summary": {"total_services": 0, "healthy_services": 0, "overall_status": "error"},
+                "summary": {
+                    "total_services": 0,
+                    "healthy_services": 0,
+                    "overall_status": "error",
+                },
             }
 
     async def start_services(self) -> bool:
@@ -485,7 +491,11 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
             return {"error": str(e)}
 
     async def get_growth_time_series(
-        self, channel_id: int, from_date: datetime, to_date: datetime, window_days: int = 1
+        self,
+        channel_id: int,
+        from_date: datetime,
+        to_date: datetime,
+        window_days: int = 1,
     ) -> list[dict[str, Any]]:
         """Get growth time series data"""
         try:
@@ -606,8 +616,16 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
         return [
             RoutingRule(
                 request_type=RequestType.COMPREHENSIVE_ANALYSIS,
-                target_services=[ServiceType.CORE, ServiceType.REPORTING, ServiceType.INTELLIGENCE],
-                execution_order=[ServiceType.CORE, ServiceType.INTELLIGENCE, ServiceType.REPORTING],
+                target_services=[
+                    ServiceType.CORE,
+                    ServiceType.REPORTING,
+                    ServiceType.INTELLIGENCE,
+                ],
+                execution_order=[
+                    ServiceType.CORE,
+                    ServiceType.INTELLIGENCE,
+                    ServiceType.REPORTING,
+                ],
                 parallel_execution=False,
                 timeout_seconds=300,
             ),
@@ -793,7 +811,12 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
 
         except Exception as e:
             logger.error(f"Failed to calculate performance score for channel {channel_id}: {e}")
-            return {"channel_id": channel_id, "period": period, "error": str(e), "status": "failed"}
+            return {
+                "channel_id": channel_id,
+                "period": period,
+                "error": str(e),
+                "status": "failed",
+            }
 
     async def get_live_monitoring_data(self, channel_id: int) -> dict[str, Any]:
         """
@@ -804,14 +827,15 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
         try:
             # Use existing comprehensive analysis with monitoring focus
             result = await self.coordinate_comprehensive_analysis(
-                channel_id=channel_id, parameters={"monitoring": True, "live_data": True}
+                channel_id=channel_id,
+                parameters={"monitoring": True, "live_data": True},
             )
 
             return {
                 "channel_id": channel_id,
                 "status": "live",
                 "last_updated": datetime.utcnow().isoformat(),
-                "monitoring_data": result.get("results", {}) if result.get("success") else {},
+                "monitoring_data": (result.get("results", {}) if result.get("success") else {}),
                 "health_status": "healthy" if result.get("success") else "degraded",
             }
 
@@ -845,7 +869,12 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
 
         except Exception as e:
             logger.error(f"Failed to get live metrics for channel {channel_id}: {e}")
-            return {"channel_id": channel_id, "hours": hours, "error": str(e), "status": "failed"}
+            return {
+                "channel_id": channel_id,
+                "hours": hours,
+                "error": str(e),
+                "status": "failed",
+            }
 
     async def generate_analytical_report(
         self, channel_id: int, report_type: str, days: int
@@ -956,6 +985,12 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
 
         except Exception as e:
             logger.error(
-                f"Failed to get best posting times for channel {channel_id}: {e}", exc_info=True
+                f"Failed to get best posting times for channel {channel_id}: {e}",
+                exc_info=True,
             )
-            return {"channel_id": channel_id, "best_times": [], "error": str(e), "status": "failed"}
+            return {
+                "channel_id": channel_id,
+                "best_times": [],
+                "error": str(e),
+                "status": "failed",
+            }

@@ -18,12 +18,10 @@ IMPLEMENTATION:
 - Automatic backoff on 429 errors
 """
 
-from typing import Any
-
 import asyncio
 import time
 from collections import deque
-from typing import ClassVar
+from typing import Any, ClassVar
 
 
 class GlobalRateLimiter:
@@ -211,9 +209,7 @@ class GlobalRateLimiter:
             self._backoff_until = time.time() + backoff_duration
             self._backoff_count += 1
 
-            print(
-                f"🚨 Rate limit error (429) from Telegram! " f"Backing off for {backoff_duration}s"
-            )
+            print(f"🚨 Rate limit error (429) from Telegram! Backing off for {backoff_duration}s")
 
     def get_stats(self) -> dict[str, Any]:
         """

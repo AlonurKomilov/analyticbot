@@ -71,7 +71,9 @@ async def get_current_user_profile(request: Request):
 
         step1 = time.time()
         user_id = await get_current_user_id_from_request(request)
-        logger.debug(f"⏱️ get_current_user_id_from_request took {(time.time() - step1)*1000:.2f}ms")
+        logger.debug(
+            f"⏱️ get_current_user_id_from_request took {(time.time() - step1) * 1000:.2f}ms"
+        )
 
         # Verify token and extract claims
         step2 = time.time()
@@ -83,7 +85,7 @@ async def get_current_user_profile(request: Request):
             logger.error(f"❌ Token verification failed: {verify_error}")
             logger.error(f"❌ Token prefix: {token[:50]}...")
             raise
-        logger.debug(f"⏱️ Token verification took {(time.time() - step2)*1000:.2f}ms")
+        logger.debug(f"⏱️ Token verification took {(time.time() - step2) * 1000:.2f}ms")
 
         # Fetch additional user data from database (full_name, telegram info, password status)
         step3 = time.time()
@@ -126,13 +128,13 @@ async def get_current_user_profile(request: Request):
                 # Use user's custom photo_url, fallback to telegram_photo_url
                 photo_url = row["photo_url"] or row["telegram_photo_url"]
 
-        logger.debug(f"⏱️ Database lookup took {(time.time() - step3)*1000:.2f}ms")
+        logger.debug(f"⏱️ Database lookup took {(time.time() - step3) * 1000:.2f}ms")
 
         # Extract user info from JWT claims + database
         # Handle None values for Telegram-only users
         email = claims.get("email")
         username = claims.get("username")
-        
+
         response = UserResponse(
             id=str(claims.get("sub", user_id)),
             email=email,  # Can be None for Telegram users
@@ -191,7 +193,8 @@ async def get_mfa_status(
     except Exception as e:
         logger.error(f"MFA status check error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get MFA status"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get MFA status",
         )
 
 
@@ -258,7 +261,8 @@ async def get_role_hierarchy(current_user: dict = Depends(get_current_user)):
     except Exception as e:
         logger.error(f"Role hierarchy error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get role hierarchy"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get role hierarchy",
         )
 
 
@@ -298,7 +302,8 @@ async def update_profile(
             email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
             if not re.match(email_pattern, body["email"]):
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email format"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid email format",
                 )
             updates["email"] = body["email"]
 
@@ -307,8 +312,8 @@ async def update_profile(
             photo_url = body["photo_url"]
             if photo_url and not photo_url.startswith(("http://", "https://", "data:")):
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, 
-                    detail="Invalid photo URL format. Must be http://, https://, or data: URL"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid photo URL format. Must be http://, https://, or data: URL",
                 )
             updates["photo_url"] = photo_url if photo_url else None
 
@@ -326,7 +331,8 @@ async def update_profile(
 
         if not updates:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="No valid fields to update"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No valid fields to update",
             )
 
         # Update user in database
@@ -334,7 +340,8 @@ async def update_profile(
 
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update profile"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update profile",
             )
 
         # Get updated user data

@@ -62,7 +62,7 @@ Manually change domain in BotFather when switching between dev/prod.
 
 Your current `.env` settings (updated for production):
 ```bash
-TELEGRAM_BOT_TOKEN=your_bot_token_here  # Get from @BotFather
+TELEGRAM_BOT_TOKEN=7603888301:AAHsmvb846iBbiGPzTda7wA1_RCimuowo3o
 TELEGRAM_BOT_USERNAME=abccontrol_bot
 FRONTEND_URL=https://www.analyticbot.org
 CORS_ORIGINS=http://localhost:11300,http://localhost:11400,https://www.analyticbot.org,https://analyticbot.org,https://*.trycloudflare.com

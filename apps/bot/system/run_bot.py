@@ -22,7 +22,7 @@ from apps.bot.system.handlers.content_protection import router as content_router
 from apps.bot.system.handlers.user_handlers import router as user_router
 from apps.bot.system.middlewares.dependency_middleware import DependencyMiddleware
 from apps.bot.system.middlewares.i18n import i18n_middleware
-from apps.bot.schedule_handlers import schedule_router
+from apps.bot.system.schedule_handlers import schedule_router
 from config import settings
 
 

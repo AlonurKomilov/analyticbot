@@ -87,6 +87,13 @@ class UserBotRepositoryFactory(IUserBotRepository):
             repo = UserBotRepository(session)
             await repo.log_admin_action(action)
             await session.commit()
+    
+    async def increment_request_count(self, user_id: int) -> None:
+        """Increment total_requests and update last_used_at for a user's bot"""
+        async with self.session_factory() as session:
+            repo = UserBotRepository(session)
+            await repo.increment_request_count(user_id)
+            await session.commit()
 
     async def get_all_mtproto_enabled_users(self) -> list[dict]:
         """Get all users with MTProto enabled"""

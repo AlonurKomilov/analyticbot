@@ -38,6 +38,26 @@ from .pgbouncer_pool import PgBouncerPool, PgBouncerConfig, SCALE_CONFIGS
 from .read_replica_router import ReadReplicaRouter, ReadReplicaRouterConfig
 from .partition_manager import PartitionManager, PARTITION_MIGRATIONS
 from .cache_manager import QueryCacheManager, CacheTier, CacheKey, CACHE_PATTERNS
+from .cached_queries import (
+    set_cache_manager,
+    get_cached_user,
+    get_cached_user_by_telegram_id,
+    get_cached_channel,
+    get_cached_user_channels,
+    get_cached_channel_stats,
+    get_cached_user_subscription,
+    get_cached_user_credits,
+    get_cached_marketplace_services,
+    get_cached_feature_flags,
+    invalidate_user_cache,
+    invalidate_channel_cache,
+    invalidate_channel_stats_cache,
+    invalidate_user_subscription_cache,
+    invalidate_marketplace_cache,
+    invalidate_feature_flags_cache,
+    cached_query,
+    get_cache_stats,
+)
 
 __all__ = [
     # Connection pooling
@@ -55,4 +75,23 @@ __all__ = [
     "CacheTier",
     "CacheKey",
     "CACHE_PATTERNS",
+    # Cached query wrappers
+    "set_cache_manager",
+    "get_cached_user",
+    "get_cached_user_by_telegram_id",
+    "get_cached_channel",
+    "get_cached_user_channels",
+    "get_cached_channel_stats",
+    "get_cached_user_subscription",
+    "get_cached_user_credits",
+    "get_cached_marketplace_services",
+    "get_cached_feature_flags",
+    "invalidate_user_cache",
+    "invalidate_channel_cache",
+    "invalidate_channel_stats_cache",
+    "invalidate_user_subscription_cache",
+    "invalidate_marketplace_cache",
+    "invalidate_feature_flags_cache",
+    "cached_query",
+    "get_cache_stats",
 ]

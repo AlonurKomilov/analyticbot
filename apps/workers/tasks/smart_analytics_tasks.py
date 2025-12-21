@@ -16,7 +16,7 @@ from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.celery.celery_app import celery_app, enhanced_retry_task
+from apps.workers.celery_app import celery_app, enhanced_retry_task
 from apps.di import get_db_connection
 
 logger = logging.getLogger(__name__)

@@ -232,13 +232,16 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         signed_token = sign_csrf_token(raw_token, timestamp)
 
         # Set cookie with security flags
+        # Domain is set to allow subdomain sharing (admin.analyticbot.org, api.analyticbot.org)
+        cookie_domain = os.getenv("CSRF_COOKIE_DOMAIN", ".analyticbot.org")
         response.set_cookie(
             key=CSRF_COOKIE_NAME,
             value=signed_token,
             max_age=CSRF_TOKEN_LIFETIME_HOURS * 3600,
+            domain=cookie_domain if cookie_domain != "localhost" else None,
             httponly=False,  # Must be readable by JavaScript
             secure=True,  # Only send over HTTPS
-            samesite="strict",  # Strict same-site policy
+            samesite="lax",  # Allow cross-subdomain requests (was "strict")
             path="/",
         )
 

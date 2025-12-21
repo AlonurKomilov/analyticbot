@@ -17,6 +17,7 @@ from aiogram.types import (
 from aiogram_i18n import I18nContext
 
 from apps.bot.system.config import settings
+from apps.bot.system.middlewares.throttle import with_timeout
 from apps.bot.system.services.subscription_service import SubscriptionService
 from apps.di import get_container
 from core.repositories.interfaces import UserRepository
@@ -330,6 +331,7 @@ async def _set_webapp_menu_or_default(message: types.Message, i18n: Any) -> None
 
 
 @router.message(CommandStart())
+@with_timeout(25)  # Timeout protection for /start handler
 async def cmd_start(message: types.Message, i18n: I18nContext):
     uid = message.from_user.id if message.from_user else None
     uname = message.from_user.username if message.from_user else None

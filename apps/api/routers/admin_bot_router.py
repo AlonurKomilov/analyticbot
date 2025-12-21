@@ -19,6 +19,7 @@ from core.schemas.user_bot_schemas import (
     AdminAccessResponse,
     BotListResponse,
     BotStatusResponse,
+    BotVerificationResponse,
     ErrorResponse,
     RateLimitUpdateResponse,
     SuspendBotRequest,
@@ -175,6 +176,81 @@ async def access_user_bot(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to access user bot",
+        )
+
+
+@router.post(
+    "/{user_id}/verify",
+    response_model=BotVerificationResponse,
+    responses={
+        403: {"model": ErrorResponse, "description": "Admin access required"},
+        404: {"model": ErrorResponse, "description": "Bot not found"},
+        400: {"model": ErrorResponse, "description": "Verification failed"},
+    },
+)
+async def verify_user_bot(
+    user_id: int,
+    admin_id: Annotated[int, Depends(get_admin_user_id)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
+):
+    """
+    Verify a user's bot credentials (admin only).
+
+    This endpoint allows admins to:
+    - Verify bot token validity with Telegram
+    - Update bot status to ACTIVE if valid
+    - Retrieve bot information (username, bot_id)
+    - Action is logged for audit trail
+
+    - **user_id**: Target user ID whose bot to verify
+    """
+    logger.info(f"[ADMIN VERIFY BOT] Admin {admin_id} verifying bot for user {user_id}")
+    try:
+        service = await create_admin_bot_service(repository)
+
+        # Log the admin action
+        await service.access_user_bot(
+            admin_user_id=admin_id,
+            target_user_id=user_id,
+            action="admin_verify_bot",
+        )
+
+        # Verify the bot credentials
+        success, message, bot_info = await service.verify_bot_credentials(
+            user_id=user_id,
+            send_test_message=False,
+            test_chat_id=None,
+            test_message=None,
+        )
+
+        logger.info(f"[ADMIN VERIFY BOT] Verification result for user {user_id}: success={success}, message={message}")
+
+        if not success:
+            if "No bot found" in message:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"No bot found for user {user_id}",
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=message,
+                )
+
+        return BotVerificationResponse(
+            success=True,
+            message=message,
+            bot_info=bot_info,
+            is_verified=True,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying bot for user {user_id} by admin {admin_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to verify user bot: {str(e)}",
         )
 
 

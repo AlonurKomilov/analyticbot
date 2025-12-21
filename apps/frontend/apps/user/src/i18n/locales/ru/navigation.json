@@ -21,7 +21,8 @@
   "workers": {
     "bot": "Бот воркер",
     "botModeration": "Модерация бота",
-    "mtproto": "MTProto воркер"
+    "mtproto": "MTProto воркер",
+    "ai": "AI воркер"
   },
   "header": {
     "search": "Поиск...",

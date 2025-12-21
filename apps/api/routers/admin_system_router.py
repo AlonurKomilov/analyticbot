@@ -508,7 +508,7 @@ async def get_system_health(
         user_bots_status = "error"
         logger.warning(f"User bots health check failed: {e}")
 
-    # Check User MTProto Sessions - count users with MTProto enabled
+    # Get User MTProto Sessions - count users with MTProto enabled
     user_mtproto_status = "unknown"
     user_mtproto_count = 0
     user_mtproto_total = 0
@@ -538,6 +538,25 @@ async def get_system_health(
     except Exception as e:
         user_mtproto_status = "error"
         logger.warning(f"User MTProto health check failed: {e}")
+
+    # Get Performance Metrics
+    performance_metrics = {}
+    try:
+        from apps.api.middleware.performance_monitoring import get_performance_metrics
+        performance_metrics = get_performance_metrics()
+    except Exception as e:
+        logger.warning(f"Performance metrics collection failed: {e}")
+        performance_metrics = {
+            "uptime_seconds": 0,
+            "total_requests": 0,
+            "requests_per_minute": 0,
+            "avg_response_time_ms": 0,
+            "error_rate_percent": 0,
+            "cache_hit_rate_percent": 0,
+            "slow_endpoints": [],
+            "slow_queries": [],
+            "recent_db_query_avg_ms": 0
+        }
 
     # Determine overall status
     all_healthy = (
@@ -580,6 +599,7 @@ async def get_system_health(
             "active_sessions": user_mtproto_count,
             "total_configured": user_mtproto_total,
         },
+        "performance": performance_metrics,
         "system": system_info,
         "overall_score": 100 if all_healthy else 75,
         "issues": issues,

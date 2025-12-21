@@ -82,6 +82,7 @@ class UserBotRepository(IUserBotRepository):
         orm.role = credentials.role.value  # ✅ Include role
         orm.rate_limit_rps = credentials.rate_limit_rps
         orm.max_concurrent_requests = credentials.max_concurrent_requests
+        orm.total_requests = credentials.total_requests
         orm.last_used_at = credentials.last_used_at
         orm.updated_at = credentials.updated_at
 
@@ -199,7 +200,7 @@ class UserBotRepository(IUserBotRepository):
     async def log_admin_action(self, action: AdminBotAction) -> None:
         """Log admin action"""
         orm = AdminBotActionORM(
-            admin_id=action.admin_user_id,
+            admin_user_id=action.admin_user_id,
             target_user_id=action.target_user_id,
             action=action.action,
             details=action.details,
@@ -224,6 +225,21 @@ class UserBotRepository(IUserBotRepository):
         )
         orm = result.scalar_one_or_none()
         return self._to_domain(orm) if orm else None
+
+    async def increment_request_count(self, user_id: int) -> None:
+        """Increment total_requests and update last_used_at for a user's bot"""
+        from datetime import datetime
+        from sqlalchemy import update
+        
+        await self.session.execute(
+            update(UserBotCredentialsORM)
+            .where(UserBotCredentialsORM.user_id == user_id)
+            .values(
+                total_requests=UserBotCredentialsORM.total_requests + 1,
+                last_used_at=datetime.now(),
+            )
+        )
+        await self.session.flush()
 
     def _to_domain(self, orm: UserBotCredentialsORM) -> UserBotCredentials:
         """Convert ORM to domain model"""

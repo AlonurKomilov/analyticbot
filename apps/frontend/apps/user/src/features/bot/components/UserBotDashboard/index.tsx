@@ -114,55 +114,113 @@ export const UserBotDashboard: React.FC = () => {
   };
 
   const handleSendTestMessage = async () => {
-    let chatId: number;
-    const { useManualInput, manualChatId, selectedChannelId, testMessage } = testMessageState;
+    console.log('[UserBotDashboard] handleSendTestMessage called - checking for Telegram ID');
+    try {
+      // Try to send test message directly (will use user's telegram_id if available)
+      const response = await verifyBot({
+        send_test_message: true,
+        // Don't provide test_chat_id - backend will use user's telegram_id automatically
+      });
 
-    if (useManualInput) {
-      if (!manualChatId.trim()) {
-        toast.error('Please enter your Telegram chat ID');
-        return;
+      // Check if the operation was successful
+      if (response.success) {
+        toast.success('✅ Test message sent! Check your Telegram messages.');
+        // Refresh bot status to update total_requests count
+        await fetchBotStatus();
+      } else {
+        // Backend returned success=false with a message
+        toast.error(`❌ ${response.message}`);
       }
-      const parsedId = parseInt(manualChatId, 10);
-      if (isNaN(parsedId)) {
-        toast.error('Invalid chat ID. Please enter a valid number.');
-        return;
+    } catch (err: any) {
+      console.error('[UserBotDashboard] Send test message failed:', err);
+      const errorMsg = err?.response?.data?.detail || err?.message || '';
+      
+      // Check if error is because user doesn't have telegram_id
+      if (errorMsg.includes('logged in with email') || errorMsg.includes('Telegram ID not found')) {
+        // User logged in via email - show manual input dialog
+        console.log('[UserBotDashboard] User has no telegram_id, opening manual dialog');
+        toast((t) => (
+          <div>
+            <strong>⚠️ Telegram ID Not Found</strong>
+            <br />
+            <span style={{ fontSize: '0.9em' }}>
+              We couldn't find your Telegram ID because you logged in with email.
+              <br />
+              Please enter your Telegram ID manually to send test messages.
+            </span>
+          </div>
+        ), {
+          duration: 6000,
+          style: {
+            background: '#1976d2',
+            color: 'white',
+          },
+        });
+        // Force manual input mode for email users
+        setTestMessageState(prev => ({ ...prev, useManualInput: true }));
+        openDialog('showTestMessageDialog');
+      } else {
+        // Other error - show error message
+        toast.error(`❌ ${errorMsg}`);
       }
-      chatId = parsedId;
-    } else {
-      if (!selectedChannelId) {
-        toast.error('Please select a channel');
-        return;
-      }
-      const selectedChannel = channels.find(ch => ch.id === selectedChannelId);
-      if (!selectedChannel) {
-        toast.error('Selected channel not found');
-        return;
-      }
+    }
+  };
 
-      const convertedId = convertChannelToChatId(selectedChannel.telegramId);
-      if (convertedId === null) {
-        toast.error('Invalid channel ID format');
-        return;
-      }
-      chatId = convertedId;
+  const handleSendTestMessageWithChatId = async () => {
+    const { manualChatId, testMessage } = testMessageState;
+
+    // Validate Telegram ID input
+    if (!manualChatId.trim()) {
+      toast.error('Please enter your Telegram ID');
+      return;
+    }
+    
+    const chatId = parseInt(manualChatId, 10);
+    if (isNaN(chatId)) {
+      toast.error('Invalid Telegram ID. Please enter a valid number.');
+      return;
     }
 
     try {
-      await verifyBot({
+      const response = await verifyBot({
         send_test_message: true,
         test_chat_id: chatId,
         test_message: testMessage,
       });
 
-      toast.success('✅ Test message sent successfully! Check your Telegram.');
-      closeDialog('showTestMessageDialog');
-      setTestMessageState(prev => ({
-        ...prev,
-        selectedChannelId: '',
-        manualChatId: '',
-      }));
+      // Check if the operation was successful
+      if (response.success) {
+        toast.success('✅ Test message sent successfully! Check your Telegram.');
+        closeDialog('showTestMessageDialog');
+        setTestMessageState(prev => ({
+          ...prev,
+          manualChatId: '',
+        }));
+        // Refresh bot status to update total_requests count
+        await fetchBotStatus();
+      } else {
+        // Backend returned success=false with a message
+        toast.error(`❌ ${response.message}`);
+      }
     } catch (err: any) {
       const errorMsg = err?.response?.data?.detail || err?.message || 'Failed to send test message';
+      toast.error(`❌ ${errorMsg}`);
+    }
+  };
+
+  const handleVerifyBot = async () => {
+    console.log('[UserBotDashboard] handleVerifyBot called');
+    try {
+      console.log('[UserBotDashboard] Calling verifyBot API...');
+      await verifyBot({
+        send_test_message: false,
+      });
+      console.log('[UserBotDashboard] Verify successful');
+      toast.success('✅ Bot verified successfully!');
+      await fetchBotStatus();
+    } catch (err: any) {
+      console.error('[UserBotDashboard] Verify failed:', err);
+      const errorMsg = err?.response?.data?.detail || err?.message || 'Failed to verify bot';
       toast.error(`❌ ${errorMsg}`);
     }
   };
@@ -214,7 +272,7 @@ export const UserBotDashboard: React.FC = () => {
       <Grid container spacing={3}>
         {/* Bot Info & Stats Row */}
         <Grid item xs={12} md={6}>
-          {bot && <BotInfoCard bot={bot} />}
+          {bot && <BotInfoCard bot={bot} onVerify={handleVerifyBot} isVerifying={isVerifying} />}
         </Grid>
 
         <Grid item xs={12} md={6}>
@@ -245,8 +303,21 @@ export const UserBotDashboard: React.FC = () => {
 
         {/* Quick Actions */}
         <Grid item xs={12}>
+          {/* Important: Start Bot First Info */}
+          {bot && !bot.is_verified && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              <strong>Before sending test messages:</strong> You must start your bot first!
+              <br />
+              1. Open Telegram and search for <strong>@{bot.bot_username}</strong>
+              <br />
+              2. Click the <strong>START</strong> button to begin a conversation
+              <br />
+              3. Then come back here and click "Send Test Message"
+            </Alert>
+          )}
+          
           <BotActionsCard
-            onSendTestMessage={() => openDialog('showTestMessageDialog')}
+            onSendTestMessage={handleSendTestMessage}
             onUpdateRateLimits={() => openDialog('showRateLimitDialog')}
             onRemoveBot={() => openDialog('showRemoveDialog')}
             isUpdating={isUpdating}
@@ -277,7 +348,7 @@ export const UserBotDashboard: React.FC = () => {
       <TestMessageDialog
         open={dialogs.showTestMessageDialog}
         onClose={() => closeDialog('showTestMessageDialog')}
-        onSend={handleSendTestMessage}
+        onSend={handleSendTestMessageWithChatId}
         channels={channels}
         isLoadingChannels={isLoadingChannels}
         selectedChannelId={testMessageState.selectedChannelId}

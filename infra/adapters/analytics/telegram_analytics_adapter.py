@@ -537,3 +537,12 @@ class TelegramAnalyticsAdapter(AnalyticsAdapter):
             await self.session.close()
         self.cache.clear()
         logger.info("TelegramAnalyticsAdapter closed")
+
+    async def __aenter__(self):
+        """Async context manager entry"""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit - ensures cleanup"""
+        await self.close()
+        return False

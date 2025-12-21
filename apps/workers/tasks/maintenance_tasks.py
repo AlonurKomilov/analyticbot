@@ -8,7 +8,7 @@ Includes materialized view refresh, vacuum operations, and cleanup jobs.
 import logging
 from typing import Any
 
-from apps.celery.celery_app import celery_app, enhanced_retry_task
+from apps.workers.celery_app import celery_app, enhanced_retry_task
 from apps.di import get_db_session
 from core.services.system.cache.materialized_view_service import MaterializedViewService
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @celery_app.task(
-    name="apps.celery.tasks.maintenance_tasks.refresh_materialized_views",
+    name="apps.workers.tasks.maintenance_tasks.refresh_materialized_views",
     bind=True,
     max_retries=3,
     default_retry_delay=300,  # 5 minutes
@@ -68,7 +68,7 @@ async def refresh_materialized_views(self) -> dict[str, Any]:
 
 
 @celery_app.task(
-    name="apps.celery.tasks.maintenance_tasks.get_view_statistics",
+    name="apps.workers.tasks.maintenance_tasks.get_view_statistics",
     bind=True,
 )
 async def get_view_statistics(self) -> dict[str, Any]:

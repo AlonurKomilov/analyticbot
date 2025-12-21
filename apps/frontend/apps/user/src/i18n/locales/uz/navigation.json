@@ -19,10 +19,10 @@
   "marketplace": "Do'kon",
   "payment": "To'lov",
   "workers": {
-    "bot": "Bot Worker",
+    "bot": "Bot Ishchi",
     "botModeration": "Bot Moderatsiyasi",
-    "mtproto": "MTProto Worker",
-    "ai": "AI Worker"
+    "mtproto": "MTProto Ishchi",
+    "ai": "AI Ishchi"
   },
   "header": {
     "search": "Qidirish...",

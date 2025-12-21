@@ -33,10 +33,10 @@ celery_app = Celery(
     broker=str(settings.REDIS_URL),
     backend=str(settings.REDIS_URL),
     include=[
-        "apps.celery.tasks.bot_tasks",
-        "apps.celery.tasks.ml_tasks",  # Deep Learning tasks
-        "apps.celery.tasks.maintenance_tasks",  # Database maintenance tasks
-        "apps.celery.tasks.smart_analytics_tasks",  # Smart collection with change detection
+        "apps.workers.tasks.bot_tasks",
+        "apps.workers.tasks.ml_tasks",  # Deep Learning tasks
+        "apps.workers.tasks.maintenance_tasks",  # Database maintenance tasks
+        "apps.workers.tasks.smart_analytics_tasks",  # Smart collection with change detection
     ],
 )
 
@@ -55,22 +55,22 @@ celery_app.conf.update(
     task_default_queue="default",
     task_routes={
         # Message tasks - high priority
-        "apps.celery.tasks.bot_tasks.send_scheduled_message": {"queue": "messages"},
+        "apps.workers.tasks.bot_tasks.send_scheduled_message": {"queue": "messages"},
         # Analytics tasks - medium priority
-        "apps.celery.tasks.bot_tasks.update_post_views_task": {"queue": "analytics"},
+        "apps.workers.tasks.bot_tasks.update_post_views_task": {"queue": "analytics"},
         # Health and monitoring - low priority
-        "apps.celery.tasks.bot_tasks.health_check_task": {"queue": "monitoring"},
+        "apps.workers.tasks.bot_tasks.health_check_task": {"queue": "monitoring"},
         # Maintenance tasks
-        "apps.celery.tasks.bot_tasks.cleanup_metrics_task": {"queue": "maintenance"},
-        "apps.celery.tasks.bot_tasks.maintenance_cleanup": {"queue": "maintenance"},
-        "apps.celery.tasks.bot_tasks.update_prometheus_metrics": {"queue": "monitoring"},
+        "apps.workers.tasks.bot_tasks.cleanup_metrics_task": {"queue": "maintenance"},
+        "apps.workers.tasks.bot_tasks.maintenance_cleanup": {"queue": "maintenance"},
+        "apps.workers.tasks.bot_tasks.update_prometheus_metrics": {"queue": "monitoring"},
         # Deep Learning tasks - low priority, long running
-        "apps.celery.tasks.ml_tasks.train_growth_model": {"queue": "ml_processing"},
-        "apps.celery.tasks.ml_tasks.process_content_analysis": {"queue": "ml_processing"},
-        "apps.celery.tasks.ml_tasks.generate_predictions": {"queue": "ml_processing"},
+        "apps.workers.tasks.ml_tasks.train_growth_model": {"queue": "ml_processing"},
+        "apps.workers.tasks.ml_tasks.process_content_analysis": {"queue": "ml_processing"},
+        "apps.workers.tasks.ml_tasks.generate_predictions": {"queue": "ml_processing"},
         # Maintenance tasks - low priority
-        "apps.celery.tasks.maintenance_tasks.refresh_materialized_views": {"queue": "maintenance"},
-        "apps.celery.tasks.maintenance_tasks.get_view_statistics": {"queue": "maintenance"},
+        "apps.workers.tasks.maintenance_tasks.refresh_materialized_views": {"queue": "maintenance"},
+        "apps.workers.tasks.maintenance_tasks.get_view_statistics": {"queue": "maintenance"},
     },
     # Serialization and compression (ENHANCED)
     task_serializer="msgpack",
@@ -208,13 +208,13 @@ def critical_message_task(**opts) -> Callable:
 celery_app.conf.beat_schedule = {
     # High frequency tasks (every minute)
     "send-scheduled-messages": {
-        "task": "apps.celery.tasks.bot_tasks.send_scheduled_message",
+        "task": "apps.workers.tasks.bot_tasks.send_scheduled_message",
         "schedule": 60.0,  # Every minute
         "options": {"queue": "messages", "priority": 9},
     },
     # Medium frequency tasks (every 5 minutes)
     "update-post-views": {
-        "task": "apps.celery.tasks.bot_tasks.update_post_views_task",
+        "task": "apps.workers.tasks.bot_tasks.update_post_views_task",
         "schedule": 300.0,  # Every 5 minutes
         "options": {"queue": "analytics", "priority": 5},
     },
@@ -248,35 +248,35 @@ celery_app.conf.beat_schedule = {
         "options": {"queue": "analytics", "priority": 2},
     },
     "health-check": {
-        "task": "apps.celery.tasks.bot_tasks.health_check_task",
+        "task": "apps.workers.tasks.bot_tasks.health_check_task",
         "schedule": 300.0,  # Every 5 minutes
         "options": {"queue": "monitoring", "priority": 3},
     },
     # Low frequency tasks (hourly)
     "cleanup-metrics": {
-        "task": "apps.celery.tasks.bot_tasks.cleanup_metrics_task",
+        "task": "apps.workers.tasks.bot_tasks.cleanup_metrics_task",
         "schedule": 3600.0,  # Every hour
         "options": {"queue": "maintenance", "priority": 1},
     },
     "maintenance-cleanup": {
-        "task": "apps.celery.tasks.bot_tasks.maintenance_cleanup",
+        "task": "apps.workers.tasks.bot_tasks.maintenance_cleanup",
         "schedule": 3600.0,  # Every hour
         "options": {"queue": "maintenance", "priority": 1},
     },
     "update-prometheus-metrics": {
-        "task": "apps.celery.tasks.bot_tasks.update_prometheus_metrics",
+        "task": "apps.workers.tasks.bot_tasks.update_prometheus_metrics",
         "schedule": 300.0,  # Every 5 minutes
         "options": {"queue": "monitoring", "priority": 3},
     },
     # Channel metadata sync (every 6 hours) - syncs title, description, subscriber count from Telegram
     "sync-channel-metadata": {
-        "task": "apps.celery.tasks.mtproto_tasks.sync_channel_metadata_task",
+        "task": "apps.workers.tasks.mtproto_tasks.sync_channel_metadata_task",
         "schedule": 21600.0,  # Every 6 hours (6 * 60 * 60)
         "options": {"queue": "maintenance", "priority": 2},
     },
     # Materialized view refresh (every 4 hours)
     "refresh-materialized-views": {
-        "task": "apps.celery.tasks.maintenance_tasks.refresh_materialized_views",
+        "task": "apps.workers.tasks.maintenance_tasks.refresh_materialized_views",
         "schedule": 14400.0,  # Every 4 hours (4 * 60 * 60)
         "options": {"queue": "maintenance", "priority": 2},
     },

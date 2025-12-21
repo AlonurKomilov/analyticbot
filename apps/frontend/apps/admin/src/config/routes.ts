@@ -25,3 +25,16 @@ export const ROUTES = {
   PLANS: '/plans',
 
   // System
+  SYSTEM_HEALTH: '/system/health',
+  SYSTEM_AUDIT: '/system/audit',
+  SYSTEM_RATE_LIMITS: '/system/rate-limits',
+
+  // System AI
+  AI_DASHBOARD: '/ai',
+  AI_WORKERS: '/ai/workers',
+  AI_DECISIONS: '/ai/decisions',
+  AI_CONFIG: '/ai/config',
+
+  // Settings
+  SETTINGS: '/settings',
+};

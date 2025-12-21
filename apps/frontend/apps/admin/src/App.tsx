@@ -19,6 +19,13 @@ import PlansPage from './pages/PlansPage';
 import SystemHealthPage from './pages/SystemHealthPage';
 import AuditLogPage from './pages/AuditLogPage';
 import SettingsPage from './pages/SettingsPage';
+import RateLimitsPage from './pages/RateLimitsPage';
+
+// System AI Pages
+import SystemAIDashboardPage from './pages/ai/SystemAIDashboardPage';
+import SystemAIWorkersPage from './pages/ai/SystemAIWorkersPage';
+import SystemAIDecisionsPage from './pages/ai/SystemAIDecisionsPage';
+import SystemAIConfigPage from './pages/ai/SystemAIConfigPage';
 
 
 // Protected Route wrapper
@@ -64,6 +71,14 @@ const App: React.FC = () => {
 
                     <Route path="/system/health" element={<SystemHealthPage />} />
                     <Route path="/system/audit" element={<AuditLogPage />} />
+                    <Route path="/system/rate-limits" element={<RateLimitsPage />} />
+                    
+                    {/* System AI Routes */}
+                    <Route path="/ai" element={<SystemAIDashboardPage />} />
+                    <Route path="/ai/workers" element={<SystemAIWorkersPage />} />
+                    <Route path="/ai/decisions" element={<SystemAIDecisionsPage />} />
+                    <Route path="/ai/config" element={<SystemAIConfigPage />} />
+                    
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>

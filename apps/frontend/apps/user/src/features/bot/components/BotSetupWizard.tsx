@@ -323,8 +323,8 @@ export const BotSetupWizard: React.FC = () => {
       </Typography>
 
       <Stepper activeStep={activeStep} sx={{ mt: 4, mb: 4 }}>
-        {steps.map((label, index) => (
-          <Step key={index}>
+        {steps.map((label) => (
+          <Step key={label}>
             <StepLabel>{label}</StepLabel>
           </Step>
         ))}

@@ -90,7 +90,7 @@ class AdminBotActionORM(Base):
     __tablename__ = "admin_bot_actions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    admin_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    admin_user_id: Mapped[int] = mapped_column("admin_user_id", BigInteger, nullable=False, index=True)
     # Foreign key constraint exists in database
     target_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     action: Mapped[str] = mapped_column(String(100), nullable=False)

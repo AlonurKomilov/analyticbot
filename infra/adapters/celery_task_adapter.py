@@ -35,7 +35,7 @@ class CeleryTaskAdapter(TaskClientProtocol):
     def _check_celery_availability(self) -> bool:
         """Check if Celery is available"""
         try:
-            from apps.celery.tasks import ml_tasks
+            from apps.workers.tasks import ml_tasks
 
             return True
         except ImportError as e:
@@ -61,7 +61,7 @@ class CeleryTaskAdapter(TaskClientProtocol):
                 raise TaskSubmissionError("Celery is not available")
 
             # Import here to avoid circular dependencies
-            from apps.celery.tasks.ml_tasks import submit_ml_task_async
+            from apps.workers.tasks.ml_tasks import submit_ml_task_async
 
             task_id = submit_ml_task_async(task_name, **task_kwargs)
             logger.info(f"📤 Task submitted (sync): {task_id}")
@@ -91,7 +91,7 @@ class CeleryTaskAdapter(TaskClientProtocol):
                 raise TaskSubmissionError("Celery is not available")
 
             # Import here to avoid circular dependencies
-            from apps.celery.tasks.ml_tasks import submit_ml_task_async
+            from apps.workers.tasks.ml_tasks import submit_ml_task_async
 
             task_id = submit_ml_task_async(task_name, **task_kwargs)
             logger.info(f"📤 Task submitted (async): {task_id}")
@@ -117,7 +117,7 @@ class CeleryTaskAdapter(TaskClientProtocol):
                 return {"task_id": task_id, "status": "error", "error": "Celery is not available"}
 
             # Import Celery app
-            from apps.celery.celery_app import celery_app
+            from apps.workers.celery_app import celery_app
 
             # Get task result
             task_result = celery_app.AsyncResult(task_id)
@@ -164,7 +164,7 @@ class CeleryTaskAdapter(TaskClientProtocol):
                 return False
 
             # Import Celery app
-            from apps.celery.celery_app import celery_app
+            from apps.workers.celery_app import celery_app
 
             # Revoke the task
             celery_app.control.revoke(task_id, terminate=True)

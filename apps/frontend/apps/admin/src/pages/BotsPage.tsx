@@ -43,7 +43,9 @@ import {
   Warning as WarningIcon,
   MoreVert as MoreVertIcon,
   Delete as DeleteIcon,
+  VerifiedUser as VerifyIcon,
 } from '@mui/icons-material';
+import toast from 'react-hot-toast';
 import { apiClient } from '../api/client';
 import { API_ENDPOINTS } from '../config/api';
 import { PageSkeleton } from '../components/Skeletons';
@@ -239,6 +241,29 @@ const BotsPage: React.FC = () => {
     } catch (err) {
       setError('Failed to update rate limits');
       console.error('Rate limit error:', err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleVerifyBot = async (bot: BotInfo) => {
+    setActionLoading(bot.id);
+    try {
+      const response = await apiClient.post(`${API_ENDPOINTS.BOTS.LIST}/${bot.user_id}/verify`, {
+        send_test_message: false
+      });
+      
+      if (response.data.success) {
+        toast.success(`✅ Bot @${bot.bot_username} verified successfully`);
+        await fetchBots();
+      } else {
+        toast.error(response.data.message || 'Verification failed');
+      }
+    } catch (err: unknown) {
+      const errorMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+        || 'Failed to verify bot';
+      setError(errorMessage);
+      console.error('Verify error:', err);
     } finally {
       setActionLoading(null);
     }
@@ -531,6 +556,19 @@ const BotsPage: React.FC = () => {
           <ListItemIcon><ViewIcon fontSize="small" /></ListItemIcon>
           <ListItemText>View Details</ListItemText>
         </MenuItem>
+        {/* Verify Bot option - only show for pending/unverified bots */}
+        {menuBot && (!menuBot.is_verified || menuBot.status === 'pending' || menuBot.bot_id === 0) && (
+          <MenuItem
+            onClick={() => {
+              if (menuBot) handleVerifyBot(menuBot);
+              handleMenuClose();
+            }}
+            disabled={actionLoading === menuBot?.id}
+          >
+            <ListItemIcon><VerifyIcon fontSize="small" color="primary" /></ListItemIcon>
+            <ListItemText sx={{ color: 'primary.main' }}>Verify Bot</ListItemText>
+          </MenuItem>
+        )}
         <MenuItem onClick={() => {
           if (menuBot) {
             setRateLimitDialog(menuBot);

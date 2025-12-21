@@ -121,13 +121,25 @@ class Settings:
         default_factory=lambda: os.getenv("REDIS_URL", "redis://localhost:10200/0")
     )
 
-    # Database Connection Pool Settings
-    DB_POOL_SIZE: int = field(default_factory=lambda: int(os.getenv("DB_POOL_SIZE", "10")))
-    DB_MAX_OVERFLOW: int = field(default_factory=lambda: int(os.getenv("DB_MAX_OVERFLOW", "20")))
+    # Database Connection Pool Settings (Scaled for 100K+ users)
+    # Note: For production, use PgBouncer for connection pooling
+    DB_POOL_SIZE: int = field(default_factory=lambda: int(os.getenv("DB_POOL_SIZE", "50")))
+    DB_MAX_OVERFLOW: int = field(default_factory=lambda: int(os.getenv("DB_MAX_OVERFLOW", "100")))
     DB_POOL_TIMEOUT: int = field(default_factory=lambda: int(os.getenv("DB_POOL_TIMEOUT", "30")))
-    DB_POOL_RECYCLE: int = field(default_factory=lambda: int(os.getenv("DB_POOL_RECYCLE", "3600")))
+    DB_POOL_RECYCLE: int = field(default_factory=lambda: int(os.getenv("DB_POOL_RECYCLE", "1800")))  # 30 min
     DB_POOL_PRE_PING: bool = field(
         default_factory=lambda: os.getenv("DB_POOL_PRE_PING", "true").lower() == "true"
+    )
+    
+    # Redis Connection Pool Settings (for 100K+ users)
+    REDIS_MAX_CONNECTIONS: int = field(
+        default_factory=lambda: int(os.getenv("REDIS_MAX_CONNECTIONS", "100"))
+    )
+    REDIS_SOCKET_TIMEOUT: float = field(
+        default_factory=lambda: float(os.getenv("REDIS_SOCKET_TIMEOUT", "5.0"))
+    )
+    REDIS_SOCKET_CONNECT_TIMEOUT: float = field(
+        default_factory=lambda: float(os.getenv("REDIS_SOCKET_CONNECT_TIMEOUT", "5.0"))
     )
 
     # Celery & Background Jobs - Environment Configurable

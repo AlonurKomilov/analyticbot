@@ -18,7 +18,7 @@ from typing import Any
 
 from celery import Task
 
-from apps.celery.celery_app import celery_app
+from apps.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class MLTask(Task):
 
 
 @celery_app.task(
-    name="apps.celery.tasks.ml_tasks.train_growth_model",
+    name="apps.workers.tasks.ml_tasks.train_growth_model",
     base=MLTask,
     bind=True,
     max_retries=3,
@@ -141,7 +141,7 @@ def train_growth_model(
 
 
 @celery_app.task(
-    name="apps.celery.tasks.ml_tasks.process_content_analysis",
+    name="apps.workers.tasks.ml_tasks.process_content_analysis",
     base=MLTask,
     bind=True,
     max_retries=2,
@@ -194,7 +194,7 @@ def process_content_analysis(
 
 
 @celery_app.task(
-    name="apps.celery.tasks.ml_tasks.generate_predictions",
+    name="apps.workers.tasks.ml_tasks.generate_predictions",
     base=MLTask,
     bind=True,
     max_retries=2,
@@ -250,7 +250,7 @@ def generate_predictions(
         raise self.retry(exc=exc)
 
 
-@celery_app.task(name="apps.celery.tasks.ml_tasks.batch_train_models", base=MLTask, bind=True)
+@celery_app.task(name="apps.workers.tasks.ml_tasks.batch_train_models", base=MLTask, bind=True)
 def batch_train_models(
     self, channel_ids: list[int], training_config: dict[str, Any]
 ) -> dict[str, Any]:

@@ -306,22 +306,52 @@ async def verify_bot(
     - **send_test_message**: Send a test message to verify bot works (optional)
     - **test_chat_id**: Chat ID to send test message to (required if send_test_message=true)
     """
+    logger.info(f"[VERIFY BOT] Received verify request for user {user_id}")
+    logger.info(f"[VERIFY BOT] Request data: send_test_message={verify_request.send_test_message}, test_chat_id={verify_request.test_chat_id}")
     try:
         service = await create_admin_bot_service(repository)
 
-        # Validate test message parameters
-        if verify_request.send_test_message and not verify_request.test_chat_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Chat ID is required when sending a test message. Please provide the chat ID where you want to send the test message.",
-            )
+        # If sending test message without chat_id, use the user's own telegram_id
+        test_chat_id = verify_request.test_chat_id
+        if verify_request.send_test_message and not test_chat_id:
+            # Get user's telegram_id from database
+            from apps.di import get_container
+            container = get_container()
+            session_factory = await container.database.async_session_maker()
+            async with session_factory() as session:
+                from sqlalchemy import text
+                result = await session.execute(
+                    text("SELECT telegram_id, username FROM users WHERE id = :user_id"),
+                    {"user_id": user_id}
+                )
+                row = result.fetchone()
+                if row and row[0]:
+                    test_chat_id = row[0]
+                    logger.info(f"[VERIFY BOT] Using user's telegram_id as chat_id: {test_chat_id}")
+                else:
+                    # User logged in via email, not Telegram
+                    username = row[1] if row else "Unknown"
+                    logger.warning(f"[VERIFY BOT] User {user_id} ({username}) has no telegram_id - logged in via email")
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=(
+                            "Cannot send test message: You logged in with email, not Telegram. "
+                            "To receive test messages, please:\n"
+                            "1. Get your Telegram chat ID from @userinfobot or @getidsbot\n"
+                            "2. Start a conversation with your bot in Telegram\n"
+                            "3. Contact support to link your Telegram account, or\n"
+                            "4. Create a new account by logging in with Telegram"
+                        ),
+                    )
 
         success, message, bot_info = await service.verify_bot_credentials(
             user_id=user_id,
             send_test_message=verify_request.send_test_message,
-            test_chat_id=verify_request.test_chat_id,
+            test_chat_id=test_chat_id,
             test_message=verify_request.test_message,
         )
+        
+        logger.info(f"[VERIFY BOT] Verification result for user {user_id}: success={success}, message={message}")
 
         if not success and "No bot found" in message:
             raise HTTPException(

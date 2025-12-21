@@ -404,45 +404,6 @@ async def setup_mtproto_simple(
         result = await client.send_code_request(phone)
         phone_code_hash = result.phone_code_hash
 
-        # Log delivery method
-        delivery_info = f"code_type={type(result.type).__name__}"
-        if hasattr(result, "next_type") and result.next_type:
-            delivery_info += f", next_type={type(result.next_type).__name__}"
-        
-        logger.info(f"[Simple Setup] Code sent via: {delivery_info}")
-
-        # Check if email setup is required (Common issue with new sessions)
-        if type(result.type).__name__ == "SentCodeTypeSetUpEmailRequired":
-            # Even if email is required, we can sometimes proceed if we handle it correctly
-            # But usually this means we MUST stop and tell user to verify
-            
-            # However, if the user insists they have verified, it might be a Telethon/Telegram API quirk
-            # where we need to catch the specific error during sign-in, not here.
-            # But send_code_request returning this type is pretty definitive.
-            
-            await safe_disconnect(client)
-            logger.warning(
-                f"User {user_id} needs to complete email verification in Telegram account"
-            )
-            
-            detail_msg = (
-                "⚠️ Email Verification Required\n\n"
-                "Telegram requires email verification before API access. "
-                "This is a one-time security check.\n\n"
-                "Steps to fix:\n"
-                "1. Open Telegram app → Settings → Privacy and Security → "
-                "Two-Step Verification → Email\n"
-                "2. If email is already added, check for a verification email "
-                "and click the link\n"
-                "3. Make sure the email shows as 'Verified' (not just added)\n"
-                "4. Wait a few minutes, then try again."
-            )
-            
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=detail_msg,
-            )
-
         # Store session string for later verification
         session_string = session.save()
         store_pending_session(user_id, session_string)

@@ -283,7 +283,7 @@ User Journey 2: Interactive Bot (Bot API) ❌ BROKEN
 1. User logs into your platform
 2. User goes to "Create Bot" page
 3. User provides Bot Token from @BotFather:
-   - Token: 8468166027:AAHwR-EEFo47G7gBZYgSBnmx2pEyNV7690c
+   
 
 4. Your platform stores bot credentials
 

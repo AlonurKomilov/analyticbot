@@ -57,6 +57,11 @@ class IUserBotRepository(ABC):
         pass
 
     @abstractmethod
+    async def increment_request_count(self, user_id: int) -> None:
+        """Increment total_requests and update last_used_at for a user's bot"""
+        pass
+
+    @abstractmethod
     async def get_by_mtproto_phone(self, phone: str) -> UserBotCredentials | None:
         """Get credentials by MTProto phone number (to check for duplicates)"""
         pass

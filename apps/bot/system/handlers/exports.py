@@ -20,7 +20,7 @@ from apps.bot.shared.keyboards.analytics import (
     get_export_format_keyboard,
     get_export_type_keyboard,
 )
-from apps.bot.system.middlewares.throttle import rate_limit
+from apps.bot.system.middlewares.throttle import rate_limit, with_timeout, HEAVY_HANDLER_TIMEOUT
 
 # ✅ PHASE 3 FIX (Oct 19, 2025): Use DI container instead of factory
 from apps.shared.clients.analytics_client import (
@@ -130,6 +130,7 @@ async def handle_export_type_selection(callback: CallbackQuery, state: FSMContex
 
 @router.callback_query(F.data.startswith("export_format:"))
 @rate_limit("export", per_minute=10)
+@with_timeout(HEAVY_HANDLER_TIMEOUT)  # 55s timeout for heavy export operations
 async def handle_export_format_selection(callback: CallbackQuery, state: FSMContext):
     """Handle export format selection and start export"""
     if not callback.data:

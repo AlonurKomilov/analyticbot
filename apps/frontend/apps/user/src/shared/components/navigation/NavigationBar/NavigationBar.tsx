@@ -72,7 +72,7 @@ const NAV_ITEMS: NavItem[] = [
     // Workers Section
     { labelKey: 'workers.bot', path: ROUTES.WORKERS_BOT, icon: <BotIcon />, dividerBefore: true, sectionLabel: 'Workers' },
     { labelKey: 'workers.mtproto', path: ROUTES.WORKERS_MTPROTO, icon: <MTProtoIcon /> },
-    { labelKey: 'workers.ai', path: ROUTES.AI_SERVICES, icon: <AIIcon /> },
+    { labelKey: 'workers.ai', path: ROUTES.WORKERS_AI, icon: <AIIcon /> },
     // Credits & Payments Section
     { labelKey: 'credits', path: ROUTES.CREDITS, icon: <CreditsIcon />, dividerBefore: true },
     { labelKey: 'rewards', path: ROUTES.REWARDS, icon: <TrophyIcon /> },

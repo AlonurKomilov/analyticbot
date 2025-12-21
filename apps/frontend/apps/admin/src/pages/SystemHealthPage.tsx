@@ -34,6 +34,9 @@ import {
   Schedule as UptimeIcon,
   SdStorage as DiskIcon,
   Telegram as TelegramIcon,
+  TrendingUp as PerformanceIcon,
+  Timer as TimerIcon,
+  Assessment as MetricsIcon,
 } from '@mui/icons-material';
 import { apiClient } from '@api/client';
 import { API_ENDPOINTS } from '@config/api';
@@ -67,6 +70,29 @@ interface SystemInfo {
   hostname: string;
 }
 
+interface PerformanceMetrics {
+  uptime_seconds: number;
+  total_requests: number;
+  requests_per_minute: number;
+  avg_response_time_ms: number;
+  error_rate_percent: number;
+  cache_hit_rate_percent: number;
+  slow_endpoints: Array<{
+    endpoint: string;
+    count: number;
+    avg_time_ms: number;
+    max_time_ms: number;
+    min_time_ms: number;
+    errors: number;
+  }>;
+  slow_queries: Array<{
+    query: string;
+    duration_ms: number;
+    timestamp: string;
+  }>;
+  recent_db_query_avg_ms: number;
+}
+
 interface HealthStatus {
   status: string;
   timestamp: string;
@@ -75,6 +101,7 @@ interface HealthStatus {
   api: { status: string; uptime_hours: number };
   user_bots?: { status: string; active_count: number; total_count: number };
   user_mtproto?: { status: string; active_sessions: number; total_configured: number };
+  performance?: PerformanceMetrics;
   system: SystemInfo;
   issues?: string[];
 }
@@ -423,6 +450,216 @@ const SystemHealthPage: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Performance Metrics Section */}
+      {health?.performance && (
+        <Paper sx={{ p: 3, mb: 4, border: `1px solid ${theme.palette.divider}` }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+            <PerformanceIcon color="primary" />
+            <Typography variant="h6" fontWeight={600}>
+              Performance Metrics
+            </Typography>
+            <Chip
+              label={`${health.performance.requests_per_minute} req/min`}
+              size="small"
+              color="primary"
+              variant="outlined"
+            />
+          </Box>
+
+          {/* Key Metrics Grid */}
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            {/* Total Requests */}
+            <Grid size={{ xs: 6, sm: 3 }}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+                <Typography variant="h4" color="primary" fontWeight={600}>
+                  {health.performance.total_requests.toLocaleString()}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Total Requests
+                </Typography>
+              </Paper>
+            </Grid>
+
+            {/* Requests/Min */}
+            <Grid size={{ xs: 6, sm: 3 }}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: alpha(theme.palette.success.main, 0.05) }}>
+                <Typography variant="h4" color="success.main" fontWeight={600}>
+                  {health.performance.requests_per_minute}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Requests / Minute
+                </Typography>
+              </Paper>
+            </Grid>
+
+            {/* Avg Response Time */}
+            <Grid size={{ xs: 6, sm: 3 }}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: alpha(theme.palette.info.main, 0.05) }}>
+                <Typography variant="h4" color="info.main" fontWeight={600}>
+                  {health.performance.avg_response_time_ms.toFixed(0)}ms
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Avg Response Time
+                </Typography>
+              </Paper>
+            </Grid>
+
+            {/* Error Rate */}
+            <Grid size={{ xs: 6, sm: 3 }}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: alpha(
+                health.performance.error_rate_percent > 5 ? theme.palette.error.main : theme.palette.success.main,
+                0.05
+              )}}>
+                <Typography 
+                  variant="h4" 
+                  color={health.performance.error_rate_percent > 5 ? 'error.main' : 'success.main'}
+                  fontWeight={600}
+                >
+                  {health.performance.error_rate_percent.toFixed(1)}%
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Error Rate
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+
+          {/* Additional Metrics Row */}
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            {/* Cache Hit Rate */}
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.secondary.main, 0.03) }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <MetricsIcon fontSize="small" color="secondary" />
+                  <Typography variant="subtitle2">Cache Performance</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h5" color="secondary" fontWeight={600}>
+                    {health.performance.cache_hit_rate_percent.toFixed(1)}%
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Hit Rate
+                  </Typography>
+                </Box>
+                <LinearProgress
+                  variant="determinate"
+                  value={health.performance.cache_hit_rate_percent}
+                  sx={{
+                    mt: 1,
+                    height: 6,
+                    borderRadius: 3,
+                    bgcolor: alpha(theme.palette.secondary.main, 0.1),
+                    '& .MuiLinearProgress-bar': {
+                      bgcolor: theme.palette.secondary.main,
+                      borderRadius: 3,
+                    },
+                  }}
+                />
+              </Paper>
+            </Grid>
+
+            {/* DB Query Performance */}
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.03) }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <DatabaseIcon fontSize="small" color="info" />
+                  <Typography variant="subtitle2">Database Queries</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h5" color="info" fontWeight={600}>
+                    {health.performance.recent_db_query_avg_ms.toFixed(1)}ms
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Avg Time
+                  </Typography>
+                </Box>
+              </Paper>
+            </Grid>
+
+            {/* API Uptime */}
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.success.main, 0.03) }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <TimerIcon fontSize="small" color="success" />
+                  <Typography variant="subtitle2">API Uptime</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h5" color="success" fontWeight={600}>
+                    {formatUptime(health.performance.uptime_seconds / 3600)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Current Session
+                  </Typography>
+                </Box>
+              </Paper>
+            </Grid>
+          </Grid>
+
+          {/* Slow Endpoints */}
+          {health.performance.slow_endpoints && health.performance.slow_endpoints.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <WarningIcon fontSize="small" color="warning" />
+                Slow Endpoints (Top 5)
+              </Typography>
+              <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.warning.main, 0.05) }}>
+                <Stack spacing={1}>
+                  {health.performance.slow_endpoints.slice(0, 5).map((endpoint, index) => (
+                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600} sx={{ fontFamily: 'monospace' }}>
+                          {endpoint.endpoint}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {endpoint.count} requests • {endpoint.errors} errors
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography variant="body2" color="warning.main" fontWeight={600}>
+                          Avg: {endpoint.avg_time_ms.toFixed(0)}ms
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Max: {endpoint.max_time_ms.toFixed(0)}ms
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ))}
+                </Stack>
+              </Paper>
+            </Box>
+          )}
+
+          {/* Slow Queries */}
+          {health.performance.slow_queries && health.performance.slow_queries.length > 0 && (
+            <Box>
+              <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <DatabaseIcon fontSize="small" color="error" />
+                Slow Database Queries (Last 5)
+              </Typography>
+              <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.error.main, 0.05) }}>
+                <Stack spacing={1}>
+                  {health.performance.slow_queries.slice(0, 5).map((query, index) => (
+                    <Box key={index}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(query.timestamp).toLocaleTimeString()}
+                        </Typography>
+                        <Typography variant="body2" color="error.main" fontWeight={600}>
+                          {query.duration_ms.toFixed(1)}ms
+                        </Typography>
+                      </Box>
+                      <Typography variant="caption" sx={{ fontFamily: 'monospace', display: 'block', color: 'text.secondary' }}>
+                        {query.query}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
+              </Paper>
+            </Box>
+          )}
+        </Paper>
+      )}
 
       {/* System Resources - Enhanced */}
       <Paper sx={{ p: 3, border: `1px solid ${theme.palette.divider}` }}>

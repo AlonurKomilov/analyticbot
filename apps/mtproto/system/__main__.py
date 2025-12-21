@@ -48,7 +48,10 @@ def main() -> None:
     logger.info("Starting MTProto application...")
 
     # Configure DI container
-    configure_container(settings)
+    configure_container()
+    
+    # Configure container with settings
+    container.config.from_dict(settings.model_dump())
 
     # Wire dependencies
     container.wire(modules=[__name__])

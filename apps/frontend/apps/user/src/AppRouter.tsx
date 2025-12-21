@@ -68,6 +68,10 @@ const ContentProtectionSettingsPage = React.lazy(() => import('./pages/settings/
 // Storage Channels Page
 const StorageChannelsPage = React.lazy(() => import('./pages/StorageChannelsPage'));
 
+// AI Worker Page
+const AIWorkerPage = React.lazy(() => import('./pages/workers/AIPage'));
+const AIProvidersPage = React.lazy(() => import('./features/ai/components/AIProviders/AIProvidersPage').then(m => ({ default: m.AIProvidersPage })));
+
 // Owner Dashboard Page (Owner-only features)
 const OwnerDashboard = React.lazy(() => import('@features/owner/OwnerDashboard'));
 
@@ -411,7 +415,7 @@ const AppRouter: React.FC = () => {
                                     }
                                 />
 
-                                {/* AI Services Routes - New */}
+                                {/* AI Services Routes - Legacy */}
                                 <Route
                                     path={ROUTES.AI_SERVICES}
                                     element={
@@ -428,6 +432,30 @@ const AppRouter: React.FC = () => {
                                         <ProtectedRoute>
                                             <OptimizedSuspense skeletonType="dashboard">
                                                 <PredictiveAnalyticsPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* User AI Routes - AI Worker Dashboard */}
+                                <Route
+                                    path={ROUTES.AI_DASHBOARD}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <AIWorkerPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* AI Providers Management */}
+                                <Route
+                                    path={ROUTES.AI_PROVIDERS}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <AIProvidersPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }

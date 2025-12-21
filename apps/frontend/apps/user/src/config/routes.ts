@@ -44,11 +44,16 @@ export const ROUTES = {
   CHANNEL_DETAILS: '/channels/:id',
   ADD_CHANNEL: '/channels/add',
 
-  // AI Services Routes
+  // AI Services Routes (Legacy - for marketplace services)
   AI_SERVICES: '/ai-services',
   CONTENT_OPTIMIZER: '/ai-services/optimizer',
   PREDICTIVE_ANALYTICS: '/ai-services/predictive',
   SECURITY_MONITORING: '/ai-services/security',
+
+  // AI Worker Dashboard (similar to Bot/MTProto)
+  AI_DASHBOARD: '/workers/ai',
+  WORKERS_AI: '/workers/ai',
+  AI_PROVIDERS: '/workers/ai/providers',
 
   // Protection Routes
   CONTENT_PROTECTION: '/protection',

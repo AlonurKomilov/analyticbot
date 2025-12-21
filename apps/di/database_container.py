@@ -4,6 +4,7 @@ Database & Repository DI Container
 Single Responsibility: Database connectivity and repository factory
 Clean Architecture compliant - uses repository factory pattern
 Phase 2 Fix (Oct 19, 2025): Updated to use protocols instead of concrete implementations
+Phase 3 Fix (Dec 19, 2025): Added scaling infrastructure (PgBouncer, ReadReplicas, QueryCache)
 """
 
 import logging
@@ -49,6 +50,19 @@ from infra.db.repositories.user_repository import AsyncpgUserRepository
 from infra.db.repositories.user_bot_service_repository_factory import UserBotServiceRepositoryFactory
 from infra.db.repositories.credit_repository import CreditRepository
 from infra.db.repositories.marketplace_service_repository import MarketplaceServiceRepository
+
+# AI Repositories
+from core.repositories.user_ai_config_repository import UserAIConfigRepository
+from core.repositories.user_ai_usage_repository import UserAIUsageRepository
+from core.repositories.user_ai_services_repository import UserAIServicesRepository
+from core.repositories.user_ai_providers_repository import UserAIProvidersRepository
+
+# ✅ PHASE 3 SCALING (Dec 19, 2025): Import scaling infrastructure
+from infra.db.scaling import (
+    PgBouncerPool, PgBouncerConfig, SCALE_CONFIGS,
+    ReadReplicaRouter, ReadReplicaRouterConfig,
+    QueryCacheManager, CacheTier, CACHE_PATTERNS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -173,6 +187,137 @@ async def _create_repository(factory, repo_type: str) -> Any:
 
 
 # ============================================================================
+# PHASE 3 SCALING INFRASTRUCTURE FACTORY FUNCTIONS
+# ============================================================================
+
+
+async def _create_pgbouncer_pool() -> PgBouncerPool | None:
+    """
+    Create PgBouncer connection pool for 100K+ user scalability.
+    
+    Enables connection multiplexing: 10,000+ client connections → 50-500 DB connections.
+    Only activates if PGBOUNCER_ENABLED=true in environment.
+    """
+    pgbouncer_enabled = os.getenv("PGBOUNCER_ENABLED", "false").lower() == "true"
+    
+    if not pgbouncer_enabled:
+        logger.info("⚙️  PgBouncer disabled (PGBOUNCER_ENABLED != 'true')")
+        return None
+    
+    # Determine scale from environment or default to 'medium'
+    scale = os.getenv("PGBOUNCER_SCALE", "medium")
+    if scale not in SCALE_CONFIGS:
+        logger.warning(f"⚠️  Unknown PGBOUNCER_SCALE '{scale}', using 'medium'")
+        scale = "medium"
+    
+    # Get base config for scale
+    base_config = SCALE_CONFIGS[scale]
+    
+    # Allow environment overrides
+    config = PgBouncerConfig(
+        primary_host=os.getenv("PGBOUNCER_HOST", base_config.primary_host),
+        primary_port=int(os.getenv("PGBOUNCER_PORT", str(base_config.primary_port))),
+        min_connections=int(os.getenv("PGBOUNCER_MIN_CONN", str(base_config.min_connections))),
+        max_connections=int(os.getenv("PGBOUNCER_MAX_CONN", str(base_config.max_connections))),
+        pool_mode=os.getenv("PGBOUNCER_POOL_MODE", base_config.pool_mode),
+        connection_timeout=base_config.connection_timeout,
+        command_timeout=base_config.command_timeout,
+        user=os.getenv("POSTGRES_USER", ""),
+        password=os.getenv("POSTGRES_PASSWORD", ""),
+        database=os.getenv("POSTGRES_DB", ""),
+    )
+    
+    pool = PgBouncerPool(config)
+    await pool.initialize()
+    
+    logger.info(f"✅ PgBouncer pool initialized (scale={scale}, min={config.min_connections}, max={config.max_connections})")
+    return pool
+
+
+async def _create_read_replica_router(primary_pool: asyncpg.Pool) -> ReadReplicaRouter | None:
+    """
+    Create read replica router for read/write splitting.
+    
+    Routes read queries to replicas (load distribution), writes to primary.
+    Only activates if READ_REPLICA_HOSTS is set in environment.
+    """
+    from infra.db.scaling.read_replica_router import ReplicaConfig
+    
+    replica_hosts = os.getenv("READ_REPLICA_HOSTS", "")
+    
+    if not replica_hosts:
+        logger.info("⚙️  Read replicas disabled (READ_REPLICA_HOSTS not set)")
+        return None
+    
+    # Parse replica hosts (comma-separated: "replica1:5432,replica2:5432")
+    replicas = []
+    for host_port in replica_hosts.split(","):
+        host_port = host_port.strip()
+        if ":" in host_port:
+            host, port = host_port.rsplit(":", 1)
+            replicas.append(ReplicaConfig(host=host, port=int(port)))
+        elif host_port:
+            replicas.append(ReplicaConfig(host=host_port, port=5432))
+    
+    if not replicas:
+        logger.warning("⚠️  READ_REPLICA_HOSTS set but no valid hosts found")
+        return None
+    
+    # Build config using correct structure
+    config = ReadReplicaRouterConfig(
+        primary_host=os.getenv("POSTGRES_HOST", "localhost"),
+        primary_port=int(os.getenv("POSTGRES_PORT", "5432")),
+        replicas=replicas,
+        user=os.getenv("POSTGRES_USER", ""),
+        password=os.getenv("POSTGRES_PASSWORD", ""),
+        database=os.getenv("POSTGRES_DB", ""),
+        pool_size_per_replica=int(os.getenv("REPLICA_POOL_SIZE", "20")),
+        health_check_interval=int(os.getenv("REPLICA_HEALTH_CHECK_INTERVAL", "30")),
+    )
+    
+    router = ReadReplicaRouter(config, primary_pool)
+    await router.initialize()
+    
+    logger.info(f"✅ Read replica router initialized ({len(replicas)} replicas)")
+    return router
+
+
+async def _create_query_cache_manager(redis_client) -> QueryCacheManager | None:
+    """
+    Create multi-tier query cache manager for 70-90% cache hit rates.
+    
+    Uses tiered TTLs: HOT (30s), WARM (2min), STANDARD (5min), COLD (15min), STATIC (1hr).
+    Requires Redis client injection.
+    """
+    cache_enabled = os.getenv("QUERY_CACHE_ENABLED", "true").lower() == "true"
+    
+    if not cache_enabled:
+        logger.info("⚙️  Query cache disabled (QUERY_CACHE_ENABLED != 'true')")
+        return None
+    
+    if redis_client is None:
+        logger.warning("⚠️  Query cache disabled - no Redis client available")
+        return None
+    
+    # Parse tier TTL overrides from environment
+    tier_ttls = {}
+    for tier in CacheTier:
+        env_key = f"CACHE_TTL_{tier.name}"
+        if env_value := os.getenv(env_key):
+            tier_ttls[tier] = int(env_value)
+    
+    cache_manager = QueryCacheManager(
+        redis_client=redis_client,
+        default_tier=CacheTier.STANDARD,
+        tier_ttls=tier_ttls if tier_ttls else None,
+        key_prefix=os.getenv("CACHE_KEY_PREFIX", "qcache"),
+    )
+    
+    logger.info(f"✅ Query cache manager initialized (prefix={cache_manager.key_prefix})")
+    return cache_manager
+
+
+# ============================================================================
 # DATABASE CONTAINER
 # ============================================================================
 
@@ -214,6 +359,23 @@ class DatabaseContainer(containers.DeclarativeContainer):
     # to the new `session_factory` provider to avoid AttributeError at
     # startup while keeping the clearer name.
     async_session_maker = session_factory
+
+    # ============================================================================
+    # PHASE 3 SCALING INFRASTRUCTURE (100K+ Users)
+    # ============================================================================
+
+    # PgBouncer Connection Pool - connection multiplexing for 10K+ concurrent connections
+    pgbouncer_pool = providers.Resource(_create_pgbouncer_pool)
+
+    # Read Replica Router - distributes reads across replicas, writes to primary
+    read_replica_router = providers.Resource(
+        _create_read_replica_router,
+        primary_pool=asyncpg_pool,
+    )
+
+    # Query Cache Manager - multi-tier caching with 70-90% hit rates
+    # Note: Requires Redis client from CacheContainer, wire via application startup
+    # query_cache = providers.Resource(_create_query_cache_manager, redis_client=...)
 
     # ============================================================================
     # REPOSITORIES - Direct DI without Factory Anti-Pattern ✅
@@ -326,6 +488,34 @@ class DatabaseContainer(containers.DeclarativeContainer):
     # Marketplace Services Repository (for service subscriptions)
     marketplace_service_repo = providers.Factory(
         MarketplaceServiceRepository,
+        pool=asyncpg_pool,
+    )
+
+    # ========================================================================
+    # AI REPOSITORIES (for User AI system)
+    # ========================================================================
+
+    # User AI Config Repository (for AI tier, settings, preferences)
+    user_ai_config_repo = providers.Factory(
+        UserAIConfigRepository,
+        pool=asyncpg_pool,
+    )
+
+    # User AI Usage Repository (for usage tracking and rate limiting)
+    user_ai_usage_repo = providers.Factory(
+        UserAIUsageRepository,
+        pool=asyncpg_pool,
+    )
+
+    # User AI Services Repository (for marketplace AI services)
+    user_ai_services_repo = providers.Factory(
+        UserAIServicesRepository,
+        pool=asyncpg_pool,
+    )
+
+    # User AI Providers Repository (for multi-provider API key management)
+    user_ai_providers_repo = providers.Factory(
+        UserAIProvidersRepository,
         pool=asyncpg_pool,
     )
 

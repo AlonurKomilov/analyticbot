@@ -95,11 +95,12 @@ class MTProtoSettings(BaseSettings):
         default=2.5, description="Global requests per second limit across all accounts"
     )
 
-    # Connection Pool Configuration (Auto-Close System)
+    # Connection Pool Configuration (Auto-Close System) - Scaled for 100K+ users
     MTPROTO_MAX_CONCURRENT_USERS: int = Field(
-        default=10,
+        default=100,
         description=(
-            "Maximum concurrent user sessions in MTProto connection pool " "(system-wide limit)"
+            "Maximum concurrent user sessions in MTProto connection pool "
+            "(system-wide limit for 100K+ users)"
         ),
     )
 

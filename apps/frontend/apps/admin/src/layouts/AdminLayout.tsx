@@ -18,6 +18,7 @@ import {
   Divider,
   useTheme,
   alpha,
+  Collapse,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -32,6 +33,12 @@ import {
   Menu as MenuIcon,
   AdminPanelSettings as AdminIcon,
   Speed as SpeedIcon,
+  Psychology as AIIcon,
+  ExpandLess,
+  ExpandMore,
+  AutoAwesome as AIDecisionsIcon,
+  Memory as AIWorkersIcon,
+  Tune as AIConfigIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '@config/routes';
@@ -42,6 +49,7 @@ interface NavItem {
   title: string;
   path: string;
   icon: React.ReactNode;
+  children?: NavItem[];
 }
 
 const navItems: NavItem[] = [
@@ -51,9 +59,23 @@ const navItems: NavItem[] = [
   { title: 'Bots', path: ROUTES.BOTS, icon: <BotsIcon /> },
   { title: 'MTProto', path: ROUTES.MTPROTO, icon: <TelegramIcon /> },
   { title: 'Plans', path: ROUTES.PLANS, icon: <SpeedIcon /> },
+  
+  // System AI Section
+  { 
+    title: 'System AI', 
+    path: ROUTES.AI_DASHBOARD, 
+    icon: <AIIcon />,
+    children: [
+      { title: 'Dashboard', path: ROUTES.AI_DASHBOARD, icon: <DashboardIcon /> },
+      { title: 'Workers', path: ROUTES.AI_WORKERS, icon: <AIWorkersIcon /> },
+      { title: 'Decisions', path: ROUTES.AI_DECISIONS, icon: <AIDecisionsIcon /> },
+      { title: 'Configuration', path: ROUTES.AI_CONFIG, icon: <AIConfigIcon /> },
+    ]
+  },
 
   { title: 'System Health', path: ROUTES.SYSTEM_HEALTH, icon: <HealthIcon /> },
-  { title: 'Audit Log', path: ROUTES.AUDIT_LOG, icon: <AuditIcon /> },
+  { title: 'Rate Limits', path: ROUTES.SYSTEM_RATE_LIMITS, icon: <SpeedIcon /> },
+  { title: 'Audit Log', path: ROUTES.SYSTEM_AUDIT, icon: <AuditIcon /> },
   { title: 'Settings', path: ROUTES.SETTINGS, icon: <SettingsIcon /> },
 ];
 
@@ -69,6 +91,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [aiMenuOpen, setAiMenuOpen] = useState(false);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -86,6 +109,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     handleMenuClose();
     logout();
   };
+
+  const isAIRoute = location.pathname.startsWith('/ai');
+
+  // Auto-expand AI menu when on AI routes
+  React.useEffect(() => {
+    if (isAIRoute) {
+      setAiMenuOpen(true);
+    }
+  }, [isAIRoute]);
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -113,7 +145,97 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {/* Navigation */}
       <List sx={{ flex: 1, px: 1, py: 2 }}>
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || 
+            (item.children && item.children.some(child => location.pathname === child.path));
+          
+          // Handle items with children (like System AI)
+          if (item.children) {
+            return (
+              <React.Fragment key={item.path}>
+                <ListItem disablePadding sx={{ mb: 0.5 }}>
+                  <ListItemButton
+                    onClick={() => setAiMenuOpen(!aiMenuOpen)}
+                    sx={{
+                      borderRadius: 2,
+                      backgroundColor: isActive
+                        ? alpha(theme.palette.primary.main, 0.15)
+                        : 'transparent',
+                      '&:hover': {
+                        backgroundColor: isActive
+                          ? alpha(theme.palette.primary.main, 0.2)
+                          : alpha(theme.palette.primary.main, 0.08),
+                      },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        color: isActive
+                          ? theme.palette.primary.main
+                          : theme.palette.text.secondary,
+                        minWidth: 40,
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.title}
+                      primaryTypographyProps={{
+                        fontWeight: isActive ? 600 : 400,
+                        color: isActive ? 'primary.main' : 'text.primary',
+                      }}
+                    />
+                    {aiMenuOpen ? <ExpandLess /> : <ExpandMore />}
+                  </ListItemButton>
+                </ListItem>
+                <Collapse in={aiMenuOpen} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {item.children.map((child) => {
+                      const isChildActive = location.pathname === child.path;
+                      return (
+                        <ListItem key={child.path} disablePadding sx={{ mb: 0.5 }}>
+                          <ListItemButton
+                            onClick={() => navigate(child.path)}
+                            sx={{
+                              pl: 4,
+                              borderRadius: 2,
+                              backgroundColor: isChildActive
+                                ? alpha(theme.palette.primary.main, 0.15)
+                                : 'transparent',
+                              '&:hover': {
+                                backgroundColor: isChildActive
+                                  ? alpha(theme.palette.primary.main, 0.2)
+                                  : alpha(theme.palette.primary.main, 0.08),
+                              },
+                            }}
+                          >
+                            <ListItemIcon
+                              sx={{
+                                color: isChildActive
+                                  ? theme.palette.primary.main
+                                  : theme.palette.text.secondary,
+                                minWidth: 40,
+                              }}
+                            >
+                              {child.icon}
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={child.title}
+                              primaryTypographyProps={{
+                                fontWeight: isChildActive ? 600 : 400,
+                                color: isChildActive ? 'primary.main' : 'text.primary',
+                                fontSize: '0.875rem',
+                              }}
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              </React.Fragment>
+            );
+          }
+          
           return (
             <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton

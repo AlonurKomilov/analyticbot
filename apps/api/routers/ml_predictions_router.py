@@ -17,7 +17,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
-from apps.celery.celery_app import celery_app
+from apps.workers.celery_app import celery_app
 from core.protocols import DeepLearningServiceProtocol
 from core.services.ai.deep_learning import DLOrchestratorService
 

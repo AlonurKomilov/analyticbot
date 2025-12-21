@@ -2,17 +2,20 @@
  * Bot Information Card Component
  */
 import React from 'react';
-import { Box, Card, CardContent, Chip, Typography, Alert, Avatar, alpha } from '@mui/material';
-import { SmartToy, CheckCircle, Error as ErrorIcon } from '@mui/icons-material';
+import { Box, Card, CardContent, Chip, Typography, Alert, Avatar, alpha, Button } from '@mui/material';
+import { SmartToy, CheckCircle, Error as ErrorIcon, VerifiedUser as VerifyIcon } from '@mui/icons-material';
 import { BotStatusResponse } from '@/types';
 import { getStatusColor } from './utils';
 
 interface BotInfoCardProps {
   bot: BotStatusResponse;
+  onVerify?: () => void;
+  isVerifying?: boolean;
 }
 
-export const BotInfoCard: React.FC<BotInfoCardProps> = ({ bot }) => {
+export const BotInfoCard: React.FC<BotInfoCardProps> = ({ bot, onVerify, isVerifying }) => {
   const isActive = bot.status === 'active';
+  const needsVerification = !bot.is_verified || bot.status === 'pending' || !bot.bot_id;
   
   return (
     <Card
@@ -100,6 +103,38 @@ export const BotInfoCard: React.FC<BotInfoCardProps> = ({ bot }) => {
             </Box>
           </Box>
         </Box>
+
+        {needsVerification && onVerify && (
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box>
+                <Typography variant="body2" fontWeight="bold">
+                  Bot Not Verified
+                </Typography>
+                <Typography variant="body2">
+                  Click verify to test the bot token and activate your bot.
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<VerifyIcon />}
+                onClick={() => {
+                  console.log('[BotInfoCard] Verify button clicked');
+                  console.log('[BotInfoCard] onVerify function:', onVerify);
+                  console.log('[BotInfoCard] isVerifying:', isVerifying);
+                  if (onVerify) {
+                    onVerify();
+                  }
+                }}
+                disabled={isVerifying}
+                size="small"
+              >
+                {isVerifying ? 'Verifying...' : 'Verify Bot'}
+              </Button>
+            </Box>
+          </Alert>
+        )}
 
         {bot.suspension_reason && (
           <Alert severity="warning" sx={{ mt: 2 }}>

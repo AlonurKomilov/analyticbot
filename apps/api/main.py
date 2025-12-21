@@ -12,6 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from apps.api.routers.admin_channels_router import router as admin_channels_router
 from apps.api.routers.admin_plans_router import router as admin_plans_router
+from apps.api.routers.admin_rate_limits_router import router as admin_rate_limits_router
 from apps.api.routers.admin_system_router import router as admin_system_router
 from apps.api.routers.admin_users_router import router as admin_users_router
 from apps.api.routers.auth import router as auth_router
@@ -395,6 +396,12 @@ Comprehensive data export capabilities with secure sharing mechanisms.
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
+# ✅ PERFORMANCE MONITORING: Add performance tracking middleware
+from apps.api.middleware.performance_monitoring import PerformanceMonitoringMiddleware
+
+app.add_middleware(PerformanceMonitoringMiddleware)
+logger.info("✅ Performance monitoring middleware initialized")
+
 # Production performance middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
@@ -492,6 +499,7 @@ app.include_router(admin_channels_router)  # Admin - Channel Management
 app.include_router(admin_users_router)  # Admin - User Management
 app.include_router(admin_plans_router)  # Admin - Plans Management
 app.include_router(admin_system_router)  # Admin - System Management
+app.include_router(admin_rate_limits_router)  # Admin - Rate Limits Monitoring & Config
 app.include_router(credits_router)  # 💰 Credit System - balance, transactions, packages
 app.include_router(marketplace_router)  # 🏪 Marketplace - items, purchases, gifts, bundles
 app.include_router(service_subscriptions_router)  # 🛒 Service Subscriptions - bot/MTProto features
@@ -627,6 +635,8 @@ app.include_router(
 from apps.api.routers.ai_chat_router import router as ai_chat_router
 from apps.api.routers.ai_insights_router import router as ai_insights_router
 from apps.api.routers.ai_services_router import router as ai_services_router
+from apps.api.routers.user_ai_router import router as user_ai_router
+from apps.api.routers.user_ai_providers_router import router as user_ai_providers_router
 from apps.api.routers.competitive_intelligence_router import router as competitive_router
 from apps.api.routers.optimization_router import router as optimization_router
 from apps.api.routers.strategy_router import router as strategy_router
@@ -638,6 +648,12 @@ app.include_router(ai_insights_router, prefix="/ai/insights", tags=["AI - Insigh
 app.include_router(
     ai_services_router, prefix="/ai/services", tags=["AI - Services"]
 )  # Churn, content, security
+app.include_router(
+    user_ai_router, prefix="/user/ai", tags=["User AI"]
+)  # User AI settings, suggestions, analysis
+app.include_router(
+    user_ai_providers_router, prefix="/user/ai", tags=["User AI Providers"]
+)  # Multi-provider API key management
 app.include_router(
     strategy_router, prefix="/ai/strategy", tags=["AI - Strategy"]
 )  # Strategy generation

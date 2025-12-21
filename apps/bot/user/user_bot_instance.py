@@ -98,6 +98,10 @@ class UserBotInstance:
         
         # Bot features manager (marketplace services - lazy initialized)
         self._bot_features_manager = None
+        
+        # Request tracking
+        self._request_counter = 0
+        self._last_db_sync = datetime.now()
 
     async def initialize(self) -> None:
         """
@@ -335,6 +339,39 @@ class UserBotInstance:
         except Exception as e:
             print(f"⚠️  Failed to initialize MTProto for user {self.user_id}: {e}")
 
+    async def _maybe_sync_request_count(self) -> None:
+        """Sync request count to database periodically (every 10 requests or 5 minutes)"""
+        from datetime import timedelta
+        
+        now = datetime.now()
+        time_since_sync = (now - self._last_db_sync).total_seconds()
+        
+        # Sync if 10+ requests accumulated OR 5+ minutes passed
+        if self._request_counter >= 10 or time_since_sync >= 300:
+            try:
+                from apps.di import get_container
+                
+                container = get_container()
+                async with container.database.async_session() as session:
+                    from infra.db.repositories.user_bot_repository import UserBotRepository
+                    
+                    repo = UserBotRepository(session)
+                    
+                    # Increment by accumulated count
+                    for _ in range(self._request_counter):
+                        await repo.increment_request_count(self.user_id)
+                    
+                    await session.commit()
+                    
+                # Reset counter after successful sync
+                self._request_counter = 0
+                self._last_db_sync = now
+                
+                logger.debug(f"Synced request count to database for user {self.user_id}")
+                
+            except Exception as e:
+                logger.error(f"Failed to sync request count for user {self.user_id}: {e}")
+
     async def shutdown(self) -> None:
         """
         Gracefully shutdown bot instances
@@ -346,6 +383,10 @@ class UserBotInstance:
         # Prevent double-shutdown
         if self._session_closed:
             return
+        
+        # Sync any remaining request count before shutdown
+        if self._request_counter > 0:
+            await self._maybe_sync_request_count()
 
         try:
             # Stop MTProto client first
@@ -463,6 +504,10 @@ class UserBotInstance:
             # Record retry statistics
             retry_stats = get_retry_statistics()
             retry_stats.record_attempt(attempt=0, success=True, error_category=None)
+            
+            # Track request count (sync to DB periodically)
+            self._request_counter += 1
+            await self._maybe_sync_request_count()
 
             return result
 

@@ -206,21 +206,21 @@ case $SERVICE in
         cleanup_workers "bot"
 
         # Start Bot
-        start_service "bot" 'python -m apps.bot.run_bot' ""
+        start_service "bot" 'python -m apps.bot.system.run_bot' ""
         ;;
     "mtproto")
         # Clean up old MTProto processes first
         cleanup_workers "mtproto"
 
         # Start MTProto worker with lifecycle management
-        start_service "mtproto" 'python -m apps.mtproto.worker --interval 10 --max-runtime 24 --memory-limit 2048 --cpu-limit 80 --health-port 9091' ""
+        start_service "mtproto" 'python -m apps.mtproto.system.worker --interval 10 --max-runtime 24 --memory-limit 2048 --cpu-limit 80 --health-port 9091' ""
         ;;
     "workers")
         # Start both bot and mtproto workers
         cleanup_workers "all"
 
-        start_service "bot" 'python -m apps.bot.run_bot' ""
-        start_service "mtproto" 'python -m apps.mtproto.worker --interval 10 --max-runtime 24 --memory-limit 2048 --cpu-limit 80 --health-port 9091' ""
+        start_service "bot" 'python -m apps.bot.system.run_bot' ""
+        start_service "mtproto" 'python -m apps.mtproto.system.worker --interval 10 --max-runtime 24 --memory-limit 2048 --cpu-limit 80 --health-port 9091' ""
         ;;
     "frontend")
         # Start Frontend (in frontend/apps/user directory) - Development Environment Port 11300
@@ -382,7 +382,7 @@ case $SERVICE in
         # Now start all services with the updated tunnel URL in .env.local
         start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11400 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11400
         sleep 2
-        start_service "bot" 'python -m apps.bot.run_bot' ""
+        start_service "bot" 'python -m apps.bot.system.run_bot' ""
         sleep 2
 
         echo ""
@@ -399,7 +399,7 @@ case $SERVICE in
             fi
         fi
 
-        start_service "mtproto_worker" 'python -m apps.mtproto.worker --interval 10' ""
+        start_service "mtproto_worker" 'python -m apps.mtproto.system.worker --interval 10 --health-port 9091' ""
         sleep 1
 
         echo ""
@@ -613,15 +613,31 @@ case $SERVICE in
         echo ""
         echo -e "${BLUE}🤖 Workers:${NC}"
 
-        # Check Bot (by PID file)
+        # Check Bot (by PID file or process)
         if [ -f "logs/dev_bot.pid" ] && kill -0 $(cat logs/dev_bot.pid) 2>/dev/null; then
             echo -e "Bot:                ${GREEN}✅ Running${NC}"
+        elif pgrep -f "apps.bot.system.run_bot" >/dev/null 2>&1; then
+            echo -e "Bot:                ${GREEN}✅ Running${NC}"
         else
-            echo -e "Bot:                ${RED}❌ Stopped${NC}"
+            # Check if it failed due to invalid token
+            if grep -q "Token is invalid" logs/dev_bot.log 2>/dev/null; then
+                echo -e "Bot:                ${YELLOW}⚠️  Needs valid BOT_TOKEN in .env.development${NC}"
+            else
+                echo -e "Bot:                ${RED}❌ Stopped${NC}"
+            fi
         fi
 
-        # Check MTProto Worker (by PID file and health endpoint)
+        # Check MTProto Worker (by PID file, process, or health endpoint)
+        MTPROTO_RUNNING=false
         if [ -f "logs/dev_mtproto_worker.pid" ] && kill -0 $(cat logs/dev_mtproto_worker.pid) 2>/dev/null; then
+            MTPROTO_RUNNING=true
+        elif pgrep -f "apps.mtproto.system.worker" >/dev/null 2>&1; then
+            MTPROTO_RUNNING=true
+        elif curl -s http://localhost:9091/health >/dev/null 2>&1; then
+            MTPROTO_RUNNING=true
+        fi
+        
+        if [ "$MTPROTO_RUNNING" = true ]; then
             # Check health endpoint
             MTPROTO_HEALTH=$(curl -s http://localhost:9091/health 2>/dev/null | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('status', ''))" 2>/dev/null)
             if [ "$MTPROTO_HEALTH" = "healthy" ]; then
@@ -635,7 +651,14 @@ case $SERVICE in
                 echo -e "MTProto Worker:     ${GREEN}✅ Running${NC} (health check unavailable)"
             fi
         else
-            echo -e "MTProto Worker:     ${RED}❌ Stopped${NC}"
+            # Check if disabled by config or stub implementation
+            if grep -q "MTProto functionality is disabled" logs/dev_mtproto_worker.log 2>/dev/null; then
+                echo -e "MTProto Worker:     ${BLUE}ℹ️  Disabled (MTPROTO_ENABLED=false)${NC}"
+            elif grep -q "stub implementation" logs/dev_mtproto_worker.log 2>/dev/null; then
+                echo -e "MTProto Worker:     ${BLUE}ℹ️  Stub mode (not yet implemented)${NC}"
+            else
+                echo -e "MTProto Worker:     ${RED}❌ Stopped${NC}"
+            fi
         fi
 
         echo ""
@@ -671,21 +694,11 @@ case $SERVICE in
         fi
 
         echo ""
-        echo -e "${BLUE}🌐 Public Access (CloudFlare Tunnel):${NC}"
-
-        # Check CloudFlare Tunnel
-        if [ -f "logs/dev_tunnel.pid" ] && kill -0 $(cat logs/dev_tunnel.pid) 2>/dev/null; then
-            TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log 2>/dev/null | head -1)
-            if [ ! -z "$TUNNEL_URL" ]; then
-                echo -e "Tunnel:             ${GREEN}✅ Running${NC}"
-                echo -e "Public URL:         ${GREEN}${TUNNEL_URL}${NC}"
-            else
-                echo -e "Tunnel:             ${YELLOW}⚠️  Starting (no URL yet)${NC}"
-            fi
-        else
-            echo -e "Tunnel:             ${RED}❌ Stopped${NC}"
-            echo -e "${BLUE}💡 Start with: make dev-tunnel${NC}"
-        fi
+        echo -e "${BLUE}🌐 Public Access:${NC}"
+        echo -e "Domain:             ${GREEN}✅ analyticbot.org${NC}"
+        echo -e "API:                ${GREEN}✅ api.analyticbot.org${NC}"
+        echo -e "Admin:              ${GREEN}✅ admin.analyticbot.org${NC}"
+        echo -e "App:                ${GREEN}✅ app.analyticbot.org${NC}"
 
         echo ""
         echo -e "${BLUE}💡 Tip: Use 'make dev-start' to start all services${NC}"

@@ -155,84 +155,38 @@ export const TestMessageDialog: React.FC<TestMessageDialogProps> = ({
   setTestMessage,
   isVerifying,
 }) => {
-  const canSend = !isVerifying &&
-    ((!useManualInput && selectedChannelId) || (useManualInput && manualChatId));
+  const canSend = !isVerifying && manualChatId;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Send Test Message</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 2 }}>
-          Send a test message to verify your bot is working correctly.
+          <strong>📱 Enter Your Telegram ID</strong>
+          <br />
+          To test your bot, please follow these steps:
+          <br />
+          1. Open Telegram and message <strong>@userinfobot</strong>
+          <br />
+          2. Copy your Telegram ID (the number shown)
+          <br />
+          3. Paste it in the field below
+          <br />
+          4. Make sure you've started a chat with your bot first!
         </DialogContentText>
 
-        {/* Channel Selector or Manual Input Toggle */}
-        <Box sx={{ mb: 2 }}>
-          <Button
-            size="small"
-            onClick={() => setUseManualInput(!useManualInput)}
-            sx={{ mb: 1 }}
-          >
-            {useManualInput ? '📋 Use Channel Selector' : '✏️ Enter Chat ID Manually'}
-          </Button>
-        </Box>
-
-        {!useManualInput ? (
-          // Channel Selector Mode
-          <>
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel id="channel-select-label">Select Channel</InputLabel>
-              <Select
-                labelId="channel-select-label"
-                value={selectedChannelId}
-                onChange={(e) => setSelectedChannelId(e.target.value)}
-                label="Select Channel"
-                disabled={isLoadingChannels}
-              >
-                {isLoadingChannels ? (
-                  <MenuItem disabled>
-                    <CircularProgress size={20} sx={{ mr: 1 }} />
-                    Loading channels...
-                  </MenuItem>
-                ) : channels.length === 0 ? (
-                  <MenuItem disabled>
-                    No channels found. Add channels in the Channels page first.
-                  </MenuItem>
-                ) : channels.filter(ch => ch.isActive).length === 0 ? (
-                  <MenuItem disabled>
-                    No active channels found. Please activate a channel first.
-                  </MenuItem>
-                ) : (
-                  channels
-                    .filter(ch => ch.isActive)
-                    .map((channel) => (
-                      <MenuItem key={channel.id} value={channel.id}>
-                        {channel.username ? `@${channel.username}` : channel.name}
-                        {channel.subscriberCount > 0 && ` (${channel.subscriberCount.toLocaleString()} subscribers)`}
-                      </MenuItem>
-                    ))
-                )}
-              </Select>
-            </FormControl>
-            {channels.length === 0 && !isLoadingChannels && (
-              <Alert severity="info" sx={{ mb: 2 }}>
-                No channels found. You can either add channels in the Channels page or use manual input below.
-              </Alert>
-            )}
-          </>
-        ) : (
-          // Manual Input Mode
-          <TextField
-            fullWidth
-            label="Your Telegram Chat ID"
-            value={manualChatId}
-            onChange={(e) => setManualChatId(e.target.value)}
-            type="number"
-            sx={{ mb: 2 }}
-            helperText="Get your chat ID by messaging @userinfobot on Telegram"
-            required
-          />
-        )}
+        {/* Manual Telegram ID Input */}
+        <TextField
+          fullWidth
+          label="Your Telegram ID"
+          value={manualChatId}
+          onChange={(e) => setManualChatId(e.target.value)}
+          type="number"
+          sx={{ mb: 2 }}
+          helperText="Get your Telegram ID by messaging @userinfobot on Telegram"
+          required
+          error={!manualChatId}
+        />
 
         <TextField
           fullWidth

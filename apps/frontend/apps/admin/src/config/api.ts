@@ -32,6 +32,19 @@ export const API_ENDPOINTS = {
     // Settings
     SETTINGS: '/admin/system/settings',
     SETTING_DETAIL: (key: string) => `/admin/system/settings/${key}`,
+    // Rate Limits
+    RATE_LIMITS: {
+      DASHBOARD: '/admin/rate-limits/dashboard',
+      CONFIGS: '/admin/rate-limits/configs',
+      CONFIG_DETAIL: (service: string) => `/admin/rate-limits/configs/${service}`,
+      STATS: '/admin/rate-limits/stats',
+      STAT_DETAIL: (service: string) => `/admin/rate-limits/stats/${service}`,
+      HISTORY: (service: string) => `/admin/rate-limits/history/${service}`,
+      TOP_USERS: (service: string) => `/admin/rate-limits/top-users/${service}`,
+      RESET_USER: (userId: number) => `/admin/rate-limits/reset/user/${userId}`,
+      RESET_IP: (ip: string) => `/admin/rate-limits/reset/ip/${ip}`,
+      SERVICES: '/admin/rate-limits/services',
+    },
   },
   // Bot Management
   BOTS: {

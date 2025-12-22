@@ -17,11 +17,11 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     DateTime,
+    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
-    Index,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -50,49 +50,29 @@ class UserBotSettingsORM(Base):
     banned_words_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    anti_spam_enabled: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
-    anti_link_enabled: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
+    anti_spam_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    anti_link_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     anti_forward_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    welcome_enabled: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
+    welcome_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     invite_tracking_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    captcha_enabled: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
-    slow_mode_enabled: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
+    captcha_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    slow_mode_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     night_mode_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
 
     # Anti-spam settings
-    spam_action: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default="warn"
-    )
-    max_warnings: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default="3"
-    )
-    warning_action: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default="mute"
-    )
-    mute_duration_minutes: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default="60"
-    )
+    spam_action: Mapped[str] = mapped_column(String(20), nullable=False, server_default="warn")
+    max_warnings: Mapped[int] = mapped_column(Integer, nullable=False, server_default="3")
+    warning_action: Mapped[str] = mapped_column(String(20), nullable=False, server_default="mute")
+    mute_duration_minutes: Mapped[int] = mapped_column(Integer, nullable=False, server_default="60")
 
     # Anti-flood settings
-    flood_limit: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default="5"
-    )
+    flood_limit: Mapped[int] = mapped_column(Integer, nullable=False, server_default="5")
     flood_interval_seconds: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="10"
     )
@@ -113,12 +93,13 @@ class UserBotSettingsORM(Base):
         DateTime(timezone=True), nullable=False, default=datetime.now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.now, onupdate=datetime.now
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
     )
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "chat_id", name="unique_user_chat_settings"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "chat_id", name="unique_user_chat_settings"),)
 
 
 class UserBotBannedWordORM(Base):
@@ -162,9 +143,7 @@ class UserBotInviteTrackingORM(Base):
         DateTime(timezone=True), nullable=False, default=datetime.now
     )
     left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    is_still_member: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="true"
-    )
+    is_still_member: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
 
     __table_args__ = (
         Index("idx_invite_tracking_inviter", "user_id", "chat_id", "inviter_tg_id"),
@@ -222,9 +201,7 @@ class UserBotServiceLogORM(Base):
         DateTime(timezone=True), nullable=False, default=datetime.now, index=True
     )
 
-    __table_args__ = (
-        Index("idx_moderation_log_date_range", "user_id", "chat_id", "created_at"),
-    )
+    __table_args__ = (Index("idx_moderation_log_date_range", "user_id", "chat_id", "created_at"),)
 
 
 class UserBotWelcomeMessageORM(Base):
@@ -239,9 +216,7 @@ class UserBotWelcomeMessageORM(Base):
         String(20), nullable=False, server_default="'welcome'"
     )
     message_text: Mapped[str] = mapped_column(Text, nullable=False)
-    parse_mode: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default="'HTML'"
-    )
+    parse_mode: Mapped[str] = mapped_column(String(20), nullable=False, server_default="'HTML'")
     buttons: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     media_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
     media_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -251,7 +226,10 @@ class UserBotWelcomeMessageORM(Base):
         DateTime(timezone=True), nullable=False, default=datetime.now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.now, onupdate=datetime.now
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
     )
 
     __table_args__ = (

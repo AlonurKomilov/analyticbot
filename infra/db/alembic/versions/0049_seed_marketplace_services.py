@@ -10,7 +10,6 @@ Create Date: 2025-12-14
 
 from alembic import op
 
-
 # revision identifiers, used by Alembic
 revision = "0049_seed_services"
 down_revision = "0048_marketplace_services"

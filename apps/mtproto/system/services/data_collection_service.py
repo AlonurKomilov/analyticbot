@@ -28,7 +28,7 @@ FLOOD_WAIT_RETRY_COUNT = 2  # Retry twice after FloodWait
 class FloodWaitHandler:
     """
     Centralized FloodWait handling for Telegram API calls.
-    
+
     At scale (100K+ users), FloodWait errors become frequent.
     This handler:
     - Respects Telegram's rate limits
@@ -36,7 +36,7 @@ class FloodWaitHandler:
     - Skips operations with excessive wait times
     - Logs for monitoring/alerting
     """
-    
+
     @staticmethod
     async def execute_with_flood_handling(
         operation: Any,
@@ -46,16 +46,16 @@ class FloodWaitHandler:
     ) -> Any:
         """
         Execute an async operation with FloodWait error handling.
-        
+
         Args:
             operation: Async callable or coroutine to execute
             operation_name: Name for logging
             max_wait: Maximum seconds to wait before skipping
             max_retries: Maximum retry attempts after FloodWait
-            
+
         Returns:
             Result of the operation
-            
+
         Raises:
             Original exception if not FloodWait or exceeded retries
         """
@@ -63,10 +63,10 @@ class FloodWaitHandler:
             from telethon.errors import FloodWaitError
         except ImportError:
             FloodWaitError = type("FloodWaitError", (Exception,), {})  # Dummy
-        
+
         retries = 0
         last_error = None
-        
+
         while retries <= max_retries:
             try:
                 # Handle both coroutines and callables
@@ -78,34 +78,36 @@ class FloodWaitHandler:
                         return await result
                     return result
                 else:
-                    raise TypeError(f"Operation must be callable or coroutine, got {type(operation)}")
-                    
+                    raise TypeError(
+                        f"Operation must be callable or coroutine, got {type(operation)}"
+                    )
+
             except FloodWaitError as e:
                 wait_seconds = getattr(e, "seconds", 60)
                 last_error = e
-                
+
                 if wait_seconds > max_wait:
                     logger.warning(
                         f"⏸️  FloodWait for {operation_name}: {wait_seconds}s exceeds max {max_wait}s - SKIPPING"
                     )
                     raise  # Let caller handle long waits
-                
+
                 retries += 1
                 if retries > max_retries:
                     logger.warning(
                         f"⏸️  FloodWait for {operation_name}: exceeded max retries ({max_retries})"
                     )
                     raise
-                
+
                 logger.info(
                     f"⏳ FloodWait for {operation_name}: waiting {wait_seconds}s (retry {retries}/{max_retries})"
                 )
                 await asyncio.sleep(wait_seconds + 1)  # Add 1s buffer
-                
+
                 # For callables, we can retry; for consumed coroutines, we can't
                 if asyncio.iscoroutine(operation):
                     raise  # Can't retry consumed coroutine
-        
+
         if last_error:
             raise last_error
         raise RuntimeError(f"Unexpected state in FloodWait handler for {operation_name}")
@@ -113,7 +115,7 @@ class FloodWaitHandler:
 
 class TelegramClientAdapter:
     """Adapter to wrap Telethon TelegramClient to match TGClient protocol.
-    
+
     Includes automatic FloodWait handling for all Telegram API calls
     to ensure scalability at 100K+ users.
     """
@@ -126,21 +128,20 @@ class TelegramClientAdapter:
         """
         self._client = telegram_client
         self._flood_handler = FloodWaitHandler()
-        
+
         # Import FloodWaitError for use in methods
         try:
             from telethon.errors import FloodWaitError
+
             self._flood_wait_error = FloodWaitError
         except ImportError:
             self._flood_wait_error = type("FloodWaitError", (Exception,), {})
 
     async def start(self) -> None:
         """Start client (no-op as client is already started)."""
-        pass
 
     async def stop(self) -> None:
         """Stop client (handled by UserMTProtoClient)."""
-        pass
 
     async def is_connected(self) -> bool:
         """Check if client is connected."""
@@ -148,19 +149,18 @@ class TelegramClientAdapter:
 
     async def _resolve_entity_with_flood_handling(self, peer: Any) -> Any:
         """Resolve entity with FloodWait handling and fallback formats.
-        
+
         Args:
             peer: The peer to resolve (ID or username)
-            
+
         Returns:
             Resolved entity or None
         """
         entity = None
-        
+
         try:
             entity = await FloodWaitHandler.execute_with_flood_handling(
-                self._client.get_entity(peer),
-                operation_name=f"get_entity({peer})"
+                self._client.get_entity(peer), operation_name=f"get_entity({peer})"
             )
         except self._flood_wait_error:
             logger.warning(f"FloodWait while resolving entity {peer} - skipping")
@@ -175,11 +175,11 @@ class TelegramClientAdapter:
                     negative_id = -abs(peer)
                     entity = await FloodWaitHandler.execute_with_flood_handling(
                         self._client.get_entity(negative_id),
-                        operation_name=f"get_entity({negative_id})"
+                        operation_name=f"get_entity({negative_id})",
                     )
                     logger.info(f"Resolved entity using negative ID: {negative_id}")
                 except self._flood_wait_error:
-                    logger.warning(f"FloodWait with negative ID format")
+                    logger.warning("FloodWait with negative ID format")
                 except Exception as e2:
                     logger.debug(f"Negative ID failed: {e2}")
 
@@ -190,12 +190,12 @@ class TelegramClientAdapter:
                             raw_id = int(id_str[3:])
                             entity = await FloodWaitHandler.execute_with_flood_handling(
                                 self._client.get_entity(raw_id),
-                                operation_name=f"get_entity({raw_id})"
+                                operation_name=f"get_entity({raw_id})",
                             )
                             logger.info(f"Resolved entity using raw ID: {raw_id}")
                         except Exception as e3:
                             logger.debug(f"Raw ID failed: {e3}")
-        
+
         return entity
 
     async def iter_history(
@@ -228,38 +228,41 @@ class TelegramClientAdapter:
                 logger.info(f"⏳ FloodWait during iter_history: waiting {wait_seconds}s")
                 await asyncio.sleep(wait_seconds + 1)
                 # Retry iteration
-                async for message in self._client.iter_messages(peer, offset_id=offset_id, limit=limit):
+                async for message in self._client.iter_messages(
+                    peer, offset_id=offset_id, limit=limit
+                ):
                     yield message
             else:
-                logger.warning(f"⏸️  FloodWait during iter_history: {wait_seconds}s exceeds max - skipping channel")
+                logger.warning(
+                    f"⏸️  FloodWait during iter_history: {wait_seconds}s exceeds max - skipping channel"
+                )
                 raise
 
     async def get_broadcast_stats(self, channel: Any) -> Any:
         """Get broadcast statistics for a channel with FloodWait handling."""
         return await FloodWaitHandler.execute_with_flood_handling(
             self._client.get_broadcast_stats(channel),
-            operation_name="get_broadcast_stats"
+            operation_name="get_broadcast_stats",
         )
 
     async def get_megagroup_stats(self, channel: Any) -> Any:
         """Get megagroup statistics for a channel with FloodWait handling."""
         return await FloodWaitHandler.execute_with_flood_handling(
             self._client.get_megagroup_stats(channel),
-            operation_name="get_megagroup_stats"
+            operation_name="get_megagroup_stats",
         )
 
     async def load_async_graph(self, token: str, x: int = 0) -> Any:
         """Load async graph data with FloodWait handling."""
         return await FloodWaitHandler.execute_with_flood_handling(
-            self._client.load_async_graph(token, x),
-            operation_name="load_async_graph"
+            self._client.load_async_graph(token, x), operation_name="load_async_graph"
         )
 
     async def get_full_channel(self, channel: Any) -> Any:
         """Get full channel information including participant count."""
         from telethon.tl.functions.channels import GetFullChannelRequest
 
-        # Resolve entity first with fallback formats  
+        # Resolve entity first with fallback formats
         entity = await self._resolve_entity_with_flood_handling(channel)
 
         if not entity:
@@ -268,14 +271,13 @@ class TelegramClientAdapter:
         # Get full channel info with FloodWait handling
         return await FloodWaitHandler.execute_with_flood_handling(
             self._client(GetFullChannelRequest(entity)),
-            operation_name="GetFullChannelRequest"
+            operation_name="GetFullChannelRequest",
         )
 
     async def get_me(self) -> Any:
         """Get information about the current user with FloodWait handling."""
         return await FloodWaitHandler.execute_with_flood_handling(
-            self._client.get_me(),
-            operation_name="get_me"
+            self._client.get_me(), operation_name="get_me"
         )
 
     async def disconnect(self) -> None:
@@ -412,7 +414,7 @@ class MTProtoDataCollectionService:
                 # Started more than 5 minutes ago without ending - likely a crashed collection
                 # We can proceed but log a warning
                 logger.warning(
-                    f"⚠️  Previous collection started {time_since_start/60:.1f}min ago but never ended. "
+                    f"⚠️  Previous collection started {time_since_start / 60:.1f}min ago but never ended. "
                     f"May have crashed. Proceeding with new collection."
                 )
 
@@ -967,7 +969,11 @@ class MTProtoDataCollectionService:
             # Try to log the error end state
             try:
                 await self._log_collection_end(
-                    user_id=user_id, total_messages=0, channels_synced=0, total_channels=0, errors=1
+                    user_id=user_id,
+                    total_messages=0,
+                    channels_synced=0,
+                    total_channels=0,
+                    errors=1,
                 )
             except Exception:
                 # Ignore any logging errors during error handling to avoid cascading failures
@@ -1151,7 +1157,7 @@ class MTProtoDataCollectionService:
 
                 if collection_duration > interval_seconds:
                     logger.warning(
-                        f"⚠️  Collection took {collection_duration/60:.1f}min, "
+                        f"⚠️  Collection took {collection_duration / 60:.1f}min, "
                         f"longer than configured interval of {interval_minutes}min! "
                         f"Collections will run back-to-back with {remaining_wait}s cooldown."
                     )

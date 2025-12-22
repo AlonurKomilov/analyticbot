@@ -160,7 +160,12 @@ class MockPaymentService(PaymentServiceProtocol):
                 {
                     "id": f"pm_mock_{user_id}_1",
                     "type": "card",
-                    "card": {"brand": "visa", "last4": "4242", "exp_month": 12, "exp_year": 2025},
+                    "card": {
+                        "brand": "visa",
+                        "last4": "4242",
+                        "exp_month": 12,
+                        "exp_year": 2025,
+                    },
                     "is_default": True,
                 },
                 {

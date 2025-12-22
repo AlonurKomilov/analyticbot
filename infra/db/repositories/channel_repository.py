@@ -163,7 +163,7 @@ class AsyncpgChannelRepository:
 
     async def get_channel_by_telegram_id(self, telegram_id: int) -> dict[str, Any] | None:
         """Get channel by telegram ID - API compatibility method
-        
+
         Checks both positive and negative versions of the ID since Telegram
         channel IDs can be stored with different signs (legacy issue).
         """
@@ -230,8 +230,15 @@ class AsyncpgChannelRepository:
         param_num = 1
 
         # Allowed fields for update
-        allowed_fields = ["name", "description", "username", "is_active", "telegram_created_at", "subscriber_count"]
-        
+        allowed_fields = [
+            "name",
+            "description",
+            "username",
+            "is_active",
+            "telegram_created_at",
+            "subscriber_count",
+        ]
+
         for key, value in kwargs.items():
             if key in allowed_fields:
                 set_clauses.append(f"{key} = ${param_num}")
@@ -256,17 +263,13 @@ class AsyncpgChannelRepository:
             record = await conn.fetchrow(query, *values[:-1], values[-1])
             return dict(record) if record else None
 
-    async def update_telegram_created_at(
-        self, 
-        channel_id: int, 
-        telegram_created_at: Any
-    ) -> bool:
+    async def update_telegram_created_at(self, channel_id: int, telegram_created_at: Any) -> bool:
         """Update the Telegram channel creation date.
-        
+
         Args:
             channel_id: Channel ID (can be positive or negative)
             telegram_created_at: The actual creation date from Telegram
-            
+
         Returns:
             True if updated successfully
         """

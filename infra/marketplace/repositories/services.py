@@ -11,8 +11,7 @@ This repository handles CRUD operations for subscription-based services.
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Optional, List, Dict
+from datetime import datetime
 
 import asyncpg
 
@@ -30,17 +29,15 @@ class MarketplaceServiceRepository:
     # ============================================
 
     async def get_all_services(
-        self, 
-        include_inactive: bool = False, 
-        category: Optional[str] = None
-    ) -> List[Dict]:
+        self, include_inactive: bool = False, category: str | None = None
+    ) -> list[dict]:
         """
         Get all marketplace services.
-        
+
         Args:
             include_inactive: Include inactive services
             category: Filter by category
-            
+
         Returns:
             List of service records
         """
@@ -80,7 +77,7 @@ class MarketplaceServiceRepository:
             rows = await conn.fetch(query, *params)
             return [dict(row) for row in rows]
 
-    async def get_service_by_key(self, service_key: str) -> Optional[Dict]:
+    async def get_service_by_key(self, service_key: str) -> dict | None:
         """Get service by service_key"""
         query = """
             SELECT * FROM marketplace_services
@@ -90,7 +87,7 @@ class MarketplaceServiceRepository:
             row = await conn.fetchrow(query, service_key)
             return dict(row) if row else None
 
-    async def get_service_by_id(self, service_id: int) -> Optional[Dict]:
+    async def get_service_by_id(self, service_id: int) -> dict | None:
         """Get service by ID"""
         query = """
             SELECT * FROM marketplace_services
@@ -100,7 +97,7 @@ class MarketplaceServiceRepository:
             row = await conn.fetchrow(query, service_id)
             return dict(row) if row else None
 
-    async def get_featured_services(self, limit: int = 5) -> List[Dict]:
+    async def get_featured_services(self, limit: int = 5) -> list[dict]:
         """Get featured services"""
         query = """
             SELECT * FROM marketplace_services
@@ -124,10 +121,10 @@ class MarketplaceServiceRepository:
         price_paid: int,
         expires_at: datetime,
         auto_renew: bool = True,
-    ) -> Dict:
+    ) -> dict:
         """
         Create a new service subscription for a user.
-        
+
         Args:
             user_id: User ID
             service_id: Service ID
@@ -135,7 +132,7 @@ class MarketplaceServiceRepository:
             price_paid: Credits paid
             expires_at: Subscription expiration date
             auto_renew: Auto-renew on expiry
-            
+
         Returns:
             Created subscription record
         """
@@ -182,17 +179,17 @@ class MarketplaceServiceRepository:
     async def get_user_subscriptions(
         self,
         user_id: int,
-        status: Optional[str] = None,
+        status: str | None = None,
         include_expired: bool = False,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get user's service subscriptions.
-        
+
         Args:
             user_id: User ID
             status: Filter by status ('active', 'paused', 'cancelled', 'expired')
             include_expired: Include expired subscriptions
-            
+
         Returns:
             List of subscription records with service details
         """
@@ -230,11 +227,11 @@ class MarketplaceServiceRepository:
             rows = await conn.fetch(query, *params)
             return [dict(row) for row in rows]
 
-    async def get_user_active_services(self, user_id: int) -> List[str]:
+    async def get_user_active_services(self, user_id: int) -> list[str]:
         """
         Get list of service keys user has active subscriptions to.
         Used for feature gating.
-        
+
         Returns:
             List of service_key strings
         """
@@ -250,12 +247,10 @@ class MarketplaceServiceRepository:
             rows = await conn.fetch(query, user_id)
             return [row["service_key"] for row in rows]
 
-    async def check_user_has_service(
-        self, user_id: int, service_key: str
-    ) -> Optional[Dict]:
+    async def check_user_has_service(self, user_id: int, service_key: str) -> dict | None:
         """
         Check if user has an active subscription to a service.
-        
+
         Returns:
             Subscription record if active, None otherwise
         """
@@ -274,8 +269,8 @@ class MarketplaceServiceRepository:
             return dict(row) if row else None
 
     async def cancel_subscription(
-        self, subscription_id: int, reason: Optional[str] = None
-    ) -> Optional[Dict]:
+        self, subscription_id: int, reason: str | None = None
+    ) -> dict | None:
         """Cancel a subscription"""
         query = """
             UPDATE user_service_subscriptions
@@ -309,7 +304,7 @@ class MarketplaceServiceRepository:
 
     async def renew_subscription(
         self, subscription_id: int, new_expires_at: datetime, price_paid: int
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         """Renew a subscription"""
         query = """
             UPDATE user_service_subscriptions
@@ -331,17 +326,18 @@ class MarketplaceServiceRepository:
                 )
             return dict(row) if row else None
 
-    async def get_expiring_subscriptions(self, days_ahead: int = 3) -> List[Dict]:
+    async def get_expiring_subscriptions(self, days_ahead: int = 3) -> list[dict]:
         """
         Get subscriptions expiring within N days (for renewal processing).
-        
+
         Args:
             days_ahead: Number of days to look ahead
-            
+
         Returns:
             List of subscriptions about to expire
         """
-        query = """
+        query = (
+            """
             SELECT s.*, u.credit_balance, ms.price_credits_monthly, ms.price_credits_yearly
             FROM user_service_subscriptions s
             JOIN users u ON s.user_id = u.id
@@ -350,7 +346,9 @@ class MarketplaceServiceRepository:
             AND s.auto_renew = true
             AND s.expires_at BETWEEN NOW() AND NOW() + INTERVAL '%s days'
             ORDER BY s.expires_at
-        """ % days_ahead
+        """
+            % days_ahead
+        )
 
         async with self._pool.acquire() as conn:
             rows = await conn.fetch(query)
@@ -366,12 +364,12 @@ class MarketplaceServiceRepository:
         user_id: int,
         service_id: int,
         action: str,
-        resource_id: Optional[str] = None,
+        resource_id: str | None = None,
         success: bool = True,
-        error_message: Optional[str] = None,
-        response_time_ms: Optional[int] = None,
-        metadata: Optional[Dict] = None,
-    ) -> Dict:
+        error_message: str | None = None,
+        response_time_ms: int | None = None,
+        metadata: dict | None = None,
+    ) -> dict:
         """Log a service usage event"""
         query = """
             INSERT INTO service_usage_log (
@@ -398,9 +396,7 @@ class MarketplaceServiceRepository:
             )
             return dict(row)
 
-    async def increment_subscription_usage(
-        self, subscription_id: int, count: int = 1
-    ) -> None:
+    async def increment_subscription_usage(self, subscription_id: int, count: int = 1) -> None:
         """Increment daily and monthly usage counters for a subscription"""
         query = """
             UPDATE user_service_subscriptions
@@ -416,14 +412,15 @@ class MarketplaceServiceRepository:
         self,
         subscription_id: int,
         days: int = 30,
-    ) -> Dict:
+    ) -> dict:
         """
         Get usage statistics for a subscription.
-        
+
         Returns:
             Dict with usage counts, success rate, etc.
         """
-        query = """
+        query = (
+            """
             SELECT 
                 COUNT(*) as total_uses,
                 SUM(CASE WHEN success THEN 1 ELSE 0 END) as successful_uses,
@@ -432,15 +429,15 @@ class MarketplaceServiceRepository:
             FROM service_usage_log
             WHERE subscription_id = $1
             AND created_at >= NOW() - INTERVAL '%s days'
-        """ % days
+        """
+            % days
+        )
 
         async with self._pool.acquire() as conn:
             row = await conn.fetchrow(query, subscription_id)
             return dict(row) if row else {}
 
-    async def get_user_usage_today(
-        self, user_id: int, service_id: int
-    ) -> int:
+    async def get_user_usage_today(self, user_id: int, service_id: int) -> int:
         """Get user's usage count for a service today"""
         query = """
             SELECT COUNT(*) as count
@@ -457,7 +454,7 @@ class MarketplaceServiceRepository:
         """
         Reset daily usage counters for all subscriptions.
         Should be run once per day via scheduled job.
-        
+
         Returns:
             Number of subscriptions reset
         """
@@ -477,7 +474,7 @@ class MarketplaceServiceRepository:
         """
         Reset monthly usage counters for all subscriptions.
         Should be run once per month via scheduled job.
-        
+
         Returns:
             Number of subscriptions reset
         """
@@ -497,7 +494,7 @@ class MarketplaceServiceRepository:
     # ADMIN / STATISTICS
     # ============================================
 
-    async def get_service_statistics(self, service_id: int) -> Dict:
+    async def get_service_statistics(self, service_id: int) -> dict:
         """Get detailed statistics for a service"""
         query = """
             SELECT 

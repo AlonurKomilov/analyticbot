@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from core.services.system.backup_service import BackupService
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
@@ -15,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.di import get_db_connection
 from core.security_engine import AdministrativeRole, UserStatus
 from core.security_engine import User as AdminUser
-from core.services.system.backup_service import BackupService
 from core.services.system.cache.materialized_view_service import MaterializedViewService
 from core.services.system.owner_service import OwnerService
 
@@ -182,7 +182,7 @@ async def _verify_owner_access(
 ) -> AdminUser:
     """
     Verify owner access using credentials.
-    
+
     This is a helper function for endpoints that need to verify admin access
     without using dependency injection for the admin user.
     """
@@ -190,32 +190,32 @@ async def _verify_owner_access(
 
     container = get_container()
     admin_repo = await container.database.admin_repo()
-    
+
     try:
         token = credentials.credentials
         ip_address = "unknown"
-        
+
         # Create simple admin service
         class SimpleAdminService:
             def __init__(self, repo):
                 self.admin_repo = repo
-            
+
             async def validate_admin_session(self, token: str, ip_address: str):
                 # Basic token validation - in production, verify JWT
                 if not token:
                     return None
                 return {"id": 1, "username": "admin"}  # Placeholder
-        
+
         admin_service = SimpleAdminService(admin_repo)
         admin_user = await admin_service.validate_admin_session(token, ip_address)
-        
+
         if not admin_user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired session",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         # Convert to AdminUser
         return AdminUser(
             id=str(admin_user.get("id", "")),
@@ -246,7 +246,7 @@ async def admin_login(
 ):
     """Authenticate admin user and create session"""
     ip_address = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("User-Agent", "Unknown")
+    request.headers.get("User-Agent", "Unknown")
 
     # Authenticate user
     admin_session = await admin_service.authenticate_admin(
@@ -255,7 +255,8 @@ async def admin_login(
 
     if not admin_session:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials or account locked"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials or account locked",
         )
 
     # Get admin user from session
@@ -274,7 +275,7 @@ async def admin_login(
             "username": admin_user.username,
             "full_name": admin_user.full_name,
             "role": admin_user.role,
-            "last_login": admin_user.last_login.isoformat() if admin_user.last_login else None,
+            "last_login": (admin_user.last_login.isoformat() if admin_user.last_login else None),
         },
     )
 
@@ -336,7 +337,7 @@ async def suspend_user(
     admin_service: OwnerService = Depends(get_owner_service),
 ):
     """Suspend a system user"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.suspend_user(
         UUID(str(current_admin.id)), UUID(str(user_id)), suspension_request.reason
@@ -353,7 +354,7 @@ async def reactivate_user(
     admin_service: OwnerService = Depends(get_owner_service),
 ):
     """Reactivate a suspended user"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.reactivate_user(user_id, int(current_admin.id))
 
@@ -448,7 +449,7 @@ async def update_system_config(
     admin_service: OwnerService = Depends(get_owner_service),
 ):
     """Update system configuration (Owner only)"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.update_system_config(
         {key: config_update.value}, int(current_admin.id)
@@ -480,14 +481,16 @@ async def get_database_stats(
         "table_count": stats.table_count,
         "total_records": stats.total_records,
         "backup_count": stats.backup_count,
-        "last_backup": {
-            "filename": stats.last_backup.filename,
-            "size": stats.last_backup.size_human,
-            "created_at": stats.last_backup.created_at.isoformat(),
-            "age_days": stats.last_backup.age_days,
-        }
-        if stats.last_backup
-        else None,
+        "last_backup": (
+            {
+                "filename": stats.last_backup.filename,
+                "size": stats.last_backup.size_human,
+                "created_at": stats.last_backup.created_at.isoformat(),
+                "age_days": stats.last_backup.age_days,
+            }
+            if stats.last_backup
+            else None
+        ),
     }
 
 
@@ -625,7 +628,8 @@ async def get_backup_info(
 
     if not backup:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Backup not found: {filename}"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Backup not found: {filename}",
         )
 
     return {
@@ -1130,12 +1134,14 @@ async def manual_vacuum_table(
         )
 
     # Verify table exists
-    check_query = text("""
+    check_query = text(
+        """
         SELECT EXISTS (
             SELECT 1 FROM pg_tables
             WHERE schemaname = 'public' AND tablename = :table_name
         )
-    """)
+    """
+    )
     result = await db.execute(check_query, {"table_name": table_name})
     exists = result.scalar()
 
@@ -1169,7 +1175,8 @@ async def manual_vacuum_table(
     except Exception as e:
         await db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"VACUUM failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"VACUUM failed: {str(e)}",
         )
 
 
@@ -1196,7 +1203,8 @@ async def get_tables_needing_vacuum(
     """
     from sqlalchemy import text
 
-    query = text("""
+    query = text(
+        """
         SELECT
             schemaname,
             relname AS table_name,
@@ -1227,7 +1235,8 @@ async def get_tables_needing_vacuum(
             END,
             n_dead_tup DESC
         LIMIT 30
-    """)
+    """
+    )
 
     result = await db.execute(
         query,
@@ -1399,9 +1408,11 @@ async def get_index_usage_statistics(
         "unused_indexes": total_unused,
         "total_size_bytes": total_size_bytes,
         "total_size": _bytes_to_human(total_size_bytes),
-        "usage_rate_percent": round((total_indexes - total_unused) / total_indexes * 100, 2)
-        if total_indexes > 0
-        else 0,
+        "usage_rate_percent": (
+            round((total_indexes - total_unused) / total_indexes * 100, 2)
+            if total_indexes > 0
+            else 0
+        ),
     }
 
     return {
@@ -1459,6 +1470,7 @@ def _bytes_to_human(size_bytes: int) -> str:
 
 class SmartCollectionStatsResponse(BaseModel):
     """Statistics for smart collection efficiency."""
+
     total_posts: int
     total_checks: int
     total_snapshots_saved: int
@@ -1471,6 +1483,7 @@ class SmartCollectionStatsResponse(BaseModel):
 
 class StorageAnalysisResponse(BaseModel):
     """Database storage analysis with smart collection impact."""
+
     current_storage_mb: float
     projected_storage_without_smart_mb: float
     savings_mb: float
@@ -1493,12 +1506,13 @@ async def get_smart_collection_stats(
 ) -> SmartCollectionStatsResponse:
     """Get comprehensive statistics about smart collection efficiency."""
     from sqlalchemy import text
-    
+
     # Verify admin authentication
     await _verify_owner_access(credentials, db)
-    
+
     # Get total posts and checks
-    query = text("""
+    query = text(
+        """
         SELECT 
             COUNT(DISTINCT p.channel_id || '-' || p.msg_id) as total_posts,
             COALESCE(SUM(c.check_count), 0) as total_checks,
@@ -1508,25 +1522,27 @@ async def get_smart_collection_stats(
         FROM posts p
         LEFT JOIN post_metrics_checks c ON p.channel_id = c.channel_id AND p.msg_id = c.msg_id
         WHERE p.is_deleted = FALSE
-    """)
-    
+    """
+    )
+
     result = await db.execute(query)
     row = result.fetchone()
-    
+
     total_posts = row.total_posts or 0
     total_checks = row.total_checks or 0
     total_snapshots_saved = row.total_snapshots_saved or 0
     stable_posts = row.stable_posts or 0
     active_posts = row.active_posts or 0
-    
+
     # Calculate efficiency rate
     efficiency_rate = (total_snapshots_saved / total_checks * 100) if total_checks > 0 else 0.0
-    
+
     # Estimate storage saved (each skipped snapshot = ~100 bytes saved)
     storage_saved_mb = (total_checks - total_snapshots_saved) * 100 / (1024 * 1024)
-    
+
     # Get collection by age brackets
-    age_query = text("""
+    age_query = text(
+        """
         SELECT 
             CASE 
                 WHEN post_age_hours < 1 THEN 'fresh_<1h'
@@ -1542,11 +1558,12 @@ async def get_smart_collection_stats(
         WHERE post_age_hours IS NOT NULL
         GROUP BY age_bracket
         ORDER BY age_bracket
-    """)
-    
+    """
+    )
+
     age_result = await db.execute(age_query)
     collection_by_age = {}
-    
+
     for age_row in age_result.fetchall():
         collection_by_age[age_row.age_bracket] = {
             "post_count": age_row.post_count,
@@ -1554,7 +1571,7 @@ async def get_smart_collection_stats(
             "avg_saves": round(float(age_row.avg_saves or 0), 1),
             "efficiency_pct": round(float(age_row.efficiency_pct or 0), 1),
         }
-    
+
     return SmartCollectionStatsResponse(
         total_posts=total_posts,
         total_checks=total_checks,
@@ -1579,36 +1596,41 @@ async def get_storage_analysis(
 ) -> StorageAnalysisResponse:
     """Get comprehensive storage analysis showing smart collection impact."""
     from sqlalchemy import text
-    
+
     # Verify admin authentication
     await _verify_owner_access(credentials, db)
-    
+
     # Get current post_metrics storage
-    storage_query = text("""
+    storage_query = text(
+        """
         SELECT 
             pg_size_pretty(pg_total_relation_size('post_metrics')) as total_size,
             pg_total_relation_size('post_metrics') as size_bytes,
             COUNT(*) as record_count
         FROM post_metrics
-    """)
-    
+    """
+    )
+
     storage_result = await db.execute(storage_query)
     storage_row = storage_result.fetchone()
-    
+
     current_storage_mb = storage_row.size_bytes / (1024 * 1024) if storage_row.size_bytes else 0
     post_metrics_records = storage_row.record_count or 0
-    
+
     # Get checks table size
-    checks_query = text("""
+    checks_query = text(
+        """
         SELECT COUNT(*) as count FROM post_metrics_checks
-    """)
-    
+    """
+    )
+
     checks_result = await db.execute(checks_query)
     checks_row = checks_result.fetchone()
     post_metrics_checks_records = checks_row.count or 0
-    
+
     # Calculate average snapshots per post
-    avg_query = text("""
+    avg_query = text(
+        """
         SELECT 
             COUNT(DISTINCT (channel_id, msg_id)) as unique_posts,
             COUNT(*) as total_snapshots,
@@ -1618,33 +1640,40 @@ async def get_storage_analysis(
             FROM post_metrics
             GROUP BY channel_id, msg_id
         ) grouped
-    """)
-    
+    """
+    )
+
     avg_result = await db.execute(avg_query)
     avg_row = avg_result.fetchone()
-    
-    unique_posts = avg_row.unique_posts or 0
+
+    avg_row.unique_posts or 0
     avg_snapshots_per_post = float(avg_row.avg_per_post or 0)
-    
+
     # Estimate duplicates (same metrics saved multiple times)
-    duplicate_query = text("""
+    duplicate_query = text(
+        """
         SELECT 
             COUNT(*) - COUNT(DISTINCT (channel_id, msg_id, views, forwards, reactions_count, replies_count)) as duplicate_estimate
         FROM post_metrics
-    """)
-    
+    """
+    )
+
     dup_result = await db.execute(duplicate_query)
     dup_row = dup_result.fetchone()
     duplicate_snapshots_estimate = dup_row.duplicate_estimate or 0
-    
+
     # Project storage without smart collection
     # Assume old system would have 10x more snapshots (no change detection)
     projected_storage_without_smart_mb = current_storage_mb * 10
-    
+
     # Calculate savings
     savings_mb = projected_storage_without_smart_mb - current_storage_mb
-    savings_pct = (savings_mb / projected_storage_without_smart_mb * 100) if projected_storage_without_smart_mb > 0 else 0
-    
+    savings_pct = (
+        (savings_mb / projected_storage_without_smart_mb * 100)
+        if projected_storage_without_smart_mb > 0
+        else 0
+    )
+
     return StorageAnalysisResponse(
         current_storage_mb=round(current_storage_mb, 2),
         projected_storage_without_smart_mb=round(projected_storage_without_smart_mb, 2),

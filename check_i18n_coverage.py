@@ -29,7 +29,7 @@ def load_translation_file(filepath: Path) -> Dict:
 
 def analyze_coverage():
     """Analyze translation coverage across languages"""
-    base_path = Path("/home/abcdev/projects/analyticbot/apps/frontend/apps/user/src/i18n/locales")
+    base_path = Path("/home/abcdev/projects/analyticbot/apps/frontend/apps/app_analyticbot/user/src/i18n/locales")
     languages = ['en', 'ru', 'uz']
     
     # Get all translation files

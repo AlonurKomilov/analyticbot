@@ -170,6 +170,12 @@ export default defineConfig({
     // Port configuration
     port: 11300,
     host: '0.0.0.0', // Allow external connections
+    // Allow these hosts through Vite
+    allowedHosts: [
+      'app.analyticbot.org',
+      'localhost',
+      '127.0.0.1',
+    ],
     // Watch options for better file watching in Docker
     watch: {
       usePolling: true,

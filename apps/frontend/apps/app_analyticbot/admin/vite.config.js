@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
-// Moderator Panel Vite Configuration
+// Admin Panel Vite Configuration
 export default defineConfig({
   plugins: [
     react({
@@ -30,28 +30,21 @@ export default defineConfig({
 
   // Development server
   server: {
-    port: 11330,
+    port: 11310,
     host: '0.0.0.0',
     cors: true,
     hmr: true,
+    allowedHosts: [
+      'admin.analyticbot.org',
+      'localhost',
+      '127.0.0.1',
+    ],
     proxy: {
-      // Proxy API requests to backend
+      // Proxy API requests to backend to avoid CORS/connection issues
       '/api': {
-        target: 'http://127.0.0.1:11400',
+        target: 'http://localhost:11400',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
-        secure: false,
-      },
-      // Proxy moderator endpoints
-      '/moderator': {
-        target: 'http://127.0.0.1:11400',
-        changeOrigin: true,
-        secure: false,
-      },
-      // Proxy public endpoints for category lists etc
-      '/public': {
-        target: 'http://127.0.0.1:11400',
-        changeOrigin: true,
         secure: false,
       },
     },
@@ -63,12 +56,14 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
       '@components': resolve(__dirname, './src/components'),
       '@pages': resolve(__dirname, './src/pages'),
+      '@features': resolve(__dirname, './src/features'),
+      '@shared': resolve(__dirname, './src/shared'),
       '@api': resolve(__dirname, './src/api'),
       '@config': resolve(__dirname, './src/config'),
       '@hooks': resolve(__dirname, './src/hooks'),
-      '@contexts': resolve(__dirname, './src/contexts'),
+      '@store': resolve(__dirname, './src/store'),
+      '@types': resolve(__dirname, './src/types'),
       '@theme': resolve(__dirname, './src/theme'),
-      '@utils': resolve(__dirname, './src/utils'),
     }
   },
 

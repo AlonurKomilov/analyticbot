@@ -406,47 +406,51 @@ case $SERVICE in
         echo -e "${BLUE}🚀 Starting all frontend applications...${NC}"
 
         # Public Catalog Frontend (analyticbot.org) - Port 11320
-        echo -e "${BLUE}📦 Starting Public Catalog (port 11320)...${NC}"
-        cd apps/frontend/apps/public
-        if [ ! -d "node_modules" ]; then
-            echo -e "${BLUE}📦 Installing public frontend dependencies...${NC}"
-            npm install
+        if [ -d "apps/frontend/apps/analyticbot/public" ]; then
+            echo -e "${BLUE}📦 Starting Public Catalog (port 11320)...${NC}"
+            cd apps/frontend/apps/analyticbot/public
+            if [ ! -d "node_modules" ]; then
+                echo -e "${BLUE}📦 Installing public frontend dependencies...${NC}"
+                npm install
+            fi
+            start_service "frontend_public" 'npm run dev' 11320
+            cd ../../../../..
+            sleep 1
+        else
+            echo -e "${YELLOW}⚠️  Public frontend not found, skipping...${NC}"
         fi
-        start_service "frontend_public" 'npm run dev' 11320
-        cd ../../../..
-        sleep 1
 
         # User Dashboard Frontend (app.analyticbot.org) - Port 11300
         echo -e "${BLUE}📦 Starting User Dashboard (port 11300)...${NC}"
-        cd apps/frontend/apps/user
+        cd apps/frontend/apps/app_analyticbot/user
         if [ ! -d "node_modules" ]; then
             echo -e "${BLUE}📦 Installing user frontend dependencies...${NC}"
             npm install
         fi
         start_service "frontend_user" 'npm run dev' 11300
-        cd ../../../..
+        cd ../../../../..
         sleep 1
 
         # Moderator Panel Frontend (moderator.analyticbot.org) - Port 11330
         echo -e "${BLUE}📦 Starting Moderator Panel (port 11330)...${NC}"
-        cd apps/frontend/apps/moderator
+        cd apps/frontend/apps/analyticbot/moderator
         if [ ! -d "node_modules" ]; then
             echo -e "${BLUE}📦 Installing moderator frontend dependencies...${NC}"
             npm install
         fi
         start_service "frontend_moderator" 'npm run dev' 11330
-        cd ../../../..
+        cd ../../../../..
         sleep 1
 
         # Admin Panel Frontend (admin.analyticbot.org) - Port 11310
         echo -e "${BLUE}📦 Starting Admin Panel (port 11310)...${NC}"
-        cd apps/frontend/apps/admin
+        cd apps/frontend/apps/app_analyticbot/admin
         if [ ! -d "node_modules" ]; then
             echo -e "${BLUE}📦 Installing admin frontend dependencies...${NC}"
             npm install
         fi
         start_service "frontend_admin" 'npm run dev' 11310
-        cd ../../../..
+        cd ../../../../..
         ;;
     "stop")
         # Stop all development services

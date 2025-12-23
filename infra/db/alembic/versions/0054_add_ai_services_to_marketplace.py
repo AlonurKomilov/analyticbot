@@ -16,7 +16,7 @@ from datetime import datetime
 
 # revision identifiers, used by Alembic.
 revision = '0054'
-down_revision = '0053'
+down_revision = '0053_add_media_download'
 branch_labels = None
 depends_on = None
 

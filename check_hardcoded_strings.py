@@ -99,7 +99,7 @@ def check_file_for_i18n(filepath: Path) -> Dict:
 
 def analyze_frontend():
     """Analyze frontend files for i18n usage"""
-    base_path = Path("/home/abcdev/projects/analyticbot/apps/frontend/apps/user/src")
+    base_path = Path("/home/abcdev/projects/analyticbot/apps/frontend/apps/app_analyticbot/user/src")
     
     # Skip certain directories
     skip_dirs = {'node_modules', 'test', '__tests__', 'tests', 'i18n', 'types', 'config', 'utils'}

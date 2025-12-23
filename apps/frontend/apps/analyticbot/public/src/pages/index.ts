@@ -1,0 +1,5 @@
+export { default as HomePage } from './HomePage'
+export { default as ChannelPage } from './ChannelPage'
+export { default as CategoryPage } from './CategoryPage'
+export { default as SearchPage } from './SearchPage'
+export { default as NotFoundPage } from './NotFoundPage'

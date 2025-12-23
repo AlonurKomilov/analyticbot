@@ -17,13 +17,16 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from apps.api.middleware.auth import (
     get_current_user,
     require_admin_user,
 )
-from apps.api.middleware.rate_limiter import RateLimitConfig as RateLimitConfigMiddleware, limiter
+from apps.api.middleware.rate_limiter import (
+    RateLimitConfig as RateLimitConfigMiddleware,
+)
+from apps.api.middleware.rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +42,7 @@ router = APIRouter(
 
 class RateLimitConfigModel(BaseModel):
     """Rate limit configuration model"""
+
     service: str
     limit: int
     period: str  # "minute", "hour", "day"
@@ -48,12 +52,14 @@ class RateLimitConfigModel(BaseModel):
 
 class RateLimitConfigResponse(BaseModel):
     """Response containing all rate limit configurations"""
+
     configs: list[RateLimitConfigModel]
     total: int
 
 
 class RateLimitUsageModel(BaseModel):
     """Current usage statistics for a service"""
+
     service: str
     current_usage: int
     limit: int
@@ -66,6 +72,7 @@ class RateLimitUsageModel(BaseModel):
 
 class RateLimitUsageResponse(BaseModel):
     """Response containing all usage statistics"""
+
     stats: list[RateLimitUsageModel]
     total: int
     timestamp: str
@@ -73,6 +80,7 @@ class RateLimitUsageResponse(BaseModel):
 
 class RateLimitUpdateRequest(BaseModel):
     """Request to update a rate limit configuration"""
+
     limit: int | None = None
     period: str | None = None
     enabled: bool | None = None
@@ -81,12 +89,14 @@ class RateLimitUpdateRequest(BaseModel):
 
 class RateLimitHistoryModel(BaseModel):
     """Historical usage data point"""
+
     timestamp: str
     usage: int
 
 
 class RateLimitHistoryResponse(BaseModel):
     """Response containing historical usage data"""
+
     service: str
     history: list[RateLimitHistoryModel]
     total_points: int
@@ -94,12 +104,14 @@ class RateLimitHistoryResponse(BaseModel):
 
 class TopUserModel(BaseModel):
     """Top user by rate limit usage"""
+
     user_id: int
     usage: int
 
 
 class TopUsersResponse(BaseModel):
     """Response containing top users"""
+
     service: str
     users: list[TopUserModel]
     total: int
@@ -107,12 +119,14 @@ class TopUsersResponse(BaseModel):
 
 class ResetResponse(BaseModel):
     """Response for reset operations"""
+
     success: bool
     message: str
 
 
 class RateLimitDashboardResponse(BaseModel):
     """Combined dashboard response with configs and stats"""
+
     configs: list[RateLimitConfigModel]
     stats: list[RateLimitUsageModel]
     summary: dict[str, Any]
@@ -125,6 +139,7 @@ class RateLimitDashboardResponse(BaseModel):
 def get_rate_limit_service():
     """Get the rate limit monitoring service"""
     from core.services.system import get_rate_limit_service as get_service
+
     return get_service()
 
 
@@ -154,18 +169,18 @@ async def get_rate_limit_dashboard(
     """
     try:
         await require_admin_user(current_user)
-        
+
         service = get_rate_limit_service()
-        
+
         # Get configs and stats in parallel (conceptually)
         configs = await service.get_all_configs()
         stats = await service.get_all_usage_stats()
-        
+
         # Calculate summary metrics
         at_limit_count = sum(1 for s in stats if s.get("is_at_limit", False))
         high_usage_count = sum(1 for s in stats if s.get("utilization_percent", 0) > 80)
         total_requests = sum(s.get("current_usage", 0) for s in stats)
-        
+
         summary = {
             "total_services": len(configs),
             "services_at_limit": at_limit_count,
@@ -173,14 +188,14 @@ async def get_rate_limit_dashboard(
             "total_requests_this_period": total_requests,
             "enabled_services": sum(1 for c in configs if c.get("enabled", True)),
         }
-        
+
         return RateLimitDashboardResponse(
             configs=[RateLimitConfigModel(**c) for c in configs],
             stats=[RateLimitUsageModel(**s) for s in stats],
             summary=summary,
             timestamp=datetime.utcnow().isoformat(),
         )
-        
+
     except Exception as e:
         logger.error(f"Error getting rate limit dashboard: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -206,15 +221,15 @@ async def get_all_rate_limit_configs(
     """
     try:
         await require_admin_user(current_user)
-        
+
         service = get_rate_limit_service()
         configs = await service.get_all_configs()
-        
+
         return RateLimitConfigResponse(
             configs=[RateLimitConfigModel(**c) for c in configs],
             total=len(configs),
         )
-        
+
     except Exception as e:
         logger.error(f"Error getting rate limit configs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -243,15 +258,18 @@ async def get_rate_limit_config(
     """
     try:
         await require_admin_user(current_user)
-        
+
         service = get_rate_limit_service()
         config = await service.get_config(service_name)
-        
+
         if not config:
-            raise HTTPException(status_code=404, detail=f"Rate limit config not found for service: {service_name}")
-        
+            raise HTTPException(
+                status_code=404,
+                detail=f"Rate limit config not found for service: {service_name}",
+            )
+
         return RateLimitConfigModel(**config)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -298,15 +316,15 @@ async def update_rate_limit_config(
     """
     try:
         await require_admin_user(current_user)
-        
+
         # Validate period if provided
         if update.period and update.period not in ["minute", "hour", "day"]:
             raise HTTPException(status_code=400, detail="Period must be 'minute', 'hour', or 'day'")
-        
+
         # Validate limit if provided
         if update.limit is not None and update.limit < 1:
             raise HTTPException(status_code=400, detail="Limit must be at least 1")
-        
+
         service = get_rate_limit_service()
         updated_config = await service.update_config(
             service=service_name,
@@ -315,11 +333,13 @@ async def update_rate_limit_config(
             enabled=update.enabled,
             description=update.description,
         )
-        
-        logger.info(f"Admin {current_user.get('username')} updated rate limit for {service_name}: {update}")
-        
+
+        logger.info(
+            f"Admin {current_user.get('username')} updated rate limit for {service_name}: {update}"
+        )
+
         return RateLimitConfigModel(**updated_config)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -349,16 +369,16 @@ async def get_rate_limit_stats(
     """
     try:
         await require_admin_user(current_user)
-        
+
         service = get_rate_limit_service()
         stats = await service.get_all_usage_stats()
-        
+
         return RateLimitUsageResponse(
             stats=[RateLimitUsageModel(**s) for s in stats],
             total=len(stats),
             timestamp=datetime.utcnow().isoformat(),
         )
-        
+
     except Exception as e:
         logger.error(f"Error getting rate limit stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -387,10 +407,10 @@ async def get_service_rate_limit_stats(
     """
     try:
         await require_admin_user(current_user)
-        
+
         service = get_rate_limit_service()
         usage = await service.get_current_usage(service_name)
-        
+
         return RateLimitUsageModel(
             service=usage.service,
             current_usage=usage.current_usage,
@@ -401,7 +421,7 @@ async def get_service_rate_limit_stats(
             utilization_percent=usage.utilization_percent,
             is_at_limit=usage.is_at_limit,
         )
-        
+
     except Exception as e:
         logger.error(f"Error getting rate limit stats for {service_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -413,7 +433,12 @@ async def get_rate_limit_history(
     request: Request,
     response: Response,
     service_name: str,
-    hours: int = Query(default=24, ge=1, le=168, description="Number of hours of history (max 168 = 7 days)"),
+    hours: int = Query(
+        default=24,
+        ge=1,
+        le=168,
+        description="Number of hours of history (max 168 = 7 days)",
+    ),
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -434,16 +459,16 @@ async def get_rate_limit_history(
     """
     try:
         await require_admin_user(current_user)
-        
+
         service = get_rate_limit_service()
         history = await service.get_usage_history(service_name, hours=hours)
-        
+
         return RateLimitHistoryResponse(
             service=service_name,
             history=[RateLimitHistoryModel(**h) for h in history],
             total_points=len(history),
         )
-        
+
     except Exception as e:
         logger.error(f"Error getting rate limit history for {service_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -476,16 +501,16 @@ async def get_top_users_by_rate_limit(
     """
     try:
         await require_admin_user(current_user)
-        
+
         service = get_rate_limit_service()
         users = await service.get_top_users(service_name, limit=limit)
-        
+
         return TopUsersResponse(
             service=service_name,
             users=[TopUserModel(**u) for u in users],
             total=len(users),
         )
-        
+
     except Exception as e:
         logger.error(f"Error getting top users for {service_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -514,16 +539,21 @@ async def reset_rate_limits_for_user(
     """
     try:
         await require_admin_user(current_user)
-        
+
         service = get_rate_limit_service()
         success = await service.reset_limits_for_user(user_id)
-        
+
         if success:
-            logger.info(f"Admin {current_user.get('username')} reset rate limits for user {user_id}")
+            logger.info(
+                f"Admin {current_user.get('username')} reset rate limits for user {user_id}"
+            )
             return ResetResponse(success=True, message=f"Rate limits reset for user {user_id}")
         else:
-            return ResetResponse(success=False, message="Failed to reset rate limits (Redis may be unavailable)")
-        
+            return ResetResponse(
+                success=False,
+                message="Failed to reset rate limits (Redis may be unavailable)",
+            )
+
     except Exception as e:
         logger.error(f"Error resetting rate limits for user {user_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -552,16 +582,21 @@ async def reset_rate_limits_for_ip(
     """
     try:
         await require_admin_user(current_user)
-        
+
         service = get_rate_limit_service()
         success = await service.reset_limits_for_ip(ip_address)
-        
+
         if success:
-            logger.info(f"Admin {current_user.get('username')} reset rate limits for IP {ip_address}")
+            logger.info(
+                f"Admin {current_user.get('username')} reset rate limits for IP {ip_address}"
+            )
             return ResetResponse(success=True, message=f"Rate limits reset for IP {ip_address}")
         else:
-            return ResetResponse(success=False, message="Failed to reset rate limits (Redis may be unavailable)")
-        
+            return ResetResponse(
+                success=False,
+                message="Failed to reset rate limits (Redis may be unavailable)",
+            )
+
     except Exception as e:
         logger.error(f"Error resetting rate limits for IP {ip_address}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -586,10 +621,11 @@ async def list_rate_limited_services(
     """
     try:
         await require_admin_user(current_user)
-        
+
         from core.services.system import RateLimitService
+
         return [s.value for s in RateLimitService]
-        
+
     except Exception as e:
         logger.error(f"Error listing rate limited services: {e}")
         raise HTTPException(status_code=500, detail=str(e))

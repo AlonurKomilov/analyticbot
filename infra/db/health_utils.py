@@ -85,12 +85,14 @@ async def perform_db_diagnostics() -> dict[str, Any]:
     # Check table existence
     try:
         async with db_manager.connection() as conn:
-            tables_result = await conn.fetch("""
+            tables_result = await conn.fetch(
+                """
                 SELECT table_name
                 FROM information_schema.tables
                 WHERE table_schema = 'public'
                 ORDER BY table_name
-            """)
+            """
+            )
             diagnostics["tables"] = [row["table_name"] for row in tables_result]
             diagnostics["table_count"] = len(diagnostics["tables"])
     except Exception as e:

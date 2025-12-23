@@ -25,10 +25,12 @@ def upgrade() -> None:
     op.add_column("channels", sa.Column("description", sa.Text(), nullable=True))
 
     # Add comment for documentation
-    op.execute("""
+    op.execute(
+        """
         COMMENT ON COLUMN channels.description IS
         'Channel description from Telegram API or user-provided text'
-    """)
+    """
+    )
 
 
 def downgrade() -> None:

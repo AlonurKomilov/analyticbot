@@ -60,7 +60,10 @@ def upgrade():
         sa.Column("replies_count", sa.BigInteger(), nullable=True, comment="Number of replies"),
         sa.Column("reactions", sa.JSON(), nullable=True, comment="Reactions data (JSON)"),
         sa.Column(
-            "reactions_count", sa.BigInteger(), nullable=True, comment="Total reactions count"
+            "reactions_count",
+            sa.BigInteger(),
+            nullable=True,
+            comment="Total reactions count",
         ),
         sa.PrimaryKeyConstraint("channel_id", "msg_id", "snapshot_time"),
         sa.ForeignKeyConstraint(

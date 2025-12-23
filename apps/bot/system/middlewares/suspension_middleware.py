@@ -64,6 +64,7 @@ Your data collection and scheduled posts have been paused until your account is 
         """
         try:
             from apps.di import get_container
+
             container = get_container()
             redis = await container.cache.redis_client()
             if redis:
@@ -77,8 +78,9 @@ Your data collection and scheduled posts have been paused until your account is 
         Get suspension status with Redis caching.
         Returns dict with status info or None if user not found.
         """
-        from apps.di import get_container
         import json
+
+        from apps.di import get_container
 
         container = get_container()
         cache_key = self._cache_key(user_id)
@@ -113,7 +115,11 @@ Your data collection and scheduled posts have been paused until your account is 
                     result = {
                         "status": user_data["status"],
                         "suspension_reason": user_data["suspension_reason"],
-                        "suspended_at": user_data["suspended_at"].isoformat() if user_data["suspended_at"] else None,
+                        "suspended_at": (
+                            user_data["suspended_at"].isoformat()
+                            if user_data["suspended_at"]
+                            else None
+                        ),
                     }
 
                     # Cache the result
@@ -156,11 +162,11 @@ Your data collection and scheduled posts have been paused until your account is 
             if user_data and user_data["status"] == "suspended":
                 reason = user_data["suspension_reason"] or "Violation of terms of service"
                 suspended_at = user_data["suspended_at"]
-                suspended_at_str = suspended_at[:16].replace("T", " ") + " UTC" if suspended_at else "Unknown"
-
-                logger.warning(
-                    f"Suspended user {user_id} attempted to use bot. Reason: {reason}"
+                suspended_at_str = (
+                    suspended_at[:16].replace("T", " ") + " UTC" if suspended_at else "Unknown"
                 )
+
+                logger.warning(f"Suspended user {user_id} attempted to use bot. Reason: {reason}")
 
                 # Send suspension message
                 message = self.SUSPENSION_MESSAGE_TEMPLATE.format(

@@ -9,24 +9,21 @@ Path: /public/*
 """
 
 import logging
-from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import func, select, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.di import get_db_session
 from core.schemas.public_catalog_schemas import (
     CategoryListResponse,
     ChannelListResponse,
-    PostListResponse,
     PublicCategory,
     PublicChannelBasic,
     PublicChannelDetail,
     PublicChannelStats,
-    PublicPost,
     SearchResponse,
     SearchResult,
     TrendingChannel,
@@ -46,26 +43,29 @@ router = APIRouter(
 # Category Endpoints
 # ============================================================================
 
+
 @router.get("/categories", response_model=CategoryListResponse)
 async def get_categories(
     db: AsyncSession = Depends(get_db_session),
 ):
     """
     Get all channel categories.
-    
+
     Returns a list of all available categories with channel counts.
     No authentication required.
     """
     try:
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT id, name, slug, icon, color, channel_count
                 FROM channel_categories
                 ORDER BY sort_order
-            """)
+            """
+            )
         )
         rows = result.fetchall()
-        
+
         categories = [
             PublicCategory(
                 id=row.id,
@@ -77,7 +77,7 @@ async def get_categories(
             )
             for row in rows
         ]
-        
+
         return CategoryListResponse(
             categories=categories,
             total=len(categories),
@@ -96,20 +96,22 @@ async def get_channels_by_category(
 ):
     """
     Get channels in a specific category.
-    
+
     Paginated list of channels filtered by category slug.
     """
     try:
         # Get category ID from slug
         cat_result = await db.execute(
-            text("SELECT id, name, slug, icon, color, channel_count FROM channel_categories WHERE slug = :slug"),
-            {"slug": slug}
+            text(
+                "SELECT id, name, slug, icon, color, channel_count FROM channel_categories WHERE slug = :slug"
+            ),
+            {"slug": slug},
         )
         category_row = cat_result.fetchone()
-        
+
         if not category_row:
             raise HTTPException(status_code=404, detail=f"Category '{slug}' not found")
-        
+
         category = PublicCategory(
             id=category_row.id,
             name=category_row.name,
@@ -118,21 +120,24 @@ async def get_channels_by_category(
             color=category_row.color,
             channel_count=category_row.channel_count or 0,
         )
-        
+
         # Get total count
         count_result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT COUNT(*) FROM public_channel_catalog 
                 WHERE category_id = :category_id AND is_active = TRUE
-            """),
-            {"category_id": category_row.id}
+            """
+            ),
+            {"category_id": category_row.id},
         )
         total = count_result.scalar() or 0
-        
+
         # Get channels with pagination
         offset = (page - 1) * per_page
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT 
                     pcc.telegram_id,
                     pcc.username,
@@ -147,11 +152,12 @@ async def get_channels_by_category(
                 WHERE pcc.category_id = :category_id AND pcc.is_active = TRUE
                 ORDER BY csc.subscriber_count DESC NULLS LAST
                 LIMIT :limit OFFSET :offset
-            """),
-            {"category_id": category_row.id, "limit": per_page, "offset": offset}
+            """
+            ),
+            {"category_id": category_row.id, "limit": per_page, "offset": offset},
         )
         rows = result.fetchall()
-        
+
         channels = [
             PublicChannelBasic(
                 telegram_id=row.telegram_id,
@@ -166,9 +172,9 @@ async def get_channels_by_category(
             )
             for row in rows
         ]
-        
+
         total_pages = (total + per_page - 1) // per_page if total > 0 else 1
-        
+
         return ChannelListResponse(
             channels=channels,
             total=total,
@@ -187,6 +193,7 @@ async def get_channels_by_category(
 # Channel Endpoints
 # ============================================================================
 
+
 @router.get("/channels", response_model=ChannelListResponse)
 async def get_channels(
     page: int = Query(default=1, ge=1),
@@ -196,34 +203,35 @@ async def get_channels(
 ):
     """
     Get paginated list of all public channels.
-    
+
     Optionally filter by category_id.
     """
     try:
         # Build WHERE clause
         where_clauses = ["pcc.is_active = TRUE"]
         params: dict[str, Any] = {}
-        
+
         if category_id:
             where_clauses.append("pcc.category_id = :category_id")
             params["category_id"] = category_id
-        
+
         where_sql = " AND ".join(where_clauses)
-        
+
         # Get total count
         count_result = await db.execute(
             text(f"SELECT COUNT(*) FROM public_channel_catalog pcc WHERE {where_sql}"),
-            params
+            params,
         )
         total = count_result.scalar() or 0
-        
+
         # Get channels with pagination
         offset = (page - 1) * per_page
         params["limit"] = per_page
         params["offset"] = offset
-        
+
         result = await db.execute(
-            text(f"""
+            text(
+                f"""
                 SELECT 
                     pcc.telegram_id,
                     pcc.username,
@@ -244,11 +252,12 @@ async def get_channels(
                 WHERE {where_sql}
                 ORDER BY pcc.is_featured DESC, csc.subscriber_count DESC NULLS LAST
                 LIMIT :limit OFFSET :offset
-            """),
-            params
+            """
+            ),
+            params,
         )
         rows = result.fetchall()
-        
+
         channels = []
         for row in rows:
             category = None
@@ -261,21 +270,23 @@ async def get_channels(
                     color=row.category_color,
                     channel_count=0,
                 )
-            
-            channels.append(PublicChannelBasic(
-                telegram_id=row.telegram_id,
-                username=row.username,
-                title=row.title,
-                description=row.description,
-                avatar_url=row.avatar_url,
-                category=category,
-                subscriber_count=row.subscriber_count,
-                is_verified=row.is_verified,
-                is_featured=row.is_featured,
-            ))
-        
+
+            channels.append(
+                PublicChannelBasic(
+                    telegram_id=row.telegram_id,
+                    username=row.username,
+                    title=row.title,
+                    description=row.description,
+                    avatar_url=row.avatar_url,
+                    category=category,
+                    subscriber_count=row.subscriber_count,
+                    is_verified=row.is_verified,
+                    is_featured=row.is_featured,
+                )
+            )
+
         total_pages = (total + per_page - 1) // per_page if total > 0 else 1
-        
+
         return ChannelListResponse(
             channels=channels,
             total=total,
@@ -298,7 +309,8 @@ async def get_featured_channels(
     """
     try:
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT 
                     pcc.telegram_id,
                     pcc.username,
@@ -319,11 +331,12 @@ async def get_featured_channels(
                 WHERE pcc.is_featured = TRUE AND pcc.is_active = TRUE
                 ORDER BY csc.subscriber_count DESC NULLS LAST
                 LIMIT :limit
-            """),
-            {"limit": limit}
+            """
+            ),
+            {"limit": limit},
         )
         rows = result.fetchall()
-        
+
         channels = []
         for row in rows:
             category = None
@@ -336,19 +349,21 @@ async def get_featured_channels(
                     color=row.category_color,
                     channel_count=0,
                 )
-            
-            channels.append(PublicChannelBasic(
-                telegram_id=row.telegram_id,
-                username=row.username,
-                title=row.title,
-                description=row.description,
-                avatar_url=row.avatar_url,
-                category=category,
-                subscriber_count=row.subscriber_count,
-                is_verified=row.is_verified,
-                is_featured=row.is_featured,
-            ))
-        
+
+            channels.append(
+                PublicChannelBasic(
+                    telegram_id=row.telegram_id,
+                    username=row.username,
+                    title=row.title,
+                    description=row.description,
+                    avatar_url=row.avatar_url,
+                    category=category,
+                    subscriber_count=row.subscriber_count,
+                    is_verified=row.is_verified,
+                    is_featured=row.is_featured,
+                )
+            )
+
         return ChannelListResponse(
             channels=channels,
             total=len(channels),
@@ -369,12 +384,12 @@ async def get_trending_channels(
 ):
     """
     Get trending channels by subscriber growth.
-    
+
     The trending score is calculated based on:
     - Growth rate (percentage change in subscribers)
     - Absolute subscriber gain
     - Engagement rate (views relative to subscribers)
-    
+
     Channels with larger absolute growth are weighted higher to avoid
     small channels with high percentage growth dominating the list.
     """
@@ -385,12 +400,13 @@ async def get_trending_channels(
             "30d": 30,
             "90d": 90,
         }.get(period, 30)
-        
+
         # Calculate trending score:
         # score = growth_rate * log10(subscriber_count) * recency_factor
         # This ensures larger channels with good growth rank higher
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT 
                     pcc.telegram_id,
                     pcc.username,
@@ -423,11 +439,12 @@ async def get_trending_channels(
                     AND csc.subscriber_count >= 100
                 ORDER BY trending_score DESC
                 LIMIT :limit
-            """),
-            {"limit": limit}
+            """
+            ),
+            {"limit": limit},
         )
         rows = result.fetchall()
-        
+
         channels = []
         for idx, row in enumerate(rows, 1):
             category = None
@@ -440,21 +457,23 @@ async def get_trending_channels(
                     color=row.category_color,
                     channel_count=0,
                 )
-            
-            channels.append(TrendingChannel(
-                telegram_id=row.telegram_id,
-                username=row.username,
-                title=row.title,
-                description=row.description,
-                avatar_url=row.avatar_url,
-                category=category,
-                subscriber_count=row.subscriber_count,
-                is_verified=row.is_verified,
-                is_featured=row.is_featured,
-                growth_rate=float(row.growth_rate) if row.growth_rate else None,
-                rank=idx,
-            ))
-        
+
+            channels.append(
+                TrendingChannel(
+                    telegram_id=row.telegram_id,
+                    username=row.username,
+                    title=row.title,
+                    description=row.description,
+                    avatar_url=row.avatar_url,
+                    category=category,
+                    subscriber_count=row.subscriber_count,
+                    is_verified=row.is_verified,
+                    is_featured=row.is_featured,
+                    growth_rate=float(row.growth_rate) if row.growth_rate else None,
+                    rank=idx,
+                )
+            )
+
         return TrendingResponse(
             channels=channels,
             period=period,
@@ -471,16 +490,17 @@ async def get_channel_by_username(
 ):
     """
     Get detailed channel information by username.
-    
+
     Returns channel info with basic stats.
     More detailed stats require authentication.
     """
     try:
         # Clean username (remove @ if present)
         clean_username = username.lstrip("@").lower()
-        
+
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT 
                     pcc.telegram_id,
                     pcc.username,
@@ -510,14 +530,15 @@ async def get_channel_by_username(
                 LEFT JOIN channel_stats_cache csc ON pcc.telegram_id = csc.telegram_id
                 LEFT JOIN channel_categories cc ON pcc.category_id = cc.id
                 WHERE LOWER(pcc.username) = :username AND pcc.is_active = TRUE
-            """),
-            {"username": clean_username}
+            """
+            ),
+            {"username": clean_username},
         )
         row = result.fetchone()
-        
+
         if not row:
             raise HTTPException(status_code=404, detail=f"Channel '@{clean_username}' not found")
-        
+
         category = None
         if row.category_id:
             category = PublicCategory(
@@ -528,7 +549,7 @@ async def get_channel_by_username(
                 color=row.category_color,
                 channel_count=0,
             )
-        
+
         stats = PublicChannelStats(
             subscriber_count=row.subscriber_count,
             avg_views=row.avg_views,
@@ -538,7 +559,7 @@ async def get_channel_by_username(
             growth_rate=float(row.growth_rate) if row.growth_rate else None,
             last_post_at=row.last_post_at,
         )
-        
+
         return PublicChannelDetail(
             telegram_id=row.telegram_id,
             username=row.username,
@@ -566,6 +587,7 @@ async def get_channel_by_username(
 # Search Endpoints
 # ============================================================================
 
+
 @router.get("/search", response_model=SearchResponse)
 async def search_channels(
     q: str = Query(..., min_length=2, max_length=100),
@@ -575,25 +597,26 @@ async def search_channels(
 ):
     """
     Search channels by name or username.
-    
+
     Returns matching channels with basic info.
     """
     try:
         # Build WHERE clause
         where_clauses = ["pcc.is_active = TRUE"]
         params: dict[str, Any] = {"query": f"%{q.lower()}%", "limit": limit}
-        
+
         # Search in title and username
         where_clauses.append("(LOWER(pcc.title) LIKE :query OR LOWER(pcc.username) LIKE :query)")
-        
+
         if category_id:
             where_clauses.append("pcc.category_id = :category_id")
             params["category_id"] = category_id
-        
+
         where_sql = " AND ".join(where_clauses)
-        
+
         result = await db.execute(
-            text(f"""
+            text(
+                f"""
                 SELECT 
                     pcc.telegram_id,
                     pcc.username,
@@ -617,11 +640,12 @@ async def search_channels(
                     pcc.is_verified DESC,
                     csc.subscriber_count DESC NULLS LAST
                 LIMIT :limit
-            """),
-            {**params, "exact_query": q.lower().lstrip("@")}
+            """
+            ),
+            {**params, "exact_query": q.lower().lstrip("@")},
         )
         rows = result.fetchall()
-        
+
         results = []
         for row in rows:
             category = None
@@ -634,20 +658,22 @@ async def search_channels(
                     color=row.category_color,
                     channel_count=0,
                 )
-            
-            results.append(SearchResult(
-                telegram_id=row.telegram_id,
-                username=row.username,
-                title=row.title,
-                description=row.description,
-                avatar_url=row.avatar_url,
-                category=category,
-                subscriber_count=row.subscriber_count,
-                is_verified=row.is_verified,
-                is_featured=row.is_featured,
-                relevance_score=None,
-            ))
-        
+
+            results.append(
+                SearchResult(
+                    telegram_id=row.telegram_id,
+                    username=row.username,
+                    title=row.title,
+                    description=row.description,
+                    avatar_url=row.avatar_url,
+                    category=category,
+                    subscriber_count=row.subscriber_count,
+                    is_verified=row.is_verified,
+                    is_featured=row.is_featured,
+                    relevance_score=None,
+                )
+            )
+
         return SearchResponse(
             results=results,
             total=len(results),
@@ -662,8 +688,10 @@ async def search_channels(
 # Growth Data for Authenticated Users
 # ============================================================================
 
+
 class GrowthDataPoint(BaseModel):
     """Single data point for growth chart."""
+
     date: str
     subscribers: int
     views: int | None = None
@@ -672,6 +700,7 @@ class GrowthDataPoint(BaseModel):
 
 class GrowthDataResponse(BaseModel):
     """Response for channel growth data."""
+
     channel_username: str
     data: list[GrowthDataPoint]
     period_days: int
@@ -685,16 +714,18 @@ async def get_channel_growth(
 ):
     """
     Get channel growth data for authenticated users.
-    
+
     Returns daily subscriber counts for the specified period.
     """
-    from datetime import datetime as dt, timedelta
     import hashlib
-    
+    from datetime import datetime as dt
+    from datetime import timedelta
+
     try:
         # First, get the channel by username with its stats from cache
         channel_result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT 
                     pcc.telegram_id, 
                     pcc.username,
@@ -703,32 +734,33 @@ async def get_channel_growth(
                 FROM public_channel_catalog pcc
                 LEFT JOIN channel_stats_cache csc ON pcc.telegram_id = csc.telegram_id
                 WHERE pcc.username = :username AND pcc.is_active = TRUE
-            """),
-            {"username": username.lower().replace("@", "")}
+            """
+            ),
+            {"username": username.lower().replace("@", "")},
         )
         channel = channel_result.fetchone()
-        
+
         if not channel:
             raise HTTPException(status_code=404, detail="Channel not found")
-        
+
         # Get the subscriber count from cache
         current_subs = channel.subscriber_count or 0
         growth_rate = float(channel.growth_rate or 0) / 100  # Convert percentage to decimal
-        
+
         if current_subs == 0:
             return GrowthDataResponse(
                 channel_username=channel.username or username,
                 data=[],
                 period_days=days,
             )
-        
+
         # Generate growth curve based on current count and growth rate
         # Use channel's telegram_id as seed for consistent results per channel
         seed = int(hashlib.md5(str(channel.telegram_id).encode()).hexdigest()[:8], 16)
-        
+
         data = []
         today = dt.now()
-        
+
         # Calculate daily growth factor
         # If monthly growth is 5%, daily factor is roughly (1.05)^(1/30) - 1 ≈ 0.16%
         if growth_rate != 0:
@@ -736,37 +768,39 @@ async def get_channel_growth(
         else:
             # Default small positive growth if no rate available
             daily_growth = 0.001  # 0.1% daily default
-        
+
         # Generate data points going backwards
         for i in range(days - 1, -1, -1):
             date = today - timedelta(days=i)
-            
+
             # Calculate estimated subscriber count for this day
             # Working backwards: current_subs / (1 + daily_growth)^days_ago
             days_ago = i
             estimated = int(current_subs / ((1 + daily_growth) ** days_ago))
-            
+
             # Add small deterministic variation based on channel seed and day
             day_seed = seed + date.toordinal()
             variation = ((day_seed % 1000) - 500) / 50000  # ±1% variation
             estimated = int(estimated * (1 + variation))
-            
+
             # Ensure we don't go below 0 or above current
             estimated = max(1, min(estimated, current_subs + int(current_subs * 0.1)))
-            
-            data.append(GrowthDataPoint(
-                date=date.strftime("%Y-%m-%d"),
-                subscribers=estimated,
-                views=None,
-                posts=None,
-            ))
-        
+
+            data.append(
+                GrowthDataPoint(
+                    date=date.strftime("%Y-%m-%d"),
+                    subscribers=estimated,
+                    views=None,
+                    posts=None,
+                )
+            )
+
         return GrowthDataResponse(
             channel_username=channel.username or username,
             data=data,
             period_days=days,
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -778,27 +812,30 @@ async def get_channel_growth(
 # Stats/Health Endpoint
 # ============================================================================
 
+
 @router.get("/stats")
 async def get_catalog_stats(
     db: AsyncSession = Depends(get_db_session),
 ):
     """
     Get public catalog statistics.
-    
+
     Returns basic stats about the catalog for display purposes.
     """
     try:
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT 
                     (SELECT COUNT(*) FROM public_channel_catalog WHERE is_active = TRUE) as total_channels,
                     (SELECT COUNT(*) FROM channel_categories) as total_categories,
                     (SELECT COUNT(*) FROM public_channel_catalog WHERE is_featured = TRUE AND is_active = TRUE) as featured_channels,
                     (SELECT COUNT(*) FROM public_channel_catalog WHERE is_verified = TRUE AND is_active = TRUE) as verified_channels
-            """)
+            """
+            )
         )
         row = result.fetchone()
-        
+
         return {
             "total_channels": row.total_channels or 0,
             "total_categories": row.total_categories or 0,

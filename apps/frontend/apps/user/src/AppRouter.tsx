@@ -71,6 +71,7 @@ const StorageChannelsPage = React.lazy(() => import('./pages/StorageChannelsPage
 // AI Worker Page
 const AIWorkerPage = React.lazy(() => import('./pages/workers/AIPage'));
 const AIProvidersPage = React.lazy(() => import('./features/ai/components/AIProviders/AIProvidersPage').then(m => ({ default: m.AIProvidersPage })));
+const AISettingsPage = React.lazy(() => import('./features/ai/pages/AISettingsPage'));
 
 // Owner Dashboard Page (Owner-only features)
 const OwnerDashboard = React.lazy(() => import('@features/owner/OwnerDashboard'));
@@ -456,6 +457,18 @@ const AppRouter: React.FC = () => {
                                         <ProtectedRoute>
                                             <OptimizedSuspense skeletonType="dashboard">
                                                 <AIProvidersPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* AI Settings Page */}
+                                <Route
+                                    path={ROUTES.AI_SETTINGS}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="form">
+                                                <AISettingsPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }

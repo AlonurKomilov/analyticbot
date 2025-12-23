@@ -54,6 +54,7 @@ export const ROUTES = {
   AI_DASHBOARD: '/workers/ai',
   WORKERS_AI: '/workers/ai',
   AI_PROVIDERS: '/workers/ai/providers',
+  AI_SETTINGS: '/ai/settings',
 
   // Protection Routes
   CONTENT_PROTECTION: '/protection',

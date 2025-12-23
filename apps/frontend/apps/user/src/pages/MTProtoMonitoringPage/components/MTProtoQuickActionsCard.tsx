@@ -21,20 +21,20 @@ import {
 } from '@mui/icons-material';
 
 interface MTProtoQuickActionsCardProps {
-  onTestConnection: () => void;
+  onCheckStatus: () => void;
   onBrowsePowerUps: () => void;
   onOpenSettings: () => void;
   onRemoveMTProto: () => void;
-  isTestingConnection?: boolean;
+  isCheckingStatus?: boolean;
   isRemoving?: boolean;
 }
 
 export const MTProtoQuickActionsCard: React.FC<MTProtoQuickActionsCardProps> = ({
-  onTestConnection,
+  onCheckStatus,
   onBrowsePowerUps,
   onOpenSettings,
   onRemoveMTProto,
-  isTestingConnection = false,
+  isCheckingStatus = false,
   isRemoving = false,
 }) => {
   const { t } = useTranslation(['mtproto', 'common']);
@@ -47,14 +47,14 @@ export const MTProtoQuickActionsCard: React.FC<MTProtoQuickActionsCardProps> = (
         </Typography>
         
         <Box display="flex" gap={2} flexWrap="wrap">
-          {/* Test Connection Button */}
-          <Tooltip title={t('mtproto:quickActions.testConnectionDesc', 'Verify your MTProto session is working')}>
+          {/* Check Status Button */}
+          <Tooltip title={t('mtproto:quickActions.checkStatusDesc', 'Verify your MTProto session is working')}>
             <Button
               variant="contained"
               color="primary"
               startIcon={<RefreshIcon />}
-              onClick={onTestConnection}
-              disabled={isTestingConnection}
+              onClick={onCheckStatus}
+              disabled={isCheckingStatus}
               sx={{
                 background: 'linear-gradient(135deg, #4CAF50 0%, #2196F3 100%)',
                 '&:hover': {
@@ -62,9 +62,9 @@ export const MTProtoQuickActionsCard: React.FC<MTProtoQuickActionsCardProps> = (
                 },
               }}
             >
-              {isTestingConnection 
-                ? t('mtproto:quickActions.testing', 'Testing...')
-                : t('mtproto:quickActions.testConnection', 'Test Connection')
+              {isCheckingStatus 
+                ? t('mtproto:quickActions.checking', 'Checking...')
+                : t('mtproto:quickActions.checkStatus', 'Check Status')
               }
             </Button>
           </Tooltip>

@@ -62,25 +62,25 @@ export const useMTProtoServices = () => {
 };
 
 /**
- * Hook for testing MTProto connection
+ * Hook for checking MTProto connection status
  */
 export const useMTProtoConnection = () => {
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  const testConnection = useCallback(async () => {
+  const checkConnection = useCallback(async () => {
     setIsTesting(true);
     setTestResult(null);
 
     try {
-      const response = await apiClient.post<{ success: boolean; message: string }>('/user-mtproto/test-connection');
+      const response = await apiClient.post<{ success: boolean; message: string }>('/user-mtproto/check-connection');
       setTestResult({
         success: true,
         message: response.message || 'Connection successful!',
       });
       return response;
     } catch (err: any) {
-      const message = err.response?.data?.detail || err.message || 'Connection test failed';
+      const message = err.response?.data?.detail || err.message || 'Connection check failed';
       setTestResult({
         success: false,
         message,
@@ -94,7 +94,7 @@ export const useMTProtoConnection = () => {
   return {
     isTesting,
     testResult,
-    testConnection,
+    checkConnection,
     clearResult: () => setTestResult(null),
   };
 };

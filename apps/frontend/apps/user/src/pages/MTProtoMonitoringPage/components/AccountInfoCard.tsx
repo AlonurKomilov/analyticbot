@@ -42,6 +42,7 @@ import {
   Security as SecurityIcon,
 } from '@mui/icons-material';
 import { apiClient } from '@/api/client';
+import { checkMTProtoConnection } from '@/features/mtproto-setup/api';
 
 interface MTProtoStatus {
   configured: boolean;
@@ -112,10 +113,12 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({
   const [isToggling, setIsToggling] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
   // UI states
   const [showPhone, setShowPhone] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [reconnectDialogOpen, setReconnectDialogOpen] = useState(false);
 
   const fetchStatus = async () => {
     try {
@@ -150,7 +153,33 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({
       setIsToggling(false);
     }
   };
+  const handleCheckStatus = async () => {
+    try {
+      setIsCheckingStatus(true);
+      setError(null);
+      const response = await checkMTProtoConnection();
+      setSuccess(response.message || 'Connection status: Active and healthy!');
+      await fetchStatus();
+      setTimeout(() => setSuccess(null), 5000);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.detail || 'Failed to check connection status';
+      setError(errorMsg);
+      
+      // If session expired, show reconnect option
+      if (errorMsg.includes('session') || errorMsg.includes('expired') || errorMsg.includes('invalid')) {
+        setReconnectDialogOpen(true);
+      }
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
 
+  const handleReconnect = () => {
+    // Close dialog and navigate to MTProto setup page to re-verify
+    setReconnectDialogOpen(false);
+    // Use React Router navigation instead of window.location
+    window.location.href = '/workers/mtproto';
+  };
   const handleDisconnect = async () => {
     try {
       setIsDisconnecting(true);
@@ -438,6 +467,28 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({
 
         {/* Quick Actions */}
         <Box display="flex" gap={1.5} flexWrap="wrap" alignItems="center">
+          {/* Check Status Button - Primary Action */}
+          <Tooltip title="Check your MTProto connection and verify session health">
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={isCheckingStatus ? <CircularProgress size={14} /> : <CheckCircle />}
+              onClick={handleCheckStatus}
+              disabled={isCheckingStatus}
+              sx={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                },
+                '&:disabled': {
+                  background: 'rgba(107, 114, 128, 0.3)',
+                },
+              }}
+            >
+              {isCheckingStatus ? 'Checking...' : 'Check Status'}
+            </Button>
+          </Tooltip>
+
           {/* Disconnect Session Button */}
           <Tooltip title={t('mtproto:accountInfo.disconnectDesc', 'Close active connection but keep session')}>
             <Button
@@ -527,6 +578,44 @@ export const AccountInfoCard: React.FC<AccountInfoCardProps> = ({
             startIcon={isRemoving ? <CircularProgress size={16} /> : <DeleteIcon />}
           >
             {isRemoving ? t('common:removing') : t('common:removeConfig')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Reconnect Dialog - Shows when session expired */}
+      <Dialog open={reconnectDialogOpen} onClose={() => setReconnectDialogOpen(false)}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningIcon color="warning" />
+          Session Expired
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Your MTProto session has expired or become invalid. You need to reconnect to resume data collection.
+          </DialogContentText>
+          <Alert severity="info" sx={{ mt: 2 }}>
+            <strong>What happens when you reconnect:</strong>
+            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+              <li>You'll receive a new verification code on Telegram</li>
+              <li>Enter the code to re-authenticate</li>
+              <li>Your data collection will resume automatically</li>
+              <li>All your settings and channel configurations will be preserved</li>
+            </ul>
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReconnectDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleReconnect}
+            variant="contained"
+            color="primary"
+            sx={{
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)',
+              },
+            }}
+          >
+            Reconnect Now
           </Button>
         </DialogActions>
       </Dialog>

@@ -92,7 +92,7 @@ async def connect_mtproto(
 
 
 @router.post(
-    "/test-connection",
+    "/check-connection",
     response_model=MTProtoActionResponse,
     status_code=status.HTTP_200_OK,
     responses={
@@ -100,12 +100,12 @@ async def connect_mtproto(
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
-async def test_mtproto_connection(
+async def check_mtproto_connection(
     user_id: Annotated[int, Depends(get_current_user_id)],
     repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
-    Test MTProto connection by attempting to connect and verify the session.
+    Check MTProto connection by attempting to connect and verify the session.
 
     This is a non-destructive operation that verifies:
     1. Credentials exist and are verified

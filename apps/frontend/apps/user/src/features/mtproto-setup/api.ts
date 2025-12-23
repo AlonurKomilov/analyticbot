@@ -75,6 +75,14 @@ export async function removeMTProto(): Promise<MTProtoActionResponse> {
 }
 
 /**
+ * Check MTProto connection status
+ */
+export async function checkMTProtoConnection(): Promise<MTProtoActionResponse> {
+  const response = await apiClient.post<MTProtoActionResponse>('/user-mtproto/check-connection', {});
+  return response;
+}
+
+/**
  * Toggle global MTProto feature (enable/disable for the user)
  * Note: backend exposes this as POST /api/user-mtproto/toggle
  */

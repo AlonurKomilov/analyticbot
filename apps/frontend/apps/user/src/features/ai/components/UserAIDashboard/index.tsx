@@ -37,9 +37,11 @@ import { AIStatusCard } from './AIStatusCard';
 import { AISettingsCard } from './AISettingsCard';
 import { ActiveAIServicesCard } from './ActiveAIServicesCard';
 import { AvailableAIUpgradesCard } from './AvailableAIUpgradesCard';
+import { EditAISettingsDialog } from './EditAISettingsDialog';
 
 export const UserAIDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [settingsDialogOpen, setSettingsDialogOpen] = React.useState(false);
 
   const {
     status,
@@ -65,7 +67,7 @@ export const UserAIDashboard: React.FC = () => {
   };
 
   const handleOpenSettings = () => {
-    navigate('/ai/settings');
+    setSettingsDialogOpen(true);
   };
 
   const handleGoToMarketplace = () => {
@@ -225,6 +227,14 @@ export const UserAIDashboard: React.FC = () => {
           />
         </Grid>
       </Grid>
+
+      {/* Edit Settings Dialog */}
+      <EditAISettingsDialog
+        open={settingsDialogOpen}
+        onClose={() => setSettingsDialogOpen(false)}
+        currentSettings={settings}
+        onSettingsUpdated={refreshAll}
+      />
     </Box>
   );
 };

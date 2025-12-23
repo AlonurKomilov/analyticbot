@@ -72,7 +72,7 @@ export const MTProtoMonitoringPage: React.FC = () => {
   } = useMTProtoServices();
 
   // MTProto connection testing
-  const { isTesting, testConnection } = useMTProtoConnection();
+  const { isTesting, checkConnection } = useMTProtoConnection();
 
   const fetchMonitoringData = useCallback(async (isBackgroundRefresh = false) => {
     if (!isBackgroundRefresh) {
@@ -142,12 +142,12 @@ export const MTProtoMonitoringPage: React.FC = () => {
   }, [fetchMonitoringData]);
 
   // Quick Actions handlers
-  const handleTestConnection = async () => {
+  const handleCheckStatus = async () => {
     try {
-      await testConnection();
-      toast.success(t('mtproto:quickActions.testSuccess', '✅ MTProto connection is working!'));
+      await checkConnection();
+      toast.success(t('mtproto:quickActions.checkSuccess', '✅ MTProto connection is working!'));
     } catch (err) {
-      toast.error(t('mtproto:quickActions.testFailed', '❌ Connection test failed'));
+      toast.error(t('mtproto:quickActions.checkFailed', '❌ Connection check failed'));
     }
   };
 
@@ -399,7 +399,7 @@ export const MTProtoMonitoringPage: React.FC = () => {
           variant="contained"
           size="small"
           startIcon={<Refresh />}
-          onClick={handleTestConnection}
+          onClick={handleCheckStatus}
           disabled={isTesting}
           sx={{
             background: 'linear-gradient(135deg, #4CAF50 0%, #2196F3 100%)',
@@ -409,8 +409,8 @@ export const MTProtoMonitoringPage: React.FC = () => {
           }}
         >
           {isTesting 
-            ? t('mtproto:quickActions.testing', 'Testing...')
-            : t('mtproto:quickActions.testConnection', 'Test Connection')
+            ? t('mtproto:quickActions.checking', 'Checking...')
+            : t('mtproto:quickActions.checkStatus', 'Check Status')
           }
         </Button>
         <Button

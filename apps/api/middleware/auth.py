@@ -377,10 +377,11 @@ require_settings_read = require_permission(Permission.SETTINGS_READ)
 require_settings_update = require_permission(Permission.SETTINGS_UPDATE)
 
 
-async def get_current_user_id_from_request(request) -> int:
+async def get_current_user_id_from_request(request) -> int | str:
     """
     Extract user ID from Request object
     This supports proper demo mode detection and authentication
+    Returns int for legacy numeric IDs or str for UUID IDs
     """
     import time
 
@@ -415,7 +416,10 @@ async def get_current_user_id_from_request(request) -> int:
                     logger.info(
                         f"⏱️ get_current_user_id_from_request: user_id={user_id_str} (JWT, {elapsed:.2f}ms)"
                     )
-                    return int(user_id_str)
+                    # Return as int if numeric, otherwise return as string (UUID)
+                    if user_id_str.isdigit():
+                        return int(user_id_str)
+                    return user_id_str  # UUID string
             except Exception as token_error:
                 logger.error(
                     f"❌ Failed to decode JWT token in get_current_user_id_from_request: {token_error}",

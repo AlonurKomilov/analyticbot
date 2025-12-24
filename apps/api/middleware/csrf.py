@@ -42,6 +42,8 @@ CSRF_EXEMPT_PATHS = {
     "/auth/register",
     "/auth/csrf-token",
     "/auth/refresh",
+    "/superadmin/auth/login",  # Admin login endpoint (legacy)
+    "/owner/auth/login",  # Admin login endpoint
     "/health",
     "/health/",
     "/docs",

@@ -106,21 +106,86 @@ async def get_owner_service():
     """
     # For now, return a basic service that meets our API needs
     # This is a temporary solution until the full port interfaces are implemented
-    from apps.di import get_container
+    import secrets
+    from datetime import datetime, timedelta
+    from passlib.context import CryptContext
+    from sqlalchemy import text
+    from apps.di import get_db_session
 
-    container = get_container()
-    admin_repo = await container.database.admin_repo()
+    # Get DB session
+    db = await anext(get_db_session())
 
     # Create a simple wrapper that provides the methods we need
     class SimpleAdminService:
-        def __init__(self, repo):
-            self.admin_repo = repo
+        def __init__(self, db_session):
+            self.db = db_session
+            self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-        async def authenticate_admin(self, username: str, password: str):
-            # Implement basic authentication logic
-            return {"id": 1, "username": username}  # Placeholder
+        async def authenticate_admin(self, username: str, password: str, ip_address: str):
+            """Authenticate admin user and create session"""
+            # Get admin user from database
+            result = await self.db.execute(
+                text("SELECT id, username, password_hash, role, status, first_name, last_name FROM admin_users WHERE username = :username"),
+                {"username": username}
+            )
+            admin = result.fetchone()
+            
+            if not admin:
+                return None
+            
+            # Verify password
+            if not self.pwd_context.verify(password, admin.password_hash):
+                return None
+            
+            # Create session token
+            session_token = secrets.token_urlsafe(32)
+            expires_at = datetime.utcnow() + timedelta(hours=8)
+            
+            # Insert session into database
+            await self.db.execute(
+                text("""
+                    INSERT INTO admin_sessions (admin_id, session_token, ip_address, expires_at, is_active)
+                    VALUES (:admin_id, :token, :ip, :expires, true)
+                """),
+                {"admin_id": admin.id, "token": session_token, "ip": ip_address, "expires": expires_at}
+            )
+            
+            # Update last login
+            await self.db.execute(
+                text("UPDATE admin_users SET last_login = NOW() WHERE id = :id"),
+                {"id": admin.id}
+            )
+            await self.db.commit()
+            
+            return {
+                "session_token": session_token,
+                "admin_id": str(admin.id),
+                "expires_at": expires_at,
+            }
 
-    return SimpleAdminService(admin_repo)
+        async def validate_admin_session(self, token: str, ip_address: str):
+            """Validate admin session token"""
+            result = await self.db.execute(
+                text("""
+                    SELECT a.id, a.username, a.role, a.first_name, a.last_name, a.email
+                    FROM admin_sessions s
+                    JOIN admin_users a ON s.admin_id = a.id
+                    WHERE s.session_token = :token AND s.is_active = true AND s.expires_at > NOW()
+                """),
+                {"token": token}
+            )
+            admin = result.fetchone()
+            if admin:
+                return {
+                    "id": str(admin.id),
+                    "username": admin.username,
+                    "role": admin.role,
+                    "email": admin.email or "",
+                    "full_name": f"{admin.first_name or ''} {admin.last_name or ''}".strip(),
+                }
+            return None
+
+    return SimpleAdminService(db)
 
 
 async def get_current_admin_user(
@@ -241,14 +306,12 @@ async def _verify_owner_access(
 async def admin_login(
     login_request: AdminLoginRequest,
     request: Request,
-    db: AsyncSession = Depends(get_db_connection),
     admin_service: OwnerService = Depends(get_owner_service),
 ):
     """Authenticate admin user and create session"""
     ip_address = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("User-Agent", "Unknown")
 
-    # Authenticate user
+    # Authenticate user - admin_service uses SQLAlchemy session internally
     admin_session = await admin_service.authenticate_admin(
         login_request.username, login_request.password, ip_address
     )
@@ -258,23 +321,15 @@ async def admin_login(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials or account locked"
         )
 
-    # Get admin user from session
-    from sqlalchemy.future import select
-
-    from core.models.owner_domain import AdminUser
-
-    stmt = select(AdminUser).where(AdminUser.id == admin_session["admin_id"])
-    result = await db.execute(stmt)
-    admin_user = result.scalar_one()
-
+    # admin_session already contains all the info we need from authenticate_admin
     return AdminLoginResponse(
         access_token=admin_session["session_token"],
         admin_user={
-            "id": str(admin_user.id),
-            "username": admin_user.username,
-            "full_name": admin_user.full_name,
-            "role": admin_user.role,
-            "last_login": admin_user.last_login.isoformat() if admin_user.last_login else None,
+            "id": admin_session.get("admin_id", ""),
+            "username": login_request.username,
+            "full_name": "",  # Not critical for login response
+            "role": "owner",  # Will be populated by subsequent API calls
+            "last_login": None,
         },
     )
 

@@ -139,6 +139,8 @@ def configure_container() -> ApplicationContainer:
 
             from config.settings import settings
             from core.security_engine.container import get_security_container
+            # NOTE: RedisCache is synchronous (CachePort) for JWT tokens
+            # For async caching, use: from infra.caching import CacheService
             from infra.security.adapters import RedisCache
 
             logger.info("🔧 Starting cache injection into SecurityContainer...")

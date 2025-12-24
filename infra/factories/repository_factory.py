@@ -80,6 +80,6 @@ class CacheFactory:
         Returns:
             Cache adapter instance
         """
-        from infra.cache.redis_cache import create_cache_adapter
+        from infra.caching import create_redis_cache_adapter
 
-        return create_cache_adapter(redis_client)
+        return create_redis_cache_adapter(redis_client)

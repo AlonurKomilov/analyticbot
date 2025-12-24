@@ -1,26 +1,27 @@
 # Nginx Configuration Files
 
-**Last Updated:** December 15, 2025
+**Last Updated:** December 23, 2025
 
-## Active Configuration Files
+## ✅ Active Production Configuration
 
-### Production Configs (per subdomain)
+### Main Config (Production)
 
-| Config File | Domain | Port | Purpose |
-|-------------|--------|------|---------|
-| `api.analyticbot.conf` | api.analyticbot.org | 11400 | API backend |
-| `public.analyticbot.conf` | analyticbot.org | 11320 | Public analytics catalog |
-| `app.analyticbot.conf` | app.analyticbot.org | 11300 | User dashboard |
-| `moderator.analyticbot.conf` | moderator.analyticbot.org | 11330 | Moderator dashboard |
-| `admin.analyticbot.conf` | admin.analyticbot.org | 11310 | Admin panel |
+| Config File | Status | Purpose |
+|-------------|--------|---------|
+| `analyticbot.cloudflare.conf` | ✅ **ACTIVE** | Combined config for ALL domains with Cloudflare SSL |
 
-### Alternative/Reference Configs
+**All Domains Configured:**
+- `analyticbot.org` / `www.analyticbot.org` → Public catalog (port 11320)
+- `app.analyticbot.org` → User dashboard (port 11300)
+- `api.analyticbot.org` → API backend (port 11400)
+- `admin.analyticbot.org` → Admin panel (port 11310)
+- `moderator.analyticbot.org` → Moderator dashboard (port 11330)
+- `dev.analyticbot.org` → Development/testing (port 11300)
 
-| Config File | Purpose |
-|-------------|---------|
-| `frontend.analyticbot.conf` | Generic frontend serving (legacy) |
-| `analyticbot.prod.conf` | Full-stack single domain config |
-| `analyticbot.cloudflare.conf` | Combined Cloudflare config (all domains) |
+### Archived Configs (Reference Only)
+
+All individual domain configs have been archived to `archive/` directory.  
+See `AUDIT_REPORT.md` for detailed analysis.
 
 ---
 

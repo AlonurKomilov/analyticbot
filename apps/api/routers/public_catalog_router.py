@@ -401,25 +401,25 @@ async def get_trending_channels(
                     pcc.is_verified,
                     pcc.is_featured,
                     csc.subscriber_count,
-                    csc.growth_rate,
-                    csc.avg_views,
+                    COALESCE(csc.growth_rate_30d, csc.growth_rate_7d, 0) as growth_rate,
+                    csc.avg_post_views as avg_views,
                     cc.name as category_name,
                     cc.slug as category_slug,
                     cc.icon as category_icon,
                     cc.color as category_color,
                     -- Trending score calculation
                     CASE 
-                        WHEN csc.growth_rate IS NOT NULL AND csc.subscriber_count > 0 THEN
-                            csc.growth_rate * LOG(GREATEST(csc.subscriber_count, 10)) *
-                            (1 + COALESCE(csc.avg_views::float / NULLIF(csc.subscriber_count, 0), 0) * 0.1)
+                        WHEN COALESCE(csc.growth_rate_30d, csc.growth_rate_7d) IS NOT NULL AND csc.subscriber_count > 0 THEN
+                            COALESCE(csc.growth_rate_30d, csc.growth_rate_7d) * LOG(GREATEST(csc.subscriber_count, 10)) *
+                            (1 + COALESCE(csc.avg_post_views::float / NULLIF(csc.subscriber_count, 0), 0) * 0.1)
                         ELSE 0
                     END as trending_score
                 FROM public_channel_catalog pcc
                 JOIN channel_stats_cache csc ON pcc.telegram_id = csc.telegram_id
                 LEFT JOIN channel_categories cc ON pcc.category_id = cc.id
                 WHERE pcc.is_active = TRUE 
-                    AND csc.growth_rate IS NOT NULL 
-                    AND csc.growth_rate > 0
+                    AND COALESCE(csc.growth_rate_30d, csc.growth_rate_7d) IS NOT NULL 
+                    AND COALESCE(csc.growth_rate_30d, csc.growth_rate_7d) > 0
                     AND csc.subscriber_count >= 100
                 ORDER BY trending_score DESC
                 LIMIT :limit
@@ -495,12 +495,12 @@ async def get_channel_by_username(
                     pcc.added_at,
                     pcc.last_synced_at,
                     csc.subscriber_count,
-                    csc.avg_views,
-                    csc.avg_reactions,
-                    csc.avg_comments,
+                    csc.avg_post_views as avg_views,
+                    csc.avg_post_reactions as avg_reactions,
+                    0 as avg_comments,
                     csc.posts_per_day,
-                    csc.growth_rate,
-                    csc.last_post_at,
+                    COALESCE(csc.growth_rate_30d, csc.growth_rate_7d, 0) as growth_rate,
+                    csc.last_post_date as last_post_at,
                     cc.id as category_id,
                     cc.name as category_name,
                     cc.slug as category_slug,
@@ -699,7 +699,7 @@ async def get_channel_growth(
                     pcc.telegram_id, 
                     pcc.username,
                     csc.subscriber_count,
-                    csc.growth_rate
+                    COALESCE(csc.growth_rate_30d, csc.growth_rate_7d, 0) as growth_rate
                 FROM public_channel_catalog pcc
                 LEFT JOIN channel_stats_cache csc ON pcc.telegram_id = csc.telegram_id
                 WHERE pcc.username = :username AND pcc.is_active = TRUE

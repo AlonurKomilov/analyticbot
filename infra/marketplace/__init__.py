@@ -37,7 +37,7 @@ Database Tables
 """
 
 from infra.marketplace.repositories.items import MarketplaceItemRepository
-from infra.marketplace.repositories.services import MarketplaceServiceRepository
+from infra.db.repositories.marketplace_service_repository import MarketplaceServiceRepository
 
 __all__ = [
     "MarketplaceItemRepository",

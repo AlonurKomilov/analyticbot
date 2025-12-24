@@ -119,8 +119,12 @@ async def login(
             remember_me=login_data.remember_me,  # Pass remember_me from request
         )
 
-        # Update last login
-        await user_repo.update_user(int(user.id), last_login=datetime.utcnow())
+        # Update last login - handle both int and UUID user IDs
+        try:
+            user_id_for_update = int(user.id) if user.id.isdigit() else user.id
+            await user_repo.update_user(user_id_for_update, last_login=datetime.utcnow())
+        except (ValueError, TypeError, AttributeError) as e:
+            logger.warning(f"Could not update last_login for user {user.id}: {e}")
 
         logger.info(
             f"Successful login for user: {user.username} " f"(remember_me={login_data.remember_me})"

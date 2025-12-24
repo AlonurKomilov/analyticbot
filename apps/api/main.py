@@ -63,6 +63,7 @@ async def lifespan(app: FastAPI):
 
         # ✅ SECURITY: Inject Redis cache into SecurityContainer (per-worker initialization)
         # This must happen in lifespan because uvicorn workers need separate cache connections
+        # NOTE: RedisCache is synchronous (for JWT), different from async CacheService in infra/caching
         try:
             from urllib.parse import urlparse
 

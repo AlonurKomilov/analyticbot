@@ -46,7 +46,8 @@ interface Channel {
 interface Stats {
   total_channels: number
   total_categories: number
-  total_subscribers: number
+  featured_channels: number
+  verified_channels: number
 }
 
 export default function HomePage() {
@@ -88,7 +89,8 @@ export default function HomePage() {
     fetchData()
   }, [])
 
-  const formatNumber = (num: number) => {
+  const formatNumber = (num: number | undefined | null) => {
+    if (num == null) return '0'
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
     return num.toString()
@@ -113,25 +115,25 @@ export default function HomePage() {
         {/* Stats Cards */}
         {stats && (
           <Grid container spacing={3} justifyContent="center" sx={{ mt: 4 }}>
-            <Grid item>
+            <Grid item key="channels">
               <Paper sx={{ p: 3, textAlign: 'center', minWidth: 150 }}>
                 <PeopleIcon color="primary" sx={{ fontSize: 40 }} />
                 <Typography variant="h4" fontWeight={700}>{formatNumber(stats.total_channels)}</Typography>
                 <Typography color="text.secondary">Channels</Typography>
               </Paper>
             </Grid>
-            <Grid item>
+            <Grid item key="categories">
               <Paper sx={{ p: 3, textAlign: 'center', minWidth: 150 }}>
                 <CategoryIcon color="secondary" sx={{ fontSize: 40 }} />
                 <Typography variant="h4" fontWeight={700}>{stats.total_categories}</Typography>
                 <Typography color="text.secondary">Categories</Typography>
               </Paper>
             </Grid>
-            <Grid item>
+            <Grid item key="featured">
               <Paper sx={{ p: 3, textAlign: 'center', minWidth: 150 }}>
                 <TrendingUpIcon color="success" sx={{ fontSize: 40 }} />
-                <Typography variant="h4" fontWeight={700}>{formatNumber(stats.total_subscribers)}</Typography>
-                <Typography color="text.secondary">Total Subscribers</Typography>
+                <Typography variant="h4" fontWeight={700}>{stats.featured_channels}</Typography>
+                <Typography color="text.secondary">Featured</Typography>
               </Paper>
             </Grid>
           </Grid>

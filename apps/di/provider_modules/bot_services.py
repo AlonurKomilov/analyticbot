@@ -36,7 +36,7 @@ def create_guard_service(user_repository=None, **kwargs):
     """Create guard service with cache adapter for content moderation"""
     try:
         from apps.bot.system.services.guard_service import GuardService
-        from infra.cache.redis_cache_adapter import create_redis_cache_adapter
+        from infra.caching import create_redis_cache_adapter
 
         # Use in-memory cache by default (Redis optional)
         cache = create_redis_cache_adapter(None)

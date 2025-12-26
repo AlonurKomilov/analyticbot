@@ -8,8 +8,7 @@ Provides action alerts, today's stats, channel health, and activity feed.
 Uses actual database schema:
 - channels (has user_id directly)
 - channel_mtproto_settings (user_id, channel_id, mtproto_enabled)
-- posts (channel_id, msg_id, date, text)
-- post_metrics (channel_id, msg_id, snapshot_time, views, forwards, reactions_count)
+- posts (channel_id, message_id, posted_at, content, views, reactions, forwards)
 - mtproto_audit_log (channel_id, timestamp, action)
 - user_bot_credentials (user_id, status)
 - scheduled_posts (channel_id, status)
@@ -460,7 +459,7 @@ async def _get_today_stats(pool, user_id: int) -> TodayStats:
             FROM posts p
             JOIN channels c ON p.channel_id = c.id
             WHERE c.user_id = $1
-            AND p.date >= $2
+            AND p.posted_at >= $2
         """,
             user_id,
             today_start,
@@ -474,42 +473,34 @@ async def _get_today_stats(pool, user_id: int) -> TodayStats:
             FROM posts p
             JOIN channels c ON p.channel_id = c.id
             WHERE c.user_id = $1
-            AND p.date >= $2
+            AND p.posted_at >= $2
         """,
             user_id,
             week_start,
         )
         stats.posts_this_week = posts_week or 0
 
-        # Today's views (latest snapshot per post from today)
+        # Today's views (from posts table)
         today_views = await conn.fetchval(
             """
-            SELECT COALESCE(SUM(latest_views), 0)
-            FROM (
-                SELECT DISTINCT ON (pm.channel_id, pm.msg_id) pm.views as latest_views
-                FROM post_metrics pm
-                JOIN channels c ON pm.channel_id = c.id
-                WHERE c.user_id = $1
-                AND DATE(pm.snapshot_time) = CURRENT_DATE
-                ORDER BY pm.channel_id, pm.msg_id, pm.snapshot_time DESC
-            ) latest
+            SELECT COALESCE(SUM(p.views), 0)
+            FROM posts p
+            JOIN channels c ON p.channel_id = c.id
+            WHERE c.user_id = $1
+            AND DATE(p.posted_at) = CURRENT_DATE
         """,
             user_id,
         )
         stats.total_views = int(today_views) if today_views else 0
 
-        # Yesterday's views (latest snapshot per post from yesterday)
+        # Yesterday's views (from posts table)
         yesterday_views = await conn.fetchval(
             """
-            SELECT COALESCE(SUM(latest_views), 0)
-            FROM (
-                SELECT DISTINCT ON (pm.channel_id, pm.msg_id) pm.views as latest_views
-                FROM post_metrics pm
-                JOIN channels c ON pm.channel_id = c.id
-                WHERE c.user_id = $1
-                AND DATE(pm.snapshot_time) = CURRENT_DATE - 1
-                ORDER BY pm.channel_id, pm.msg_id, pm.snapshot_time DESC
-            ) latest
+            SELECT COALESCE(SUM(p.views), 0)
+            FROM posts p
+            JOIN channels c ON p.channel_id = c.id
+            WHERE c.user_id = $1
+            AND DATE(p.posted_at) = CURRENT_DATE - 1
         """,
             user_id,
         )
@@ -525,18 +516,13 @@ async def _get_today_stats(pool, user_id: int) -> TodayStats:
         # Best performing post TODAY (only posts published today)
         best_post = await conn.fetchrow(
             """
-            SELECT p.msg_id, COALESCE(LEFT(p.text, 50), 'Untitled Post') as title,
-                   COALESCE(pm.views, 0) as views, c.id as channel_id
+            SELECT p.message_id, COALESCE(LEFT(p.content, 50), 'Untitled Post') as title,
+                   COALESCE(p.views, 0) as views, c.id as channel_id
             FROM posts p
             JOIN channels c ON p.channel_id = c.id
-            LEFT JOIN LATERAL (
-                SELECT views FROM post_metrics
-                WHERE channel_id = p.channel_id AND msg_id = p.msg_id
-                ORDER BY snapshot_time DESC LIMIT 1
-            ) pm ON true
             WHERE c.user_id = $1
-            AND p.date >= $2
-            ORDER BY pm.views DESC NULLS LAST
+            AND p.posted_at >= $2
+            ORDER BY p.views DESC NULLS LAST
             LIMIT 1
         """,
             user_id,
@@ -549,7 +535,7 @@ async def _get_today_stats(pool, user_id: int) -> TodayStats:
                 title = title + "..."
             stats.best_post_title = title
             stats.best_post_views = best_post["views"]
-            stats.best_post_id = best_post["msg_id"]
+            stats.best_post_id = best_post["message_id"]
             stats.best_post_channel_id = best_post["channel_id"]
 
     return stats
@@ -565,7 +551,7 @@ async def _get_channel_health(pool, user_id: int) -> list[ChannelHealth]:
             SELECT
                 c.id, c.title as name, c.username, c.subscriber_count,
                 cms.mtproto_enabled,
-                (SELECT MAX(p.date) FROM posts p WHERE p.channel_id = c.id) as last_collected_at,
+                (SELECT MAX(p.posted_at) FROM posts p WHERE p.channel_id = c.id) as last_collected_at,
                 EXISTS(SELECT 1 FROM user_bot_credentials WHERE user_id = $1 AND status = 'active') as has_bot
             FROM channels c
             LEFT JOIN channel_mtproto_settings cms ON c.id = cms.channel_id AND cms.user_id = c.user_id
@@ -582,22 +568,17 @@ async def _get_channel_health(pool, user_id: int) -> list[ChannelHealth]:
             stats = await conn.fetchrow(
                 """
                 SELECT
-                    COUNT(p.msg_id) as total_posts,
-                    MAX(p.date) as last_post_time,
-                    COALESCE(AVG(pm.views), 0) as avg_views,
+                    COUNT(p.message_id) as total_posts,
+                    MAX(p.posted_at) as last_post_time,
+                    COALESCE(AVG(p.views), 0) as avg_views,
                     COALESCE(AVG(
-                        CASE WHEN pm.views > 0
-                        THEN (COALESCE(pm.reactions_count, 0) + COALESCE(pm.forwards, 0))::float / pm.views * 100
+                        CASE WHEN p.views > 0
+                        THEN (COALESCE(p.reactions, 0) + COALESCE(p.forwards, 0))::float / p.views * 100
                         ELSE 0 END
                     ), 0) as engagement_rate
                 FROM posts p
-                LEFT JOIN LATERAL (
-                    SELECT views, reactions_count, forwards FROM post_metrics
-                    WHERE channel_id = p.channel_id AND msg_id = p.msg_id
-                    ORDER BY snapshot_time DESC LIMIT 1
-                ) pm ON true
                 WHERE p.channel_id = $1
-                AND p.date >= NOW() - INTERVAL '30 days'
+                AND p.posted_at >= NOW() - INTERVAL '30 days'
             """,
                 channel_id,
             )
@@ -642,21 +623,25 @@ async def _get_activity_feed(pool, user_id: int, limit: int = 10) -> list[Activi
     activities = []
 
     async with pool.acquire() as conn:
-        # Get recent MTProto setting changes (enable/disable actions)
-        settings_changes = await conn.fetch(
-            """
-            SELECT
-                mal.id, mal.channel_id, c.title as channel_name,
-                mal.action, mal.timestamp
-            FROM mtproto_audit_log mal
-            JOIN channels c ON mal.channel_id = c.id
-            WHERE c.user_id = $1
-            AND mal.timestamp >= NOW() - INTERVAL '7 days'
-            ORDER BY mal.timestamp DESC
-            LIMIT 3
-        """,
-            user_id,
-        )
+        # Get recent MTProto setting changes (enable/disable actions) - Optional table
+        try:
+            settings_changes = await conn.fetch(
+                """
+                SELECT
+                    mal.id, mal.channel_id, c.title as channel_name,
+                    mal.action, mal.timestamp
+                FROM mtproto_audit_log mal
+                JOIN channels c ON mal.channel_id = c.id
+                WHERE c.user_id = $1
+                AND mal.timestamp >= NOW() - INTERVAL '7 days'
+                ORDER BY mal.timestamp DESC
+                LIMIT 3
+            """,
+                user_id,
+            )
+        except Exception:
+            # Table doesn't exist or query failed - skip audit log
+            settings_changes = []
 
         for change in settings_changes:
             action = change["action"]
@@ -687,20 +672,15 @@ async def _get_activity_feed(pool, user_id: int, limit: int = 10) -> list[Activi
         posts = await conn.fetch(
             """
             SELECT
-                p.msg_id, p.channel_id, c.title as channel_name,
-                COALESCE(LEFT(p.text, 50), 'New post') as title,
-                p.date as timestamp,
-                pm.views
+                p.message_id, p.channel_id, c.title as channel_name,
+                COALESCE(LEFT(p.content, 50), 'New post') as title,
+                p.posted_at as timestamp,
+                p.views
             FROM posts p
             JOIN channels c ON p.channel_id = c.id
-            LEFT JOIN LATERAL (
-                SELECT views FROM post_metrics
-                WHERE channel_id = p.channel_id AND msg_id = p.msg_id
-                ORDER BY snapshot_time DESC LIMIT 1
-            ) pm ON true
             WHERE c.user_id = $1
-            AND p.date >= NOW() - INTERVAL '24 hours'
-            ORDER BY p.date DESC
+            AND p.posted_at >= NOW() - INTERVAL '24 hours'
+            ORDER BY p.posted_at DESC
             LIMIT 5
         """,
             user_id,
@@ -713,7 +693,7 @@ async def _get_activity_feed(pool, user_id: int, limit: int = 10) -> list[Activi
                 title = title + "..."
             activities.append(
                 ActivityItem(
-                    id=f"post_{post['channel_id']}_{post['msg_id']}",
+                    id=f"post_{post['channel_id']}_{post['message_id']}",
                     type="post",
                     icon="📝",
                     message=f'"{title}" - {views:,} views',
@@ -818,7 +798,7 @@ async def _get_sparkline_data(pool, user_id: int) -> tuple[list[int], list[str]]
                 FROM posts p
                 JOIN channels c ON p.channel_id = c.id
                 WHERE c.user_id = $1
-                AND p.date >= $2 AND p.date < $3
+                AND p.posted_at >= $2 AND p.posted_at < $3
             """,
                 user_id,
                 day_start,

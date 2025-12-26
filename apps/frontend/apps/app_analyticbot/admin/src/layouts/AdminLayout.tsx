@@ -89,12 +89,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [aiMenuOpen, setAiMenuOpen] = useState(false);
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    setDrawerOpen(!drawerOpen);
   };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -194,7 +194,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                       return (
                         <ListItem key={child.path} disablePadding sx={{ mb: 0.5 }}>
                           <ListItemButton
-                            onClick={() => navigate(child.path)}
+                            onClick={() => {
+                              navigate(child.path);
+                              setDrawerOpen(false);
+                            }}
                             sx={{
                               pl: 4,
                               borderRadius: 2,
@@ -239,7 +242,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           return (
             <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  navigate(item.path);
+                  setDrawerOpen(false);
+                }}
                 sx={{
                   borderRadius: 2,
                   backgroundColor: isActive
@@ -306,8 +312,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <AppBar
         position="fixed"
         sx={{
-          width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
-          ml: { sm: `${DRAWER_WIDTH}px` },
           bgcolor: 'background.paper',
           borderBottom: `1px solid ${theme.palette.divider}`,
           boxShadow: 'none',
@@ -318,7 +322,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             color="inherit"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2 }}
           >
             <MenuIcon />
           </IconButton>
@@ -352,46 +356,23 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </Toolbar>
       </AppBar>
 
-      {/* Drawer */}
-      <Box
-        component="nav"
-        sx={{ width: { sm: DRAWER_WIDTH }, flexShrink: { sm: 0 } }}
+      {/* Drawer - Works on all screen sizes */}
+      <Drawer
+        variant="temporary"
+        open={drawerOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: DRAWER_WIDTH,
+            bgcolor: 'background.paper',
+            borderRight: `1px solid ${theme.palette.divider}`,
+          },
+        }}
       >
-        {/* Mobile Drawer */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: DRAWER_WIDTH,
-              bgcolor: 'background.paper',
-            },
-          }}
-        >
-          {drawer}
-        </Drawer>
-
-        {/* Desktop Drawer */}
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: DRAWER_WIDTH,
-              bgcolor: 'background.paper',
-              borderRight: `1px solid ${theme.palette.divider}`,
-            },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
+        {drawer}
+      </Drawer>
 
       {/* Main Content */}
       <Box
@@ -399,7 +380,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
+          width: '100%',
           mt: 8,
           bgcolor: 'background.default',
           minHeight: '100vh',

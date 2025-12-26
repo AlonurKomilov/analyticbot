@@ -70,10 +70,10 @@ const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceCha
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
-      // Use the same base URL logic as apiClient.ts (empty = relative URLs)
+      // Use the same base URL logic as apiClient.ts
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ||
                         import.meta.env.VITE_API_URL ||
-                        ''; // Empty = relative URLs (same domain)
+                        'https://api.analyticbot.org';
 
       const response = await fetch(`${apiBaseUrl}/health`, {
         method: 'GET',

@@ -40,6 +40,9 @@ CSRF_EXEMPT_PATHS = {
     "/auth/telegram/bot-login/confirm",  # Called by bot, has own validation
     "/auth/telegram/bot-login/terminate-session",  # Called by bot callback
     "/auth/register",
+    "/auth/check-username",  # Public availability check
+    "/auth/check-email",  # Public availability check
+    "/auth/profile",  # Profile update - protected by Bearer token
     "/auth/csrf-token",
     "/auth/refresh",
     "/superadmin/auth/login",  # Admin login endpoint (legacy)
@@ -132,14 +135,19 @@ def is_path_exempt(path: str) -> bool:
     Returns:
         True if path is exempt
     """
+    # Strip /api/v1 prefix if present for comparison
+    normalized_path = path
+    if path.startswith("/api/v1"):
+        normalized_path = path[7:]  # Remove "/api/v1" prefix
+    
     # Exact match
-    if path in CSRF_EXEMPT_PATHS:
+    if normalized_path in CSRF_EXEMPT_PATHS:
         return True
 
     # Prefix match for certain paths
     exempt_prefixes = ["/docs", "/openapi", "/redoc", "/webhook/"]
     for prefix in exempt_prefixes:
-        if path.startswith(prefix):
+        if normalized_path.startswith(prefix):
             return True
 
     return False

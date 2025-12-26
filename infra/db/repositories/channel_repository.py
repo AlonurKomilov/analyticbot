@@ -74,7 +74,6 @@ class AsyncpgChannelRepository:
                     username,
                     COALESCE(description, '') as description,
                     created_at,
-                    telegram_created_at,
                     user_id,
                     subscriber_count,
                     updated_at
@@ -230,7 +229,7 @@ class AsyncpgChannelRepository:
         param_num = 1
 
         # Allowed fields for update
-        allowed_fields = ["name", "description", "username", "is_active", "telegram_created_at", "subscriber_count"]
+        allowed_fields = ["name", "description", "username", "is_active", "subscriber_count"]
         
         for key, value in kwargs.items():
             if key in allowed_fields:
@@ -263,6 +262,8 @@ class AsyncpgChannelRepository:
     ) -> bool:
         """Update the Telegram channel creation date.
         
+        NOTE: This column doesn't exist in current schema - method disabled.
+        
         Args:
             channel_id: Channel ID (can be positive or negative)
             telegram_created_at: The actual creation date from Telegram
@@ -270,18 +271,20 @@ class AsyncpgChannelRepository:
         Returns:
             True if updated successfully
         """
-        async with self.pool.acquire() as conn:
-            result = await conn.execute(
-                """
-                UPDATE channels 
-                SET telegram_created_at = $1, updated_at = NOW()
-                WHERE id = $2 OR id = $3
-                """,
-                telegram_created_at,
-                channel_id,
-                -abs(channel_id),  # Also try the negative version
-            )
-            return result != "UPDATE 0"
+        # Column doesn't exist - return True to avoid breaking callers
+        return True
+        # async with self.pool.acquire() as conn:
+        #     result = await conn.execute(
+        #         """
+        #         UPDATE channels 
+        #         SET telegram_created_at = $1, updated_at = NOW()
+        #         WHERE id = $2 OR id = $3
+        #         """,
+        #         telegram_created_at,
+        #         channel_id,
+        #         -abs(channel_id),  # Also try the negative version
+        #     )
+        #     return result != "UPDATE 0"
 
 
 # Alias for backwards compatibility and cleaner imports

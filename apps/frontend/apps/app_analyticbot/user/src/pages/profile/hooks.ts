@@ -19,9 +19,20 @@ export const useProfileForm = ({ user, updateUser }: UseProfileFormProps) => {
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
 
+    // Derive full_name from first_name/last_name if not present
+    const getFullName = () => {
+        if (user?.full_name) return user.full_name;
+        if (user?.first_name || user?.last_name) {
+            return `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
+        }
+        return '';
+    };
+
     const [profileData, setProfileData] = useState<ProfileData>({
         username: user?.username || '',
-        fullName: user?.full_name || '',
+        fullName: getFullName(),
+        firstName: user?.first_name || '',
+        lastName: user?.last_name || '',
         email: user?.email || ''
     });
 
@@ -44,7 +55,8 @@ export const useProfileForm = ({ user, updateUser }: UseProfileFormProps) => {
         try {
             const response = await apiClient.put<{ message: string; user: any }>('/auth/profile', {
                 username: profileData.username,
-                full_name: profileData.fullName,
+                first_name: profileData.firstName,
+                last_name: profileData.lastName,
                 email: profileData.email
             });
 
@@ -53,6 +65,8 @@ export const useProfileForm = ({ user, updateUser }: UseProfileFormProps) => {
                     ...user,
                     username: response.user.username,
                     full_name: response.user.full_name,
+                    first_name: response.user.first_name,
+                    last_name: response.user.last_name,
                     email: response.user.email
                 });
             }
@@ -67,9 +81,19 @@ export const useProfileForm = ({ user, updateUser }: UseProfileFormProps) => {
     }, [profileData, user, updateUser]);
 
     const handleCancelEdit = useCallback(() => {
+        const getFullName = () => {
+            if (user?.full_name) return user.full_name;
+            if (user?.first_name || user?.last_name) {
+                return `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
+            }
+            return '';
+        };
+        
         setProfileData({
             username: user?.username || '',
-            fullName: user?.full_name || '',
+            fullName: getFullName(),
+            firstName: user?.first_name || '',
+            lastName: user?.last_name || '',
             email: user?.email || ''
         });
         setEditMode(false);

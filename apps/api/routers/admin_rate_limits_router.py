@@ -110,6 +110,46 @@ class ResetResponse(BaseModel):
     success: bool
     message: str
 
+class ReloadConfigResponse(BaseModel):
+    """Response for config reload operations"""
+    success: bool
+    updated_count: int
+    message: str
+    requires_restart: bool = False
+
+
+class AuditLogEntry(BaseModel):
+    """Single audit log entry (Phase 3)"""
+    id: int
+    service_key: str
+    action: str
+    old_limit: int | None
+    new_limit: int | None
+    old_period: str | None
+    new_period: str | None
+    old_enabled: bool | None
+    new_enabled: bool | None
+    changed_by: str
+    changed_by_username: str | None
+    changed_by_ip: str | None
+    change_reason: str | None
+    created_at: str
+
+
+class AuditTrailResponse(BaseModel):
+    """Response containing audit trail (Phase 3)"""
+    entries: list[AuditLogEntry]
+    total: int
+    service_filter: str | None = None
+
+
+class ReloadConfigResponse(BaseModel):
+    """Response for config reload operations"""
+    success: bool
+    updated_count: int
+    message: str
+    requires_restart: bool = False
+
 
 class RateLimitDashboardResponse(BaseModel):
     """Combined dashboard response with configs and stats"""
@@ -308,13 +348,41 @@ async def update_rate_limit_config(
             raise HTTPException(status_code=400, detail="Limit must be at least 1")
         
         service = get_rate_limit_service()
-        updated_config = await service.update_config(
-            service=service_name,
-            limit=update.limit,
-            period=update.period,
-            enabled=update.enabled,
-            description=update.description,
-        )
+        
+        # ✅ PHASE 3: Update with full audit trail
+        try:
+            # Get client IP for audit
+            client_ip = request.client.host if request.client else "unknown"
+            
+            updated_config = await service.update_config_with_audit(
+                service=service_name,
+                limit=update.limit,
+                period=update.period,
+                enabled=update.enabled,
+                description=update.description,
+                changed_by=str(current_user.get('id', 'unknown')),
+                changed_by_username=current_user.get('username'),
+                changed_by_ip=client_ip,
+                change_reason=f"Updated via admin dashboard",
+            )
+        except AttributeError:
+            # Fallback to Phase 1/2 if Phase 3 not available
+            logger.warning("Phase 3 not available, using Phase 1/2 update")
+            updated_config = await service.update_config(
+                service=service_name,
+                limit=update.limit,
+                period=update.period,
+                enabled=update.enabled,
+                description=update.description,
+            )
+        
+        # ✅ PHASE 2: Invalidate cache for this service (hot-reload within 30s)
+        try:
+            from apps.api.middleware.rate_limit_cache import invalidate_cache
+            await invalidate_cache(service_name)
+            logger.info(f"Cache invalidated for {service_name} - changes will apply within 30s")
+        except Exception as cache_error:
+            logger.warning(f"Failed to invalidate cache for {service_name}: {cache_error}")
         
         logger.info(f"Admin {current_user.get('username')} updated rate limit for {service_name}: {update}")
         
@@ -592,4 +660,137 @@ async def list_rate_limited_services(
         
     except Exception as e:
         logger.error(f"Error listing rate limited services: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/reload", response_model=ReloadConfigResponse)
+@limiter.limit(RateLimitConfigMiddleware.ADMIN_OPERATIONS)
+async def reload_rate_limit_configs_endpoint(
+    request: Request,
+    response: Response,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🔄 Reload Rate Limit Configs (Admin)
+
+    Manually reload rate limit configurations from Redis without restarting the API.
+    
+    This applies any changes made through the admin dashboard.
+    
+    **Phase 2**: Now with cache invalidation - changes apply within 30 seconds!
+    
+    **Note**: Phase 1 decorators still require restart. Phase 2 dynamic decorators
+    will hot-reload within 30 seconds.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Number of configs updated
+    - Success status
+    - Whether API restart is recommended
+    """
+    try:
+        await require_admin_user(current_user)
+        
+        # ✅ PHASE 2: Invalidate entire cache first
+        from apps.api.middleware.rate_limit_cache import invalidate_cache
+        await invalidate_cache()  # Clear all cached configs
+        logger.info("Cache cleared - Phase 2 endpoints will reload within 30s")
+        
+        # ✅ PHASE 1: Reload class attributes (for backward compatibility)
+        from apps.api.middleware.rate_limiter import reload_rate_limit_configs
+        updated_count = await reload_rate_limit_configs()
+        
+        logger.info(f"Admin {current_user.get('username')} reloaded rate limit configs: {updated_count} updated")
+        
+        return ReloadConfigResponse(
+            success=True,
+            updated_count=updated_count,
+            message=f"Successfully reloaded {updated_count} rate limit configuration(s). Phase 2 endpoints will update within 30s. Full restart still recommended for Phase 1 endpoints.",
+            requires_restart=updated_count > 0,  # Still recommend restart for Phase 1 endpoints
+        )
+        
+    except Exception as e:
+        logger.error(f"Error reloading rate limit configs: {e}")
+        return ReloadConfigResponse(
+            success=False,
+            updated_count=0,
+            message=f"Failed to reload configs: {str(e)}",
+            requires_restart=False,
+        )
+
+
+@router.get("/audit-trail", response_model=AuditTrailResponse)
+@limiter.limit(RateLimitConfigMiddleware.ADMIN_OPERATIONS)
+async def get_audit_trail(
+    request: Request,
+    response: Response,
+    service_key: str | None = Query(None, description="Filter by service"),
+    changed_by: str | None = Query(None, description="Filter by admin user ID"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum records to return"),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 📜 Get Audit Trail (Phase 3)
+
+    View complete history of rate limit configuration changes.
+    
+    Tracks:
+    - Who changed what and when
+    - Before/after values
+    - Change reasons
+    - IP addresses
+    
+    **Admin Only**: Requires admin role
+
+    **Query Parameters:**
+    - `service_key`: Filter by specific service (optional)
+    - `changed_by`: Filter by admin user ID (optional)
+    - `limit`: Maximum records to return (default: 100, max: 1000)
+
+    **Returns:**
+    - List of audit log entries with full change history
+    """
+    try:
+        await require_admin_user(current_user)
+        
+        service = get_rate_limit_service()
+        
+        # Get audit trail
+        audit_logs = await service.get_audit_trail(
+            service_key=service_key,
+            changed_by=changed_by,
+            limit=limit,
+        )
+        
+        # Convert to response format
+        entries = []
+        for log in audit_logs:
+            entries.append(AuditLogEntry(
+                id=log.get("id"),
+                service_key=log.get("service_key"),
+                action=log.get("action"),
+                old_limit=log.get("old_limit"),
+                new_limit=log.get("new_limit"),
+                old_period=log.get("old_period"),
+                new_period=log.get("new_period"),
+                old_enabled=log.get("old_enabled"),
+                new_enabled=log.get("new_enabled"),
+                changed_by=log.get("changed_by"),
+                changed_by_username=log.get("changed_by_username"),
+                changed_by_ip=log.get("changed_by_ip"),
+                change_reason=log.get("change_reason"),
+                created_at=log.get("created_at"),
+            ))
+        
+        return AuditTrailResponse(
+            entries=entries,
+            total=len(entries),
+            service_filter=service_key,
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting audit trail: {e}")
         raise HTTPException(status_code=500, detail=str(e))

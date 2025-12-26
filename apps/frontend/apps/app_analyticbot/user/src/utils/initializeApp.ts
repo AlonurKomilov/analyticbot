@@ -10,7 +10,7 @@ import {
 import { autoLoginFromTelegram } from './telegramAuth';
 import { logger } from './logger';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://api.analyticbot.org';
 
 type DataSource = 'api' | 'mock';
 

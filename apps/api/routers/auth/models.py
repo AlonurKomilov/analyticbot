@@ -28,7 +28,18 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8)
-    full_name: str | None = None
+    full_name: str | None = None  # Legacy field
+    first_name: str | None = None
+    last_name: str | None = None
+    
+    def get_full_name(self) -> str | None:
+        """Get full name, combining first_name and last_name if full_name not provided"""
+        if self.full_name:
+            return self.full_name
+        if self.first_name or self.last_name:
+            parts = [p for p in [self.first_name, self.last_name] if p]
+            return " ".join(parts) if parts else None
+        return None
 
 
 class AuthResponse(BaseModel):
@@ -48,6 +59,8 @@ class UserResponse(BaseModel):
     email: str | None = None  # Optional for Telegram-only users
     username: str | None = None  # Optional
     full_name: str | None = None
+    first_name: str | None = None  # Split name field
+    last_name: str | None = None  # Split name field
     role: str
     status: str
     created_at: datetime

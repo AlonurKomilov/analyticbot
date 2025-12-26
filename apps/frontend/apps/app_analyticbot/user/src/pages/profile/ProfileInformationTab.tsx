@@ -92,15 +92,6 @@ export const ProfileInformationTab: React.FC<ProfileInformationTabProps> = ({
                 <Grid item xs={12} sm={6}>
                     <TextField
                         fullWidth
-                        label="Full Name"
-                        value={profileData.fullName}
-                        onChange={onProfileChange('fullName')}
-                        disabled={!editMode || loading}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <TextField
-                        fullWidth
                         label="Email Address"
                         value={profileData.email}
                         onChange={onProfileChange('email')}
@@ -111,7 +102,27 @@ export const ProfileInformationTab: React.FC<ProfileInformationTabProps> = ({
                         }}
                     />
                 </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="First Name"
+                        value={profileData.firstName}
+                        onChange={onProfileChange('firstName')}
+                        disabled={!editMode || loading}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Last Name"
+                        value={profileData.lastName}
+                        onChange={onProfileChange('lastName')}
+                        disabled={!editMode || loading}
+                    />
+                </Grid>
             </Grid>
         </Box>
     );
 };
+
+export default ProfileInformationTab;

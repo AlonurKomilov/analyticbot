@@ -5,6 +5,7 @@ Handles new user account creation.
 """
 
 import logging
+from pydantic import BaseModel, EmailStr
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
@@ -17,6 +18,58 @@ from core.security_engine import ApplicationRole, AuthProvider, User, UserStatus
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+class UsernameCheckRequest(BaseModel):
+    username: str
+
+
+class EmailCheckRequest(BaseModel):
+    email: EmailStr
+
+
+@router.post("/check-username")
+@limiter.limit("30/minute")  # Rate limit username checks
+async def check_username_availability(
+    request: Request,
+    response: Response,
+    data: UsernameCheckRequest,
+    user_repo: UserRepository = Depends(get_user_repository)
+):
+    """Check if username is available"""
+    username = data.username.strip().lower()
+    
+    # Validate username format
+    if len(username) < 3:
+        return {"available": False, "message": "Username must be at least 3 characters"}
+    if len(username) > 50:
+        return {"available": False, "message": "Username must be less than 50 characters"}
+    if not username.replace("_", "").replace("-", "").isalnum():
+        return {"available": False, "message": "Username can only contain letters, numbers, underscores and hyphens"}
+    
+    existing = await user_repo.get_user_by_username(username)
+    if existing:
+        return {"available": False, "message": "This username is already occupied"}
+    
+    return {"available": True, "message": "This username is available"}
+
+
+@router.post("/check-email")
+@limiter.limit("30/minute")  # Rate limit email checks
+async def check_email_availability(
+    request: Request,
+    response: Response,
+    data: EmailCheckRequest,
+    user_repo: UserRepository = Depends(get_user_repository)
+):
+    """Check if email is available"""
+    email = data.email.strip().lower()
+    
+    existing = await user_repo.get_user_by_email(email)
+    if existing:
+        return {"available": False, "message": "This email is already registered. Please sign in instead."}
+    
+    return {"available": True, "message": "This email is available"}
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -52,11 +105,14 @@ async def register(
 
         # Create User object
         logger.debug("Creating User object...")
+        
+        # Get full name from request (supports both full_name and first_name/last_name)
+        full_name = register_data.get_full_name()
 
         user = User(
             email=register_data.email,
             username=register_data.username,
-            full_name=register_data.full_name,
+            full_name=full_name,
             role=ApplicationRole.USER.value,  # Use new role system
             status=UserStatus.ACTIVE,  # Auto-activate users (no email verification required)
             auth_provider=AuthProvider.LOCAL,

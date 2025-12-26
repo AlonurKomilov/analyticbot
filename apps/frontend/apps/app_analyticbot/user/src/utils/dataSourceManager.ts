@@ -109,7 +109,7 @@ class DataSourceManager {
         try {
             const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
                                 import.meta.env.VITE_API_URL ||
-                                'https://b2qz1m0n-11400.euw.devtunnels.ms';
+                                'https://api.analyticbot.org';
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased to 10s to match slow API response times

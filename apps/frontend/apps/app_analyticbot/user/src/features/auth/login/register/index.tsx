@@ -37,12 +37,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode = null 
         formData,
         errors,
         registerError,
+        registerSuccess,
         isSubmitting,
         isLoading,
         showPassword,
         showConfirmPassword,
         showPasswordRequirements,
         passwordStrength,
+        usernameStatus,
+        emailStatus,
         handleChange,
         handleSubmit,
         togglePasswordVisibility,
@@ -87,6 +90,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode = null 
                         </Typography>
                     </Box>
 
+                    {/* Success Alert */}
+                    {registerSuccess && (
+                        <Alert severity="success" sx={{ mb: 2 }}>
+                            {registerSuccess}
+                        </Alert>
+                    )}
+
                     {/* Registration Error Alert */}
                     {registerError && (
                         <Alert severity="error" sx={{ mb: 2 }}>
@@ -104,6 +114,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode = null 
                             showConfirmPassword={showConfirmPassword}
                             showPasswordRequirements={showPasswordRequirements}
                             passwordStrength={passwordStrength}
+                            usernameStatus={usernameStatus}
+                            emailStatus={emailStatus}
                             onChange={handleChange}
                             onTogglePassword={togglePasswordVisibility}
                             onToggleConfirmPassword={toggleConfirmPasswordVisibility}

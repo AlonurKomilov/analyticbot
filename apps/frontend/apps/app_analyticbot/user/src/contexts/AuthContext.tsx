@@ -64,6 +64,8 @@ interface LoginResponse {
 interface RegisterResponse {
     success: boolean;
     error?: string;
+    message?: string;
+    requiresLogin?: boolean;
 }
 
 interface AuthContextValue {
@@ -385,19 +387,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             const response = await apiClient.post('/auth/register', userData);
             const data = (response as any).data || response; // Support both formats
+            
+            // Registration returns message, not tokens - user needs to login separately
+            if (data.message || data.user_id) {
+                authLogger.info('Registration successful', { 
+                    userId: data.user_id, 
+                    email: data.email 
+                });
+                return { 
+                    success: true,
+                    message: data.message || 'Registration successful. Please log in.',
+                    requiresLogin: true
+                };
+            }
+            
+            // Fallback: if API returns tokens directly (old behavior)
             const { access_token, refresh_token, user: userInfo } = data;
+            if (access_token) {
+                setStoredAuth(access_token, refresh_token, userInfo);
+                setToken(access_token);
+                setUser(userInfo);
+                return { success: true };
+            }
 
-            // Store auth data
-            setStoredAuth(access_token, refresh_token, userInfo);
-            setToken(access_token);
-            setUser(userInfo);
-
-            return { success: true };
+            return { 
+                success: false, 
+                error: 'Invalid response from server' 
+            };
         } catch (error: any) {
             authLogger.error('Registration error', { error });
+            const errorMessage = error?.response?.data?.detail || error?.message || 'Network error. Please try again.';
             return {
                 success: false,
-                error: 'Network error. Please try again.'
+                error: errorMessage
             };
         } finally {
             setIsLoading(false);

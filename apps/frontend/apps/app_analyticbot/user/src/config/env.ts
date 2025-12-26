@@ -5,8 +5,8 @@
 
 export const ENV = {
   // API Configuration
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '',
-  WS_URL: import.meta.env.VITE_WS_URL || 'ws://localhost:11400',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://api.analyticbot.org',
+  WS_URL: import.meta.env.VITE_WS_URL || (typeof window !== 'undefined' ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws` : 'wss://api.analyticbot.org'),
 
   // Timeouts
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),

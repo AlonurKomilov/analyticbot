@@ -191,7 +191,7 @@ export const MTProtoMonitoringPage: React.FC = () => {
           <Button variant="contained" onClick={() => fetchMonitoringData(false)}>
             Retry
           </Button>
-          <Button variant="outlined" onClick={() => window.open(import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:11400', '_blank')}>
+          <Button variant="outlined" onClick={() => window.open(import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://api.analyticbot.org', '_blank')}>
             Open API
           </Button>
           <Button variant="text" onClick={() => window.location.reload()}>

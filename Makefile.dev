@@ -1,7 +1,7 @@
 # Development-specific Makefile targets
 # Use this for venv-based development
 
-.PHONY: dev-help dev-start dev-stop dev-status dev-logs dev-install dev-migrate dev-test dev-clean dev-cleanup dev-cleanup-cron-install dev-cleanup-cron-remove dev-kill-zombies dev-admin-install dev-admin-start dev-admin-stop dev-admin-build
+.PHONY: dev-help dev-start dev-stop dev-status dev-logs dev-install dev-migrate dev-test dev-clean dev-cleanup dev-cleanup-cron-install dev-cleanup-cron-remove dev-kill-zombies dev-admin-install dev-admin-start dev-admin-stop dev-admin-build dev-owner-install dev-owner-start dev-owner-stop dev-owner-build
 
 dev-help:
 	@echo "🔥 Development Commands (venv-based)"
@@ -23,6 +23,7 @@ dev-help:
 	@echo "  app.analyticbot.org     → User Dashboard  (port 11300)"
 	@echo "  moderator.analyticbot.org → Moderator Panel (port 11330)"
 	@echo "  admin.analyticbot.org   → Admin Panel     (port 11310)"
+	@echo "  owner.analyticbot.org   → Owner Panel     (port 11340)"
 	@echo ""
 	@echo "🧹 Cleanup Commands"
 	@echo "==================="
@@ -177,8 +178,31 @@ dev-admin-build:
 	@echo "✅ Admin frontend built to apps/frontend/apps/admin/dist"
 	@echo "   Deploy to: /var/www/analyticbot/admin"
 
+# ============================================================================# Owner Panel Commands (Monorepo Structure: apps/frontend/apps/owner)
 # ============================================================================
-# API Watchdog - Auto-restart API if it crashes
+
+dev-owner-install:
+	@echo "📦 Installing owner frontend dependencies..."
+	cd apps/frontend/apps/owner && npm install
+
+dev-owner-start:
+	@echo "👑 Starting owner frontend on port 11340..."
+	@cd apps/frontend/apps/owner && npm run dev &
+	@echo "✅ Owner panel starting at http://localhost:11340"
+	@echo "   Production URL: https://owner.analyticbot.org"
+
+dev-owner-stop:
+	@echo "🛑 Stopping owner frontend..."
+	@pkill -f "vite.*11340" 2>/dev/null || true
+	@echo "✅ Owner frontend stopped"
+
+dev-owner-build:
+	@echo "🏗️  Building owner frontend for production..."
+	cd apps/frontend/apps/owner && npm run build
+	@echo "✅ Owner frontend built to apps/frontend/apps/owner/dist"
+	@echo "   Deploy to: /var/www/analyticbot/owner"
+
+# ============================================================================# API Watchdog - Auto-restart API if it crashes
 # ============================================================================
 
 dev-watchdog-start:

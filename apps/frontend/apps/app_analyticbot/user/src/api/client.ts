@@ -33,7 +33,7 @@ syncAuthStorage();
 
 // Configuration constants
 const DEFAULT_CONFIG: ApiClientConfig = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '',
+  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://api.analyticbot.org',
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
   maxRetries: 3,
   retryDelay: 1000,

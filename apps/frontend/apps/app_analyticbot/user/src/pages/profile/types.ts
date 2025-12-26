@@ -5,7 +5,9 @@
 
 export interface ProfileData {
     username: string;
-    fullName: string;
+    fullName: string;  // Legacy field for display
+    firstName: string;
+    lastName: string;
     email: string;
 }
 

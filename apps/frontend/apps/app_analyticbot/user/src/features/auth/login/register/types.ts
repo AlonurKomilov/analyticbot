@@ -8,7 +8,8 @@ export interface FormData {
     password: string;
     confirmPassword: string;
     username: string;
-    fullName: string;
+    firstName: string;
+    lastName: string;
 }
 
 export interface FormErrors {
@@ -16,7 +17,14 @@ export interface FormErrors {
     password?: string;
     confirmPassword?: string;
     username?: string;
-    fullName?: string;
+    firstName?: string;
+    lastName?: string;
+}
+
+export interface AvailabilityStatus {
+    checking: boolean;
+    available: boolean | null;
+    message: string;
 }
 
 export interface PasswordRequirements {

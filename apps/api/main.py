@@ -175,6 +175,17 @@ async def lifespan(app: FastAPI):
             logger.warning(f"⚠️ Redis cache initialization failed: {cache_error}")
             logger.info("Application will continue without caching")
 
+        # ✅ PHASE 2: Initialize rate limit cache with warmup
+        try:
+            from apps.api.middleware.rate_limit_cache import warmup_cache
+            
+            logger.info("🔧 Warming up rate limit configuration cache...")
+            cache_count = await warmup_cache()
+            logger.info(f"✅ Rate limit cache warmed up with {cache_count} configurations")
+        except Exception as cache_error:
+            logger.warning(f"⚠️ Rate limit cache warmup failed: {cache_error}")
+            logger.info("Application will use defaults and load configs on-demand")
+
         # ✅ PRODUCTION READINESS: Run comprehensive startup health checks
         try:
             from apps.api.services.startup_health_check import run_startup_health_check

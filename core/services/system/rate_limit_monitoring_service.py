@@ -1,10 +1,17 @@
 """
-Rate Limit Monitoring and Configuration Service
+Rate Limit Monitoring and Configuration Service (Phase 3)
 
 Provides admin APIs for:
 1. Monitoring rate limit usage across all services
-2. Configuring rate limits dynamically
+2. Configuring rate limits dynamically (with database persistence)
 3. Viewing rate limit statistics
+4. Full audit trail of configuration changes
+
+Phase 3 Updates:
+- Database-backed configuration persistence
+- Full audit trail logging
+- Historical change tracking
+- Redis used only for runtime cache
 
 Domain: Admin system monitoring
 """
@@ -16,7 +23,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +68,7 @@ class RateLimitConfig:
     description: str = ""
 
 
-# Default rate limit configurations
+# Default rate limit configurations (synchronized with middleware)
 DEFAULT_RATE_LIMITS: dict[str, RateLimitConfig] = {
     RateLimitService.BOT_CREATION: RateLimitConfig(
         service=RateLimitService.BOT_CREATION,
@@ -71,7 +78,7 @@ DEFAULT_RATE_LIMITS: dict[str, RateLimitConfig] = {
     ),
     RateLimitService.BOT_OPERATIONS: RateLimitConfig(
         service=RateLimitService.BOT_OPERATIONS,
-        limit=100,
+        limit=300,  # Updated from 100
         period="minute",
         description="General bot operations"
     ),
@@ -83,7 +90,7 @@ DEFAULT_RATE_LIMITS: dict[str, RateLimitConfig] = {
     ),
     RateLimitService.AUTH_LOGIN: RateLimitConfig(
         service=RateLimitService.AUTH_LOGIN,
-        limit=10,
+        limit=30,  # Updated from 10
         period="minute",
         description="Login attempts"
     ),
@@ -95,7 +102,7 @@ DEFAULT_RATE_LIMITS: dict[str, RateLimitConfig] = {
     ),
     RateLimitService.PUBLIC_READ: RateLimitConfig(
         service=RateLimitService.PUBLIC_READ,
-        limit=200,
+        limit=500,  # Updated from 200
         period="minute",
         description="Public API reads"
     ),
@@ -517,6 +524,190 @@ class RateLimitMonitoringService:
         except Exception as e:
             logger.error(f"Error resetting limits for IP {ip}: {e}")
             return False
+
+
+    # =========================================================================
+    # PHASE 3: DATABASE OPERATIONS WITH AUDIT TRAIL
+    # =========================================================================
+    
+    async def get_db_session(self):
+        """Get database session for Phase 3 operations"""
+        try:
+            from apps.di import get_container
+            container = get_container()
+            db_manager = await container.database.database_manager()
+            return await db_manager.get_session()
+        except Exception as e:
+            logger.error(f"Failed to get database session: {e}")
+            return None
+    
+    async def get_all_configs_from_db(self) -> list[dict]:
+        """Get all configurations from database (Phase 3)"""
+        try:
+            session = await self.get_db_session()
+            if not session:
+                logger.warning("Database not available, using Redis/defaults")
+                return await self.get_all_configs()
+            
+            from infra.db.repositories.rate_limit_repository import RateLimitRepository
+            repo = RateLimitRepository(session)
+            
+            configs = await repo.get_all_configs()
+            return [config.to_dict() for config in configs]
+            
+        except Exception as e:
+            logger.error(f"Error getting configs from database: {e}")
+            # Fallback to Redis
+            return await self.get_all_configs()
+    
+    async def update_config_with_audit(
+        self,
+        service: str,
+        limit: int | None = None,
+        period: str | None = None,
+        enabled: bool | None = None,
+        description: str | None = None,
+        changed_by: str = "system",
+        changed_by_username: Optional[str] = None,
+        changed_by_ip: Optional[str] = None,
+        change_reason: Optional[str] = None,
+    ) -> dict:
+        """
+        Update configuration with full audit trail (Phase 3)
+        
+        Updates both database and Redis cache.
+        Logs change to audit trail.
+        """
+        try:
+            session = await self.get_db_session()
+            if not session:
+                logger.warning("Database not available, using Redis-only update")
+                return await self.update_config(service, limit, period, enabled, description)
+            
+            from infra.db.repositories.rate_limit_repository import RateLimitRepository
+            repo = RateLimitRepository(session)
+            
+            # Get old config for audit trail
+            old_config = await repo.get_config(service)
+            
+            # Update in database
+            updated_config = await repo.update_config(
+                service_key=service,
+                limit_value=limit,
+                period=period,
+                enabled=enabled,
+                description=description,
+                updated_by=changed_by,
+            )
+            
+            if not updated_config:
+                raise Exception("Failed to update config in database")
+            
+            # Log to audit trail
+            await repo.log_change(
+                service_key=service,
+                action="update",
+                old_config=old_config,
+                new_config=updated_config,
+                changed_by=changed_by,
+                changed_by_username=changed_by_username,
+                changed_by_ip=changed_by_ip,
+                change_reason=change_reason,
+                metadata={"timestamp": datetime.utcnow().isoformat()},
+            )
+            
+            # Update Redis cache for runtime performance
+            redis = await self._get_redis()
+            if redis:
+                try:
+                    config_dict = updated_config.to_dict()
+                    await redis.hset(self._config_key, service, json.dumps(config_dict))
+                except Exception as redis_error:
+                    logger.warning(f"Failed to update Redis cache: {redis_error}")
+            
+            logger.info(
+                f"✅ Updated rate limit config (Phase 3): {service} by {changed_by_username or changed_by}"
+            )
+            
+            return updated_config.to_dict()
+            
+        except Exception as e:
+            logger.error(f"Error in Phase 3 config update: {e}")
+            # Fallback to Phase 1 behavior
+            return await self.update_config(service, limit, period, enabled, description)
+    
+    async def get_audit_trail(
+        self,
+        service_key: Optional[str] = None,
+        changed_by: Optional[str] = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        """
+        Get audit trail of configuration changes (Phase 3)
+        
+        Args:
+            service_key: Filter by service (optional)
+            changed_by: Filter by admin user (optional)
+            limit: Maximum records to return
+            
+        Returns:
+            List of audit log entries
+        """
+        try:
+            session = await self.get_db_session()
+            if not session:
+                return []
+            
+            from infra.db.repositories.rate_limit_repository import RateLimitRepository
+            repo = RateLimitRepository(session)
+            
+            audit_logs = await repo.get_audit_trail(
+                service_key=service_key,
+                changed_by=changed_by,
+                limit=limit,
+            )
+            
+            return [log.to_dict() for log in audit_logs]
+            
+        except Exception as e:
+            logger.error(f"Error getting audit trail: {e}")
+            return []
+    
+    async def sync_db_to_redis(self) -> int:
+        """
+        Sync all configurations from database to Redis cache (Phase 3)
+        
+        Useful after database updates or for cache warming.
+        
+        Returns:
+            Number of configs synced
+        """
+        try:
+            configs = await self.get_all_configs_from_db()
+            
+            redis = await self._get_redis()
+            if not redis:
+                logger.warning("Redis not available for sync")
+                return 0
+            
+            synced = 0
+            for config in configs:
+                try:
+                    await redis.hset(
+                        self._config_key,
+                        config["service_key"],
+                        json.dumps(config)
+                    )
+                    synced += 1
+                except Exception as e:
+                    logger.warning(f"Failed to sync {config['service_key']}: {e}")
+            
+            logger.info(f"✅ Synced {synced} configs from database to Redis")
+            return synced
+            
+        except Exception as e:
+            logger.error(f"Error syncing DB to Redis: {e}")
+            return 0
 
 
 # Global instance (singleton)

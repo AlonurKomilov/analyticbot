@@ -1,30 +1,31 @@
 """
-⚠️ DEPRECATED
+Caching Infrastructure
+======================
 
-This module is deprecated. Use infra.caching instead.
+Unified caching layer for the application.
 
-Old import:
-    from infra.cache import RedisCacheAdapter
+USE THIS for all caching needs:
+    from infra.cache import CacheService
     
-New import:
-    from infra.caching import CacheService
+    # Production with Redis
+    cache = CacheService(redis_url="redis://localhost:6379")
+    await cache.set("key", "value", ttl=3600)
+    
+    # Testing with in-memory
+    from infra.cache import InMemoryCacheAdapter
+    cache = InMemoryCacheAdapter()
 
-See infra/caching/README.md for migration guide.
+This module consolidates all caching functionality.
 """
 
-# For backward compatibility, re-export from new location
-try:
-    from infra.caching import CacheService as RedisCacheAdapter
-    from infra.caching import InMemoryCacheAdapter, create_redis_cache_adapter
-    
-    __all__ = [
-        "RedisCacheAdapter",
-        "InMemoryCacheAdapter",
-        "create_redis_cache_adapter",
-    ]
-except ImportError:
-    # If new module doesn't exist yet, raise helpful error
-    raise ImportError(
-        "infra.cache is deprecated. "
-        "Please update your imports to: from infra.caching import CacheService"
-    )
+from infra.cache.cache_service import (
+    CacheService,
+    InMemoryCacheAdapter,
+    create_redis_cache_adapter,
+)
+
+__all__ = [
+    "CacheService",
+    "InMemoryCacheAdapter",
+    "create_redis_cache_adapter",
+]

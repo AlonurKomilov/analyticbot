@@ -91,6 +91,8 @@ async def get_current_user_profile(request: Request):
         pool = await container.database.asyncpg_pool()
 
         full_name = claims.get("full_name")
+        first_name = None
+        last_name = None
         has_password = False
         telegram_id = None
         telegram_username = None
@@ -102,6 +104,8 @@ async def get_current_user_profile(request: Request):
                 """
                 SELECT
                     u.full_name,
+                    u.first_name,
+                    u.last_name,
                     u.hashed_password IS NOT NULL as has_password,
                     u.telegram_id,
                     u.photo_url,
@@ -119,6 +123,8 @@ async def get_current_user_profile(request: Request):
             )
             if row:
                 full_name = row["full_name"] or full_name
+                first_name = row["first_name"]
+                last_name = row["last_name"]
                 has_password = row["has_password"] or False
                 telegram_id = row["telegram_id"]
                 telegram_username = row["telegram_username"]
@@ -138,6 +144,8 @@ async def get_current_user_profile(request: Request):
             email=email,  # Can be None for Telegram users
             username=username,  # Can be None
             full_name=full_name,
+            first_name=first_name,
+            last_name=last_name,
             role=claims.get("role", "user"),
             status=claims.get("status", "active"),
             created_at=datetime.utcnow(),
@@ -270,7 +278,7 @@ async def update_profile(
     """
     Update user profile information.
 
-    Supports updating: username, full_name, email, password
+    Supports updating: username, first_name, last_name, full_name, email, password
     """
     try:
         from apps.api.middleware.auth import get_user_repository
@@ -288,8 +296,27 @@ async def update_profile(
         if "username" in body and body["username"]:
             updates["username"] = body["username"]
 
-        if "full_name" in body and body["full_name"]:
-            updates["full_name"] = body["full_name"]
+        # Support both first_name/last_name and legacy full_name
+        if "first_name" in body:
+            updates["first_name"] = body["first_name"].strip() if body["first_name"] else None
+        
+        if "last_name" in body:
+            updates["last_name"] = body["last_name"].strip() if body["last_name"] else None
+
+        # If first_name or last_name provided, also update full_name for backwards compatibility
+        if "first_name" in updates or "last_name" in updates:
+            first = updates.get("first_name") or current_user.get("first_name") or ""
+            last = updates.get("last_name") or current_user.get("last_name") or ""
+            updates["full_name"] = f"{first} {last}".strip() or None
+
+        # Legacy full_name support (if sent directly, split into first/last)
+        if "full_name" in body and body["full_name"] and "first_name" not in body:
+            full_name = body["full_name"].strip()
+            updates["full_name"] = full_name
+            # Split into first/last
+            parts = full_name.split(" ", 1)
+            updates["first_name"] = parts[0] if parts else None
+            updates["last_name"] = parts[1] if len(parts) > 1 else None
 
         if "email" in body and body["email"]:
             # Validate email format

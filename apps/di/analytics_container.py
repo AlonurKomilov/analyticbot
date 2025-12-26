@@ -38,7 +38,7 @@ from core.protocols import AnalyticsFusionServiceProtocol
 from core.services.system.analytics.analytics_fusion import AnalyticsOrchestratorService
 
 # DI Container infrastructure imports (acceptable - this IS a DI container)
-from infra.cache.redis_cache import create_cache_adapter
+from infra.cache import create_redis_cache_adapter as create_cache_adapter
 from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.edges_repository import AsyncpgEdgesRepository

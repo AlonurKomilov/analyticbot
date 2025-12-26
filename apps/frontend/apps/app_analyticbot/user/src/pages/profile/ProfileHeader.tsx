@@ -84,6 +84,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, onPhotoUpdat
 
     // Get user initials for fallback
     const getInitials = () => {
+        // Prefer first_name/last_name
+        if (user?.first_name && user?.last_name) {
+            return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
+        }
+        if (user?.first_name) {
+            return user.first_name[0].toUpperCase();
+        }
+        // Fallback to full_name
         if (user?.full_name) {
             const parts = user.full_name.split(' ');
             if (parts.length >= 2) {
@@ -95,6 +103,17 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, onPhotoUpdat
             return user.username[0].toUpperCase();
         }
         return 'U';
+    };
+
+    // Get display name
+    const getDisplayName = () => {
+        if (user?.first_name && user?.last_name) {
+            return `${user.first_name} ${user.last_name}`;
+        }
+        if (user?.first_name) {
+            return user.first_name;
+        }
+        return user?.full_name || user?.username || 'User';
     };
 
     return (
@@ -151,7 +170,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, onPhotoUpdat
                 </Tooltip>
             </Box>
             <Typography variant="h4" gutterBottom>
-                {user?.full_name || user?.username || 'User Profile'}
+                {getDisplayName()}
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mb: 2 }}>
                 <Chip

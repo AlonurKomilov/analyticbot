@@ -21,29 +21,73 @@ logger = logging.getLogger(__name__)
 # === RATE LIMIT CONFIGURATION ===
 
 class RateLimitConfig:
-    """Rate limit configuration for different endpoint types"""
+    """Rate limit configuration for different endpoint types
+    
+    Note: These are DEFAULT values that can be overridden via admin dashboard.
+    The admin rate limit service stores updated values in Redis.
+    """
 
     # Bot creation limits (prevent spam)
     BOT_CREATION = "5/hour"  # 5 bot creations per hour per IP
 
     # Bot operations (normal usage)
-    BOT_OPERATIONS = "100/minute"  # 100 operations per minute per IP
+    BOT_OPERATIONS = "300/minute"  # 300 operations per minute per IP
 
     # Admin endpoints (monitoring)
     ADMIN_OPERATIONS = "30/minute"  # 30 admin requests per minute per IP
 
     # Authentication endpoints
-    AUTH_LOGIN = "10/minute"  # 10 login attempts per minute per IP
+    AUTH_LOGIN = "30/minute"  # 30 login attempts per minute per IP
     AUTH_REGISTER = "3/hour"  # 3 registrations per hour per IP
 
     # Public endpoints (higher limits)
-    PUBLIC_READ = "200/minute"  # 200 reads per minute per IP
+    PUBLIC_READ = "500/minute"  # 500 reads per minute per IP
 
     # Webhook endpoints (very high limits)
     WEBHOOK = "1000/minute"  # 1000 webhook calls per minute per IP
 
     # Failed authentication
     FAILED_AUTH = "5/15minute"  # 5 failed attempts per 15 minutes
+    
+    @classmethod
+    def get_dynamic_limit(cls, service_key: str, default: str) -> str:
+        """
+        Get rate limit from admin config (Redis) if available, otherwise use default.
+        
+        Args:
+            service_key: Service name (e.g., "bot_operations", "auth_login")
+            default: Default limit string (e.g., "100/minute")
+            
+        Returns:
+            Rate limit string to apply
+        """
+        try:
+            # Try to get from admin config service
+            import asyncio
+            from core.services.system import get_rate_limit_service
+            
+            service = get_rate_limit_service()
+            
+            # Run async function synchronously (only for config loading)
+            loop = None
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            config = loop.run_until_complete(service.get_config(service_key))
+            
+            if config and config.get("enabled"):
+                limit = config.get("limit")
+                period = config.get("period", "minute")
+                return f"{limit}/{period}"
+                
+        except Exception as e:
+            logger.debug(f"Could not load dynamic limit for {service_key}: {e}")
+        
+        # Fallback to default
+        return default
 
 
 # === IP WHITELIST ===
@@ -256,6 +300,184 @@ def check_rate_limit_status(request: Request, limit: str) -> dict:
 
 # === EXPORTS ===
 
+# === CONFIG RELOAD SUPPORT ===
+
+async def reload_rate_limit_configs():
+    """
+    Reload rate limit configurations from Redis/database.
+    
+    This should be called:
+    - On application startup
+    - When admin updates configs via dashboard
+    - Periodically (optional background task)
+    
+    Returns:
+        Number of configs updated
+    """
+    try:
+        from core.services.system import get_rate_limit_service
+        
+        service = get_rate_limit_service()
+        configs = await service.get_all_configs()
+        
+        updated = 0
+        for config in configs:
+            service_name = config.get("service", "")
+            limit = config.get("limit")
+            period = config.get("period", "minute")
+            enabled = config.get("enabled", True)
+            
+            if not enabled:
+                logger.info(f"Rate limit disabled for {service_name}")
+                continue
+            
+            # Update class attributes dynamically
+            limit_string = f"{limit}/{period}"
+            
+            # Map service names to class attributes
+            attr_map = {
+                "bot_creation": "BOT_CREATION",
+                "bot_operations": "BOT_OPERATIONS",
+                "admin_operations": "ADMIN_OPERATIONS",
+                "auth_login": "AUTH_LOGIN",
+                "auth_register": "AUTH_REGISTER",
+                "public_read": "PUBLIC_READ",
+                "webhook": "WEBHOOK",
+                "analytics": "ANALYTICS",
+            }
+            
+            attr_name = attr_map.get(service_name)
+            if attr_name and hasattr(RateLimitConfig, attr_name):
+                old_value = getattr(RateLimitConfig, attr_name)
+                if old_value != limit_string:
+                    setattr(RateLimitConfig, attr_name, limit_string)
+                    logger.info(f"Updated rate limit {attr_name}: {old_value} -> {limit_string}")
+                    updated += 1
+        
+        if updated > 0:
+            logger.info(f"✅ Reloaded {updated} rate limit configurations")
+        else:
+            logger.debug("No rate limit config changes detected")
+        
+        return updated
+        
+    except Exception as e:
+        logger.error(f"Error reloading rate limit configs: {e}")
+        return 0
+
+
+# === DYNAMIC RATE LIMIT DECORATOR (Phase 2) ===
+
+from functools import wraps
+from typing import Callable, Optional
+from fastapi import HTTPException, status
+
+def dynamic_rate_limit(service: str, default: str = "100/minute"):
+    """
+    Dynamic rate limit decorator with cache support (Phase 2)
+    
+    Checks cache at request time for current rate limit configuration.
+    Changes apply within 30 seconds without restart.
+    
+    Usage:
+        @router.post("/bots")
+        @dynamic_rate_limit(service="bot_creation", default="5/hour")
+        async def create_bot(request: Request):
+            pass
+    
+    Args:
+        service: Service key (e.g., "bot_operations", "auth_login")
+        default: Fallback limit if config not found (e.g., "100/minute")
+    
+    Returns:
+        Decorated function with dynamic rate limiting
+    """
+    def decorator(func: Callable):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            # Import cache here to avoid circular dependency
+            from apps.api.middleware.rate_limit_cache import get_cached_limit
+            
+            # Get request object from kwargs
+            request: Optional[Request] = kwargs.get("request")
+            if not request:
+                # Try to find request in args
+                for arg in args:
+                    if isinstance(arg, Request):
+                        request = arg
+                        break
+            
+            if not request:
+                # No request found, skip rate limiting
+                logger.warning(f"No request object found for {service}, skipping rate limit")
+                return await func(*args, **kwargs)
+            
+            # Get current limit from cache (checks every 30s)
+            current_limit = await get_cached_limit(service, default)
+            
+            # Get client IP
+            ip = get_client_ip(request)
+            
+            # Check if whitelisted
+            if ip in get_ip_whitelist():
+                logger.debug(f"IP {ip} whitelisted for {service}, skipping rate limit")
+                return await func(*args, **kwargs)
+            
+            # Parse limit string (e.g., "100/minute" -> 100, "minute")
+            try:
+                parts = current_limit.split("/")
+                if len(parts) != 2:
+                    raise ValueError(f"Invalid limit format: {current_limit}")
+                
+                max_requests = int(parts[0])
+                window = parts[1]  # minute, hour, day, etc.
+                
+            except (ValueError, IndexError) as e:
+                logger.error(f"Failed to parse rate limit '{current_limit}': {e}")
+                # Fallback to default
+                return await func(*args, **kwargs)
+            
+            # Check rate limit using slowapi's limiter
+            # Note: We use the existing limiter's storage for consistency
+            try:
+                # Manually check rate limit
+                key = f"ratelimit:{service}:{ip}"
+                
+                # Use limiter's internal storage
+                if hasattr(limiter, "_storage") and limiter._storage:
+                    storage = limiter._storage
+                    
+                    # Get current count
+                    current_count = await storage.get(key) or 0
+                    
+                    if current_count >= max_requests:
+                        logger.warning(
+                            f"Rate limit exceeded for {service}: {ip} "
+                            f"({current_count}/{max_requests} per {window})"
+                        )
+                        raise HTTPException(
+                            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail=f"Rate limit exceeded: {max_requests} requests per {window}. Please try again later."
+                        )
+                    
+                    # Increment counter
+                    await storage.incr(key, window, amount=1)
+                    
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.debug(f"Rate limit check failed for {service}: {e}, allowing request")
+                # If check fails, allow request (fail open)
+            
+            # Execute the actual endpoint
+            return await func(*args, **kwargs)
+        
+        return wrapper
+    return decorator
+
+
+# === EXPORTS ===
+
 __all__ = [
     "limiter",
     "RateLimitConfig",
@@ -263,4 +485,6 @@ __all__ = [
     "get_client_ip",
     "check_rate_limit_status",
     "get_ip_whitelist",
+    "reload_rate_limit_configs",
+    "dynamic_rate_limit",  # Phase 2
 ]

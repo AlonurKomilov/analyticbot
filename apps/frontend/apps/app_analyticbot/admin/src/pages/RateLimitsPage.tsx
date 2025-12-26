@@ -6,7 +6,6 @@ import {
   Grid2 as Grid,
   Card,
   CardContent,
-  CardHeader,
   CircularProgress,
   Chip,
   LinearProgress,
@@ -15,7 +14,6 @@ import {
   IconButton,
   Tooltip,
   Alert,
-  Divider,
   Stack,
   Button,
   TextField,
@@ -43,11 +41,9 @@ import {
   CheckCircle as HealthyIcon,
   Warning as WarningIcon,
   Error as ErrorIcon,
-  RestartAlt as ResetIcon,
   Settings as SettingsIcon,
   TrendingUp as TrendingUpIcon,
-  Person as PersonIcon,
-  Public as PublicIcon,
+  History as HistoryIcon,
 } from '@mui/icons-material';
 import { apiClient } from '@api/client';
 
@@ -92,6 +88,30 @@ interface EditDialogState {
   description: string;
 }
 
+interface AuditLogEntry {
+  id: number;
+  service_key: string;
+  action: string;
+  old_limit: number | null;
+  new_limit: number | null;
+  old_period: string | null;
+  new_period: string | null;
+  old_enabled: boolean | null;
+  new_enabled: boolean | null;
+  changed_by: string;
+  changed_by_username: string | null;
+  changed_by_ip: string | null;
+  change_reason: string | null;
+  created_at: string;
+}
+
+interface HistoryDialogState {
+  open: boolean;
+  service: string;
+  entries: AuditLogEntry[];
+  loading: boolean;
+}
+
 const RateLimitsPage: React.FC = () => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
@@ -106,6 +126,12 @@ const RateLimitsPage: React.FC = () => {
     period: 'minute',
     enabled: true,
     description: '',
+  });
+  const [historyDialog, setHistoryDialog] = useState<HistoryDialogState>({
+    open: false,
+    service: '',
+    entries: [],
+    loading: false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -157,11 +183,25 @@ const RateLimitsPage: React.FC = () => {
         description: editDialog.description || null,
       });
       setEditDialog({ ...editDialog, open: false });
-      fetchDashboard(true);
+      await fetchDashboard();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to update configuration');
+      setError(err.response?.data?.detail || 'Failed to save configuration');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Open history dialog and fetch audit trail
+  const handleHistoryClick = async (service: string) => {
+    setHistoryDialog({ open: true, service, entries: [], loading: true });
+    try {
+      const response = await apiClient.get('/admin/rate-limits/audit-trail', {
+        params: { service_key: service, limit: 50 },
+      });
+      setHistoryDialog(prev => ({ ...prev, entries: response.data.entries, loading: false }));
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to fetch audit trail');
+      setHistoryDialog(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -412,29 +452,39 @@ const RateLimitsPage: React.FC = () => {
                           <Typography
                             variant="body2"
                             color={stat.remaining === 0 ? 'error' : 'text.secondary'}
-                            fontWeight={stat.remaining === 0 ? 'bold' : 'normal'}
                           >
                             {stat.remaining}
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="body2" color="text.secondary">
                             {stat.reset_at
                               ? new Date(stat.reset_at).toLocaleTimeString()
                               : '-'}
                           </Typography>
                         </TableCell>
                         <TableCell align="right">
-                          {config && (
-                            <Tooltip title="Edit Configuration">
+                          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                            <Tooltip title="View History">
                               <IconButton
                                 size="small"
-                                onClick={() => handleEditClick(config)}
+                                onClick={() => handleHistoryClick(stat.service)}
+                                color="info"
                               >
-                                <EditIcon fontSize="small" />
+                                <HistoryIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
-                          )}
+                            {config && (
+                              <Tooltip title="Edit Configuration">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleEditClick(config)}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </Box>
                         </TableCell>
                       </TableRow>
                     );
@@ -447,7 +497,7 @@ const RateLimitsPage: React.FC = () => {
           {/* Last Updated */}
           <Box sx={{ mt: 2, textAlign: 'right' }}>
             <Typography variant="caption" color="text.secondary">
-              Last updated: {new Date(dashboard.timestamp).toLocaleString()}
+              Last updated: {dashboard?.timestamp ? new Date(dashboard.timestamp).toLocaleString() : 'N/A'}
             </Typography>
           </Box>
         </>
@@ -511,6 +561,102 @@ const RateLimitsPage: React.FC = () => {
             disabled={saving || editDialog.limit < 1}
           >
             {saving ? <CircularProgress size={20} /> : 'Save Changes'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* History/Audit Trail Dialog */}
+      <Dialog 
+        open={historyDialog.open} 
+        onClose={() => setHistoryDialog({ ...historyDialog, open: false })} 
+        maxWidth="md" 
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <HistoryIcon />
+            Change History: {formatServiceName(historyDialog.service)}
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {historyDialog.loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : historyDialog.entries.length === 0 ? (
+            <Box sx={{ textAlign: 'center', p: 4 }}>
+              <Typography color="text.secondary">
+                No change history available for this service
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date & Time</TableCell>
+                    <TableCell>Action</TableCell>
+                    <TableCell>Changed By</TableCell>
+                    <TableCell>Before</TableCell>
+                    <TableCell>After</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {historyDialog.entries.map((entry) => (
+                    <TableRow key={entry.id} hover>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {new Date(entry.created_at).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={entry.action}
+                          size="small"
+                          color={
+                            entry.action === 'create' ? 'success' :
+                            entry.action === 'update' ? 'primary' :
+                            entry.action === 'delete' ? 'error' :
+                            'default'
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {entry.changed_by_username || entry.changed_by}
+                        </Typography>
+                        {entry.changed_by_ip && (
+                          <Typography variant="caption" color="text.secondary">
+                            {entry.changed_by_ip}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {entry.old_limit !== null && (
+                          <Typography variant="body2">
+                            {entry.old_limit}/{entry.old_period}
+                            {entry.old_enabled === false && ' (disabled)'}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {entry.new_limit !== null && (
+                          <Typography variant="body2" fontWeight="medium">
+                            {entry.new_limit}/{entry.new_period}
+                            {entry.new_enabled === false && ' (disabled)'}
+                          </Typography>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setHistoryDialog({ ...historyDialog, open: false })}>
+            Close
           </Button>
         </DialogActions>
       </Dialog>

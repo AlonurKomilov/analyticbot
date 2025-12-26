@@ -689,30 +689,42 @@ class CreditRepository:
             query += " WHERE " + " AND ".join(conditions)
         query += " ORDER BY category, credit_cost"
 
-        rows = await self._pool.fetch(query, *params)
-        return [dict(row) for row in rows]
+        try:
+            rows = await self._pool.fetch(query, *params)
+            return [dict(row) for row in rows]
+        except Exception:
+            # Table doesn't exist - return empty list
+            return []
 
     async def get_service_by_key(self, service_key: str) -> dict | None:
         """Get a specific service by key"""
-        row = await self._pool.fetchrow(
-            """
-            SELECT id, service_key, name, description, credit_cost, category, usage_limit_per_day
-            FROM credit_services
-            WHERE service_key = $1 AND is_active = TRUE
-        """,
-            service_key,
-        )
-        return dict(row) if row else None
+        try:
+            row = await self._pool.fetchrow(
+                """
+                SELECT id, service_key, name, description, credit_cost, category, usage_limit_per_day
+                FROM credit_services
+                WHERE service_key = $1 AND is_active = TRUE
+            """,
+                service_key,
+            )
+            return dict(row) if row else None
+        except Exception:
+            # Table doesn't exist
+            return None
 
     async def get_service_cost(self, service_key: str) -> Decimal | None:
         """Get the cost of a service"""
-        cost = await self._pool.fetchval(
-            """
-            SELECT credit_cost FROM credit_services WHERE service_key = $1 AND is_active = TRUE
-        """,
-            service_key,
-        )
-        return Decimal(str(cost)) if cost else None
+        try:
+            cost = await self._pool.fetchval(
+                """
+                SELECT credit_cost FROM credit_services WHERE service_key = $1 AND is_active = TRUE
+            """,
+                service_key,
+            )
+            return Decimal(str(cost)) if cost else None
+        except Exception:
+            # Table doesn't exist
+            return None
 
     # ============================================
     # REFERRAL SYSTEM

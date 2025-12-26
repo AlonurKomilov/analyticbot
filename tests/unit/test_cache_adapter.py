@@ -3,7 +3,7 @@
 import pytest
 
 from core.ports.cache_port import AsyncCachePort
-from infra.caching import InMemoryCacheAdapter, create_redis_cache_adapter
+from infra.cache import InMemoryCacheAdapter, create_redis_cache_adapter
 
 
 class TestInMemoryCacheAdapter:

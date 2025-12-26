@@ -14,6 +14,52 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# ============================================================================
+# NGINX CHECK & AUTO-FIX
+# ============================================================================
+check_and_fix_nginx() {
+    echo -e "${BLUE}🔍 Checking Nginx...${NC}"
+    
+    # Check if nginx is installed
+    if ! command -v nginx &> /dev/null; then
+        echo -e "${RED}❌ Nginx is not installed!${NC}"
+        echo -e "${BLUE}💡 Install with: sudo apt install nginx${NC}"
+        return 1
+    fi
+    
+    # Check if nginx is running
+    if systemctl is-active --quiet nginx; then
+        # Nginx is running, check configuration
+        if sudo nginx -t 2>&1 | grep -q "test is successful"; then
+            echo -e "${GREEN}✅ Nginx is running and configuration is valid${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Nginx configuration has errors, reloading...${NC}"
+            sudo nginx -t 2>&1
+            if sudo systemctl reload nginx 2>/dev/null; then
+                echo -e "${GREEN}✅ Nginx reloaded successfully${NC}"
+            else
+                echo -e "${RED}❌ Failed to reload nginx${NC}"
+                return 1
+            fi
+        fi
+    else
+        # Nginx is not running, try to start it
+        echo -e "${YELLOW}⚠️  Nginx is not running, starting it...${NC}"
+        if sudo systemctl start nginx 2>/dev/null; then
+            echo -e "${GREEN}✅ Nginx started successfully${NC}"
+        else
+            echo -e "${RED}❌ Failed to start nginx${NC}"
+            echo -e "${BLUE}💡 Check: sudo systemctl status nginx${NC}"
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
+# Run nginx check
+check_and_fix_nginx || echo -e "${YELLOW}⚠️  Continuing without nginx (services may not be accessible via domain)${NC}"
+
 # Check if venv exists
 if [ ! -d ".venv" ]; then
     echo -e "${RED}❌ Virtual environment not found. Please run: python -m venv .venv${NC}"
@@ -451,6 +497,17 @@ case $SERVICE in
         fi
         start_service "frontend_admin" 'npm run dev' 11310
         cd ../../../../..
+        sleep 1
+
+        # Owner Panel Frontend (owner.analyticbot.org) - Port 11340
+        echo -e "${BLUE}📦 Starting Owner Panel (port 11340)...${NC}"
+        cd apps/frontend/apps/owner
+        if [ ! -d "node_modules" ]; then
+            echo -e "${BLUE}📦 Installing owner frontend dependencies...${NC}"
+            npm install
+        fi
+        start_service "frontend_owner" 'npm run dev' 11340
+        cd ../../../..
         ;;
     "stop")
         # Stop all development services
@@ -498,7 +555,7 @@ case $SERVICE in
         fi
 
         # Check for npm/vite (Frontend) processes specifically - ALL PORTS
-        for port in 11300 11310 11320 11330; do
+        for port in 11300 11310 11320 11330 11340; do
             if pgrep -f "vite.*${port}" > /dev/null; then
                 echo -e "${YELLOW}🔄 Stopping frontend on port ${port}${NC}"
                 pkill -f "vite.*${port}" || true
@@ -557,6 +614,21 @@ case $SERVICE in
         echo -e "${BLUE}📊 Development Services Status:${NC}"
         echo "=================================="
         echo ""
+        
+        # Check Nginx first
+        echo -e "${BLUE}🌐 Nginx Reverse Proxy:${NC}"
+        if systemctl is-active --quiet nginx; then
+            if sudo nginx -t 2>&1 | grep -q "test is successful"; then
+                echo -e "Nginx:              ${GREEN}✅ Running (config valid)${NC}"
+            else
+                echo -e "Nginx:              ${YELLOW}⚠️  Running (config errors)${NC}"
+            fi
+        else
+            echo -e "Nginx:              ${RED}❌ Stopped${NC}"
+            echo -e "${BLUE}💡 Start with: sudo systemctl start nginx${NC}"
+        fi
+        
+        echo ""
         echo -e "${BLUE}🐳 Infrastructure (Docker):${NC}"
 
         # Check PostgreSQL (port 10100)
@@ -612,6 +684,13 @@ case $SERVICE in
             echo -e "Admin (11310):      ${GREEN}✅ Running${NC}  → admin.analyticbot.org"
         else
             echo -e "Admin (11310):      ${RED}❌ Stopped${NC}   → admin.analyticbot.org"
+        fi
+
+        # Check Owner Panel - Port 11340 (owner.analyticbot.org)
+        if curl -s http://localhost:11340 >/dev/null 2>&1; then
+            echo -e "Owner (11340):      ${GREEN}✅ Running${NC}  → owner.analyticbot.org"
+        else
+            echo -e "Owner (11340):      ${RED}❌ Stopped${NC}   → owner.analyticbot.org"
         fi
 
         echo ""

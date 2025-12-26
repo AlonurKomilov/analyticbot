@@ -89,7 +89,7 @@ const NavigationBar: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const [mobileOpen, setMobileOpen] = useState(false);
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     // Profile menu state
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -99,14 +99,12 @@ const NavigationBar: React.FC = () => {
     const { user, logout } = useAuth();
 
     const handleDrawerToggle = () => {
-        setMobileOpen(!mobileOpen);
+        setDrawerOpen(!drawerOpen);
     };
 
     const handleNavigation = (path: string) => {
         navigate(path);
-        if (isMobile) {
-            setMobileOpen(false);
-        }
+        setDrawerOpen(false);
     };
 
     const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -258,16 +256,14 @@ const NavigationBar: React.FC = () => {
                 }}
             >
                 <Toolbar>
-                    {isMobile && (
-                        <IconButton
-                            color="inherit"
-                            edge="start"
-                            onClick={handleDrawerToggle}
-                            sx={{ mr: 2 }}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                    )}
+                    <IconButton
+                        color="inherit"
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                        sx={{ mr: 2 }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                         {tCommon('appName')}
                     </Typography>
@@ -409,42 +405,23 @@ const NavigationBar: React.FC = () => {
                 </Toolbar>
             </AppBar>
 
-            {/* Desktop Sidebar */}
-            {!isMobile && (
-                <Drawer
-                    variant="permanent"
-                    sx={{
+            {/* Drawer - Works on all screen sizes */}
+            <Drawer
+                variant="temporary"
+                open={drawerOpen}
+                onClose={handleDrawerToggle}
+                ModalProps={{
+                    keepMounted: true, // Better mobile performance
+                }}
+                sx={{
+                    '& .MuiDrawer-paper': {
                         width: DRAWER_WIDTH,
-                        flexShrink: 0,
-                        '& .MuiDrawer-paper': {
-                            width: DRAWER_WIDTH,
-                            boxSizing: 'border-box',
-                        },
-                    }}
-                >
-                    {drawerContent}
-                </Drawer>
-            )}
-
-            {/* Mobile Drawer */}
-            {isMobile && (
-                <Drawer
-                    variant="temporary"
-                    open={mobileOpen}
-                    onClose={handleDrawerToggle}
-                    ModalProps={{
-                        keepMounted: true, // Better mobile performance
-                    }}
-                    sx={{
-                        '& .MuiDrawer-paper': {
-                            width: DRAWER_WIDTH,
-                            boxSizing: 'border-box',
-                        },
-                    }}
-                >
-                    {drawerContent}
-                </Drawer>
-            )}
+                        boxSizing: 'border-box',
+                    },
+                }}
+            >
+                {drawerContent}
+            </Drawer>
         </>
     );
 };

@@ -174,6 +174,7 @@ export default defineConfig({
     allowedHosts: [
       '2bot.org',
       'www.2bot.org',
+      'analyticbot.org',
       'localhost',
       '127.0.0.1',
     ],

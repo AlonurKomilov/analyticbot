@@ -35,7 +35,7 @@ export default defineConfig({
     cors: true,
     hmr: true,
     allowedHosts: [
-      'admin.analyticbot.org',
+      'admin.2bot.org',
       'localhost',
       '127.0.0.1',
     ],

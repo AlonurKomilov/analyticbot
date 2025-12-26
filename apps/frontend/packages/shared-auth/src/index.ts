@@ -80,8 +80,9 @@ export function getCookie(name: string): string | null {
 export function deleteCookie(name: string): void {
   let cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
   
-  if (!isLocalhost) {
-    cookie += `; domain=${COOKIE_DOMAIN}`;
+  const cookieDomain = getCookieDomain();
+  if (!isLocalhost && cookieDomain) {
+    cookie += `; domain=${cookieDomain}`;
   }
   
   document.cookie = cookie;

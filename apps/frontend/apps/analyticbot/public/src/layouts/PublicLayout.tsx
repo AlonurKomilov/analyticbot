@@ -106,7 +106,7 @@ export default function PublicLayout() {
 
           <Button
             color="inherit"
-            href="https://app.analyticbot.org"
+            href="https://2bot.org"
             target="_blank"
             sx={{ ml: 2 }}
           >
@@ -115,7 +115,7 @@ export default function PublicLayout() {
           <Button
             variant="contained"
             color="secondary"
-            href="https://app.analyticbot.org/register"
+            href="https://2bot.org/register"
             target="_blank"
             sx={{ ml: 1 }}
           >
@@ -158,7 +158,7 @@ export default function PublicLayout() {
               </Typography>
               <Typography
                 component="a"
-                href="https://app.analyticbot.org"
+                href="https://2bot.org"
                 variant="body2"
                 color="text.secondary"
                 sx={{ textDecoration: 'none', '&:hover': { color: 'primary.main' } }}

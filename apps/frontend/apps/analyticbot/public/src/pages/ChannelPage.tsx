@@ -261,14 +261,14 @@ export default function ChannelPage() {
           <Button
             variant="contained"
             size="large"
-            href="https://app.analyticbot.org/register"
+            href="https://2bot.org/register"
           >
             Create Free Account
           </Button>
           <Button
             variant="outlined"
             size="large"
-            href="https://app.analyticbot.org"
+            href="https://2bot.org"
           >
             Sign In
           </Button>

@@ -18,7 +18,7 @@ export const API_CONFIG = {
 // App domain configuration
 export const DOMAIN_CONFIG = {
   public: 'analyticbot.org',
-  app: 'app.analyticbot.org',
+  app: '2bot.org',
   admin: 'admin.analyticbot.org',
   moderator: 'moderator.analyticbot.org',
   api: 'api.analyticbot.org',

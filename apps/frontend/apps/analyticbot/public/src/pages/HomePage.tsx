@@ -348,7 +348,7 @@ export default function HomePage() {
         <Button
           variant="contained"
           size="large"
-          href="https://app.analyticbot.org/register"
+          href="https://2bot.org/register"
           sx={{
             bgcolor: 'white',
             color: 'primary.main',

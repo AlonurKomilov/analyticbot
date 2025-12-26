@@ -3,9 +3,32 @@
  * Single source of truth for all environment variables
  */
 
+// Dynamic API URL detection based on current domain
+const getApiBaseUrl = (): string => {
+  // Allow override via environment variables
+  if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL;
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  
+  // Auto-detect based on current domain
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // If on 2bot.org domain, use api.2bot.org
+    if (hostname.endsWith('.2bot.org') || hostname === '2bot.org') {
+      return 'https://api.2bot.org';
+    }
+    // If on analyticbot.org domain, use api.analyticbot.org
+    if (hostname.endsWith('.analyticbot.org') || hostname === 'analyticbot.org') {
+      return 'https://api.analyticbot.org';
+    }
+  }
+  
+  // Default fallback
+  return 'https://api.analyticbot.org';
+};
+
 export const ENV = {
   // API Configuration
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://api.analyticbot.org',
+  API_BASE_URL: getApiBaseUrl(),
   WS_URL: import.meta.env.VITE_WS_URL || (typeof window !== 'undefined' ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws` : 'wss://api.analyticbot.org'),
 
   // Timeouts

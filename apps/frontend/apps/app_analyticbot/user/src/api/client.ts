@@ -143,7 +143,7 @@ export class UnifiedApiClient {
     switch (this.authStrategy) {
       case 'jwt': {
         // CRITICAL FIX: Use cross-domain SSO utility first, then fall back to localStorage
-        // This ensures tokens from cookies (set on analyticbot.org) are accessible on app.analyticbot.org
+        // This ensures tokens from cookies (set on analyticbot.org) are accessible on 2bot.org
         const token = getAccessToken() ||                        // ✅ SSO: checks cookies then localStorage
                      localStorage.getItem('auth_token') ||       // Legacy key
                      localStorage.getItem('access_token') ||     // Legacy/alternate key

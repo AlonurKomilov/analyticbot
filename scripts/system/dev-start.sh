@@ -468,7 +468,7 @@ case $SERVICE in
 
         # User Dashboard Frontend (app.analyticbot.org) - Port 11300
         echo -e "${BLUE}📦 Starting User Dashboard (port 11300)...${NC}"
-        cd apps/frontend/apps/app_analyticbot/user
+        cd apps/frontend/apps/2bot/user
         if [ ! -d "node_modules" ]; then
             echo -e "${BLUE}📦 Installing user frontend dependencies...${NC}"
             npm install
@@ -490,7 +490,7 @@ case $SERVICE in
 
         # Admin Panel Frontend (admin.analyticbot.org) - Port 11310
         echo -e "${BLUE}📦 Starting Admin Panel (port 11310)...${NC}"
-        cd apps/frontend/apps/app_analyticbot/admin
+        cd apps/frontend/apps/2bot/admin
         if [ ! -d "node_modules" ]; then
             echo -e "${BLUE}📦 Installing admin frontend dependencies...${NC}"
             npm install

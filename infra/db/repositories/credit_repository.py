@@ -645,13 +645,15 @@ class CreditRepository:
     async def get_packages(self, active_only: bool = True) -> list[dict]:
         """Get available credit packages for purchase"""
         query = """
-            SELECT id, name, slug, credits, bonus_credits, price, currency,
-                   description, is_popular, sort_order
+            SELECT id, name, slug, credits, bonus_credits, 
+                   price_usd as price, 'USD' as currency,
+                   price_stars, discount_percent,
+                   description, is_featured as is_popular, sort_order
             FROM credit_packages
         """
         if active_only:
             query += " WHERE is_active = TRUE"
-        query += " ORDER BY sort_order, price"
+        query += " ORDER BY sort_order, price_usd"
 
         rows = await self._pool.fetch(query)
         return [dict(row) for row in rows]
@@ -660,7 +662,9 @@ class CreditRepository:
         """Get a specific package by slug"""
         row = await self._pool.fetchrow(
             """
-            SELECT id, name, slug, credits, bonus_credits, price, currency, description
+            SELECT id, name, slug, credits, bonus_credits, 
+                   price_usd as price, 'USD' as currency, 
+                   price_stars, description
             FROM credit_packages
             WHERE slug = $1 AND is_active = TRUE
         """,

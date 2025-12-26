@@ -2020,3 +2020,345 @@ async def get_storage_analysis(
         avg_snapshots_per_post=round(avg_snapshots_per_post, 2),
         duplicate_snapshots_estimate=duplicate_snapshots_estimate,
     )
+
+
+# =============================================================================
+# KUBERNETES MANAGEMENT ENDPOINTS
+# =============================================================================
+
+import os
+from core.services.k8s import K8sService
+
+# Initialize K8s service (lazy loading)
+_k8s_service: K8sService | None = None
+
+
+def get_k8s_service() -> K8sService:
+    """Get K8s service instance with lazy initialization."""
+    global _k8s_service
+    if _k8s_service is None:
+        _k8s_service = K8sService(
+            kubeconfig_path=os.environ.get('KUBECONFIG'),
+            context=os.environ.get('K8S_CONTEXT'),
+            in_cluster=os.environ.get('K8S_IN_CLUSTER', 'false').lower() == 'true'
+        )
+    return _k8s_service
+
+
+class K8sStatusResponse(BaseModel):
+    enabled: bool
+    status: str
+    cluster: str | None = None
+    version: str | None = None
+    error: str | None = None
+
+
+class K8sScaleRequest(BaseModel):
+    replicas: int = Field(..., ge=0, le=100)
+
+
+class K8sActionResponse(BaseModel):
+    success: bool
+    message: str | None = None
+    error: str | None = None
+
+
+class K8sPodLogsRequest(BaseModel):
+    container: str | None = None
+    tail_lines: int = Field(default=100, ge=1, le=10000)
+
+
+@router.get("/k8s/status", response_model=K8sStatusResponse)
+async def get_k8s_status(
+    admin: dict = Depends(get_current_admin_user)
+):
+    """
+    Get Kubernetes connection status.
+    Returns whether K8s management is enabled and connection health.
+    """
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        return K8sStatusResponse(
+            enabled=False,
+            status="disabled",
+            error="K8s management is disabled. Set K8S_ENABLED=true to enable."
+        )
+    
+    k8s = get_k8s_service()
+    connection = k8s.connect()
+    
+    return K8sStatusResponse(
+        enabled=True,
+        status=connection.get('status', 'unknown'),
+        cluster=connection.get('cluster'),
+        version=connection.get('version'),
+        error=connection.get('error')
+    )
+
+
+@router.get("/k8s/clusters")
+async def get_k8s_clusters(
+    admin: dict = Depends(get_current_admin_user)
+):
+    """
+    Get list of Kubernetes clusters.
+    For single-cluster setups, returns info about the connected cluster.
+    """
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    clusters = k8s.get_clusters()
+    
+    if not clusters:
+        # Return mock data if not connected
+        return [{
+            'name': 'Not Connected',
+            'endpoint': '-',
+            'status': 'disconnected',
+            'version': '-',
+            'nodes_count': 0,
+            'pods_running': 0,
+            'pods_total': 0,
+            'cpu_usage': 0,
+            'memory_usage': 0
+        }]
+    
+    return clusters
+
+
+@router.get("/k8s/nodes")
+async def get_k8s_nodes(
+    admin: dict = Depends(get_current_admin_user)
+):
+    """Get all Kubernetes nodes in the cluster."""
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    nodes = k8s.get_nodes()
+    
+    return nodes
+
+
+@router.get("/k8s/pods")
+async def get_k8s_pods(
+    namespace: str | None = Query(default=None, description="Filter by namespace"),
+    admin: dict = Depends(get_current_admin_user)
+):
+    """Get all pods, optionally filtered by namespace."""
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    pods = k8s.get_pods(namespace=namespace)
+    
+    return pods
+
+
+@router.delete("/k8s/pods/{namespace}/{name}", response_model=K8sActionResponse)
+async def delete_k8s_pod(
+    namespace: str,
+    name: str,
+    admin: dict = Depends(get_current_admin_user)
+):
+    """
+    Delete a specific pod.
+    The pod will be recreated if managed by a ReplicaSet/Deployment.
+    """
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    result = k8s.delete_pod(name, namespace)
+    
+    return K8sActionResponse(**result)
+
+
+@router.post("/k8s/pods/{namespace}/{name}/logs")
+async def get_k8s_pod_logs(
+    namespace: str,
+    name: str,
+    request: K8sPodLogsRequest,
+    admin: dict = Depends(get_current_admin_user)
+):
+    """Get logs from a specific pod."""
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    result = k8s.get_pod_logs(
+        name=name,
+        namespace=namespace,
+        container=request.container,
+        tail_lines=request.tail_lines
+    )
+    
+    if not result.get('success'):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=result.get('error', 'Failed to get logs')
+        )
+    
+    return {'logs': result.get('logs', '')}
+
+
+@router.get("/k8s/deployments")
+async def get_k8s_deployments(
+    namespace: str | None = Query(default=None, description="Filter by namespace"),
+    admin: dict = Depends(get_current_admin_user)
+):
+    """Get all deployments."""
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    deployments = k8s.get_deployments(namespace=namespace)
+    
+    return deployments
+
+
+@router.post("/k8s/deployments/{namespace}/{name}/scale", response_model=K8sActionResponse)
+async def scale_k8s_deployment(
+    namespace: str,
+    name: str,
+    request: K8sScaleRequest,
+    admin: dict = Depends(get_current_admin_user)
+):
+    """Scale a deployment to specified replica count."""
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    result = k8s.scale_deployment(name, namespace, request.replicas)
+    
+    return K8sActionResponse(**result)
+
+
+@router.post("/k8s/deployments/{namespace}/{name}/restart", response_model=K8sActionResponse)
+async def restart_k8s_deployment(
+    namespace: str,
+    name: str,
+    admin: dict = Depends(get_current_admin_user)
+):
+    """
+    Restart a deployment by triggering a rollout.
+    All pods will be recreated with the same configuration.
+    """
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    result = k8s.restart_deployment(name, namespace)
+    
+    return K8sActionResponse(**result)
+
+
+@router.get("/k8s/services")
+async def get_k8s_services(
+    namespace: str | None = Query(default=None, description="Filter by namespace"),
+    admin: dict = Depends(get_current_admin_user)
+):
+    """Get all Kubernetes services."""
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    services = k8s.get_services(namespace=namespace)
+    
+    return services
+
+
+@router.get("/k8s/ingress")
+async def get_k8s_ingresses(
+    namespace: str | None = Query(default=None, description="Filter by namespace"),
+    admin: dict = Depends(get_current_admin_user)
+):
+    """Get all Kubernetes ingresses."""
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    ingresses = k8s.get_ingresses(namespace=namespace)
+    
+    return ingresses
+
+
+@router.get("/k8s/metrics")
+async def get_k8s_metrics(
+    admin: dict = Depends(get_current_admin_user)
+):
+    """
+    Get cluster-wide Kubernetes metrics.
+    Note: Detailed CPU/memory metrics require metrics-server to be installed.
+    """
+    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
+    
+    if not k8s_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="K8s management is disabled"
+        )
+    
+    k8s = get_k8s_service()
+    metrics = k8s.get_metrics()
+    
+    if 'error' in metrics and not 'nodes' in metrics:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=metrics['error']
+        )
+    
+    return metrics
+

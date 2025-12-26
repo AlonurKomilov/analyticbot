@@ -53,6 +53,10 @@ CSRF_EXEMPT_PATHS = {
     "/openapi.json",
     "/redoc",
     "/webhook",  # Webhooks have their own validation
+    # Credits endpoints - protected by Bearer token
+    "/credits/daily-reward",
+    "/credits/purchase",
+    "/credits/use-service",
 }
 
 # Methods that don't require CSRF protection (safe methods)

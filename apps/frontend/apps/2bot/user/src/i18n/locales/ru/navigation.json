@@ -1,0 +1,82 @@
+{
+  "sidebar": {
+    "dashboard": "Панель управления",
+    "analytics": "Аналитика",
+    "channels": "Каналы",
+    "posts": "Посты",
+    "scheduler": "Планировщик",
+    "reports": "Отчеты",
+    "settings": "Настройки",
+    "help": "Помощь",
+    "logout": "Выход",
+    "browseCatalog": "Каталог каналов",
+    "publicCatalog": "Публичный каталог"
+  },
+  "aiServices": "AI Сервисы",
+  "myBot": "Мой бот",
+  "credits": "Кредиты",
+  "rewards": "Награды",
+  "marketplace": "Магазин",
+  "payment": "Оплата",
+  "workers": {
+    "bot": "Бот воркер",
+    "botModeration": "Модерация бота",
+    "mtproto": "MTProto воркер",
+    "ai": "AI воркер"
+  },
+  "header": {
+    "search": "Поиск...",
+    "notifications": "Уведомления",
+    "profile": "Профиль",
+    "settings": "Настройки",
+    "logout": "Выход"
+  },
+  "breadcrumb": {
+    "home": "Главная",
+    "dashboard": "Панель управления",
+    "analytics": "Аналитика",
+    "channels": "Каналы",
+    "posts": "Посты",
+    "settings": "Настройки"
+  },
+  "footer": {
+    "copyright": "© {{year}} 2Bot. Все права защищены.",
+    "privacy": "Политика конфиденциальности",
+    "terms": "Условия использования",
+    "contact": "Связаться с нами"
+  },
+  "userMenu": {
+    "profile": "Мой профиль",
+    "settings": "Настройки",
+    "billing": "Оплата",
+    "credits": "Кредиты",
+    "help": "Помощь и поддержка",
+    "logout": "Выход"
+  },
+  "mobile": {
+    "menu": "Меню",
+    "close": "Закрыть"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Панель управления",
+      "description": "Обзор эффективности ваших каналов"
+    },
+    "analytics": {
+      "title": "Аналитика",
+      "description": "Подробная аналитика и статистика"
+    },
+    "channels": {
+      "title": "Каналы",
+      "description": "Управление Telegram-каналами"
+    },
+    "posts": {
+      "title": "Посты",
+      "description": "Просмотр и управление постами"
+    },
+    "settings": {
+      "title": "Настройки",
+      "description": "Управление настройками аккаунта"
+    }
+  }
+}

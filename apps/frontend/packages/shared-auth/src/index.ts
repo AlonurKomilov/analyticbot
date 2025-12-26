@@ -1,10 +1,10 @@
 /**
  * 🔐 Shared Authentication Utilities
  * 
- * Cross-subdomain SSO support for AnalyticBot platforms:
- * - analyticbot.org (public catalog)
- * - 2bot.org (user dashboard - new domain)
- * - admin.analyticbot.org (admin panel)
+ * Cross-subdomain SSO support for 2Bot platforms:
+ * - 2bot.org (user dashboard)
+ * - admin.2bot.org (admin panel)
+ * - analyticbot.org (public catalog & legacy)
  * - moderator.analyticbot.org (moderator panel)
  * 
  * Uses cookies with dynamic domain detection for cross-subdomain auth

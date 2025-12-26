@@ -172,7 +172,8 @@ export default defineConfig({
     host: '0.0.0.0', // Allow external connections
     // Allow these hosts through Vite
     allowedHosts: [
-      'app.analyticbot.org',
+      '2bot.org',
+      'www.2bot.org',
       'localhost',
       '127.0.0.1',
     ],

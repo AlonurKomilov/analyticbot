@@ -3,15 +3,14 @@
  * 
  * Cross-subdomain SSO support for AnalyticBot platforms:
  * - analyticbot.org (public catalog)
- * - app.analyticbot.org (user dashboard)
+ * - 2bot.org (user dashboard - new domain)
  * - admin.analyticbot.org (admin panel)
  * - moderator.analyticbot.org (moderator panel)
  * 
- * Uses cookies with domain=.analyticbot.org for cross-subdomain auth
+ * Uses cookies with dynamic domain detection for cross-subdomain auth
  */
 
 // Cookie configuration
-const COOKIE_DOMAIN = '.analyticbot.org';
 const TOKEN_COOKIE = 'ab_token';
 const REFRESH_TOKEN_COOKIE = 'ab_refresh';
 const USER_COOKIE = 'ab_user';
@@ -19,6 +18,22 @@ const USER_COOKIE = 'ab_user';
 // For local development, don't set domain (uses current domain)
 const isLocalhost = typeof window !== 'undefined' && 
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+// Dynamic cookie domain detection
+function getCookieDomain(): string | null {
+  if (typeof window === 'undefined') return null;
+  const hostname = window.location.hostname;
+  
+  // 2bot.org domain
+  if (hostname === '2bot.org' || hostname.endsWith('.2bot.org')) {
+    return '.2bot.org';
+  }
+  // analyticbot.org domain
+  if (hostname === 'analyticbot.org' || hostname.endsWith('.analyticbot.org')) {
+    return '.analyticbot.org';
+  }
+  return null;
+}
 
 /**
  * Set a cookie with proper cross-subdomain configuration
@@ -30,8 +45,9 @@ export function setCookie(name: string, value: string, days: number = 30): void 
   let cookie = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
   
   // Only set domain for production (enables cross-subdomain)
-  if (!isLocalhost) {
-    cookie += `; domain=${COOKIE_DOMAIN}`;
+  const cookieDomain = getCookieDomain();
+  if (!isLocalhost && cookieDomain) {
+    cookie += `; domain=${cookieDomain}`;
   }
   
   // Use Secure flag in production

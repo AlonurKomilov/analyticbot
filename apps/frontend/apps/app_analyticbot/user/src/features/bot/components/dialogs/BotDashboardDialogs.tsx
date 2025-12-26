@@ -11,16 +11,9 @@ import {
   DialogContentText,
   DialogTitle,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Box,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import { Send } from '@mui/icons-material';
-import type { Channel } from '@/types';
 
 // ============================================================================
 // Remove Bot Dialog
@@ -126,14 +119,8 @@ interface TestMessageDialogProps {
   open: boolean;
   onClose: () => void;
   onSend: () => void;
-  channels: Channel[];
-  isLoadingChannels: boolean;
-  selectedChannelId: string;
-  setSelectedChannelId: (value: string) => void;
   manualChatId: string;
   setManualChatId: (value: string) => void;
-  useManualInput: boolean;
-  setUseManualInput: (value: boolean) => void;
   testMessage: string;
   setTestMessage: (value: string) => void;
   isVerifying: boolean;
@@ -143,14 +130,8 @@ export const TestMessageDialog: React.FC<TestMessageDialogProps> = ({
   open,
   onClose,
   onSend,
-  channels,
-  isLoadingChannels,
-  selectedChannelId,
-  setSelectedChannelId,
   manualChatId,
   setManualChatId,
-  useManualInput,
-  setUseManualInput,
   testMessage,
   setTestMessage,
   isVerifying,

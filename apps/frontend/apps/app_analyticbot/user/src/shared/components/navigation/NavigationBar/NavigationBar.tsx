@@ -88,7 +88,8 @@ const NavigationBar: React.FC = () => {
     const theme = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    // Reserved for future mobile responsive features
+    useMediaQuery(theme.breakpoints.down('md'));
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     // Profile menu state

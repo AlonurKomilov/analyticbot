@@ -1,0 +1,68 @@
+# K8s Services that point to host machine services
+# This allows K3s pods to connect to services running on the host
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: host-postgres
+  namespace: analyticbot
+spec:
+  type: ExternalName
+  externalName: host.k3d.internal  # K3s built-in host resolution
+  ports:
+    - port: 5432
+      targetPort: 10100  # Host PostgreSQL port
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: host-postgres-ep
+  namespace: analyticbot
+subsets:
+  - addresses:
+      - ip: 10.43.0.1  # K3s gateway to host
+    ports:
+      - port: 10100
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: host-postgres-ep
+  namespace: analyticbot
+spec:
+  ports:
+    - port: 5432
+      targetPort: 10100
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: host-redis
+  namespace: analyticbot
+spec:
+  type: ExternalName
+  externalName: host.k3d.internal
+  ports:
+    - port: 6379
+      targetPort: 10200  # Host Redis port
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: host-redis-ep
+  namespace: analyticbot
+subsets:
+  - addresses:
+      - ip: 10.43.0.1
+    ports:
+      - port: 10200
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: host-redis-ep
+  namespace: analyticbot
+spec:
+  ports:
+    - port: 6379
+      targetPort: 10200

@@ -3,7 +3,7 @@
  * 
  * Enables Single Sign-On across all AnalyticBot subdomains:
  * - analyticbot.org (public)
- * - app.analyticbot.org (user dashboard)
+ * - 2bot.org (user dashboard - new domain)
  * - admin.analyticbot.org (admin panel)
  * - moderator.analyticbot.org (moderator panel)
  */
@@ -22,8 +22,22 @@ export const STORAGE_KEYS = {
   USER: 'auth_user',
 } as const;
 
-// Cookie domain for cross-subdomain access
-const COOKIE_DOMAIN = '.analyticbot.org';
+// Cookie domain detection - supports both analyticbot.org and 2bot.org
+const getCookieDomain = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  const hostname = window.location.hostname;
+  
+  // 2bot.org domain
+  if (hostname === '2bot.org' || hostname.endsWith('.2bot.org')) {
+    return '.2bot.org';
+  }
+  // analyticbot.org domain
+  if (hostname === 'analyticbot.org' || hostname.endsWith('.analyticbot.org')) {
+    return '.analyticbot.org';
+  }
+  // localhost - no domain needed
+  return null;
+};
 
 /**
  * Check if running on localhost
@@ -46,8 +60,9 @@ export const setCookie = (name: string, value: string, days: number = 30): void 
   let cookieString = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
   
   // Set domain for production (enables cross-subdomain cookies)
-  if (!isLocalDev()) {
-    cookieString += `; domain=${COOKIE_DOMAIN}`;
+  const cookieDomain = getCookieDomain();
+  if (!isLocalDev() && cookieDomain) {
+    cookieString += `; domain=${cookieDomain}`;
   }
   
   // Use Secure flag for HTTPS
@@ -87,8 +102,9 @@ export const deleteCookie = (name: string): void => {
   if (typeof document === 'undefined') return;
   
   // Delete with domain (production)
-  if (!isLocalDev()) {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${COOKIE_DOMAIN}`;
+  const cookieDomain = getCookieDomain();
+  if (!isLocalDev() && cookieDomain) {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${cookieDomain}`;
   }
   
   // Also delete without domain (for cleanup/localhost)
@@ -104,7 +120,7 @@ export const setAuthTokens = (accessToken: string, refreshToken?: string): void 
     hasRefreshToken: !!refreshToken,
     hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
     isLocalDev: isLocalDev(),
-    domain: isLocalDev() ? 'none' : COOKIE_DOMAIN
+    domain: isLocalDev() ? 'none' : getCookieDomain()
   });
   
   // Set cookies for cross-subdomain SSO

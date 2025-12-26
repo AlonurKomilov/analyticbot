@@ -31,17 +31,14 @@ import { BotTimelineCard } from './BotTimelineCard';
 import { BotActionsCard } from './BotActionsCard';
 import { ActiveServicesCard } from './ActiveServicesCard';
 import { AvailableUpgradesCard } from './AvailableUpgradesCard';
-import { convertChannelToChatId } from './utils';
 
 export const UserBotDashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
     bot,
-    channels,
     error,
     clearError,
     isLoading,
-    isLoadingChannels,
     isRemoving,
     isUpdating,
     isVerifying,
@@ -117,20 +114,15 @@ export const UserBotDashboard: React.FC = () => {
     console.log('[UserBotDashboard] handleSendTestMessage called - checking for Telegram ID');
     try {
       // Try to send test message directly (will use user's telegram_id if available)
-      const response = await verifyBot({
+      await verifyBot({
         send_test_message: true,
         // Don't provide test_chat_id - backend will use user's telegram_id automatically
       });
 
-      // Check if the operation was successful
-      if (response.success) {
-        toast.success('✅ Test message sent! Check your Telegram messages.');
-        // Refresh bot status to update total_requests count
-        await fetchBotStatus();
-      } else {
-        // Backend returned success=false with a message
-        toast.error(`❌ ${response.message}`);
-      }
+      // If we reach here, the operation was successful (verifyBot throws on error)
+      toast.success('✅ Test message sent! Check your Telegram messages.');
+      // Refresh bot status to update total_requests count
+      await fetchBotStatus();
     } catch (err: any) {
       console.error('[UserBotDashboard] Send test message failed:', err);
       const errorMsg = err?.response?.data?.detail || err?.message || '';
@@ -139,7 +131,7 @@ export const UserBotDashboard: React.FC = () => {
       if (errorMsg.includes('logged in with email') || errorMsg.includes('Telegram ID not found')) {
         // User logged in via email - show manual input dialog
         console.log('[UserBotDashboard] User has no telegram_id, opening manual dialog');
-        toast((t) => (
+        toast((_t) => (
           <div>
             <strong>⚠️ Telegram ID Not Found</strong>
             <br />
@@ -182,26 +174,21 @@ export const UserBotDashboard: React.FC = () => {
     }
 
     try {
-      const response = await verifyBot({
+      await verifyBot({
         send_test_message: true,
         test_chat_id: chatId,
         test_message: testMessage,
       });
 
-      // Check if the operation was successful
-      if (response.success) {
-        toast.success('✅ Test message sent successfully! Check your Telegram.');
-        closeDialog('showTestMessageDialog');
-        setTestMessageState(prev => ({
-          ...prev,
-          manualChatId: '',
-        }));
-        // Refresh bot status to update total_requests count
-        await fetchBotStatus();
-      } else {
-        // Backend returned success=false with a message
-        toast.error(`❌ ${response.message}`);
-      }
+      // If we reach here, the operation was successful (verifyBot throws on error)
+      toast.success('✅ Test message sent successfully! Check your Telegram.');
+      closeDialog('showTestMessageDialog');
+      setTestMessageState(prev => ({
+        ...prev,
+        manualChatId: '',
+      }));
+      // Refresh bot status to update total_requests count
+      await fetchBotStatus();
     } catch (err: any) {
       const errorMsg = err?.response?.data?.detail || err?.message || 'Failed to send test message';
       toast.error(`❌ ${errorMsg}`);
@@ -349,14 +336,8 @@ export const UserBotDashboard: React.FC = () => {
         open={dialogs.showTestMessageDialog}
         onClose={() => closeDialog('showTestMessageDialog')}
         onSend={handleSendTestMessageWithChatId}
-        channels={channels}
-        isLoadingChannels={isLoadingChannels}
-        selectedChannelId={testMessageState.selectedChannelId}
-        setSelectedChannelId={(v) => setTestMessageState(prev => ({ ...prev, selectedChannelId: v }))}
         manualChatId={testMessageState.manualChatId}
         setManualChatId={(v) => setTestMessageState(prev => ({ ...prev, manualChatId: v }))}
-        useManualInput={testMessageState.useManualInput}
-        setUseManualInput={(v) => setTestMessageState(prev => ({ ...prev, useManualInput: v }))}
         testMessage={testMessageState.testMessage}
         setTestMessage={(v) => setTestMessageState(prev => ({ ...prev, testMessage: v }))}
         isVerifying={isVerifying}

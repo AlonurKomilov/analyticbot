@@ -101,15 +101,21 @@ class TimeAnalysisRepository:
                         best_days=result.get("best_days", []),
                         daily_performance=result.get("daily_performance", []),
                         total_posts_analyzed=result.get("total_posts_analyzed", 0),
-                        best_day_hour_combinations=result.get("best_day_hour_combinations", [])
-                        if ENABLE_ADVANCED_RECOMMENDATIONS
-                        else None,
-                        content_type_recommendations=result.get("content_type_recommendations", [])
-                        if ENABLE_ADVANCED_RECOMMENDATIONS
-                        else None,
-                        content_type_summary=result.get("content_type_summary")
-                        if ENABLE_ADVANCED_RECOMMENDATIONS
-                        else None,
+                        best_day_hour_combinations=(
+                            result.get("best_day_hour_combinations", [])
+                            if ENABLE_ADVANCED_RECOMMENDATIONS
+                            else None
+                        ),
+                        content_type_recommendations=(
+                            result.get("content_type_recommendations", [])
+                            if ENABLE_ADVANCED_RECOMMENDATIONS
+                            else None
+                        ),
+                        content_type_summary=(
+                            result.get("content_type_summary")
+                            if ENABLE_ADVANCED_RECOMMENDATIONS
+                            else None
+                        ),
                     )
 
             except Exception as e:
@@ -157,7 +163,11 @@ class TimeAnalysisRepository:
             else ""
         )
 
-        content_type_group = ", p.has_video, p.has_photo, p.has_media, p.text" if ENABLE_CONTENT_TYPE_ANALYSIS else ", p.text"
+        (
+            ", p.has_video, p.has_photo, p.has_media, p.text"
+            if ENABLE_CONTENT_TYPE_ANALYSIS
+            else ", p.text"
+        )
 
         # For all-time, use a subquery with LIMIT instead of date filter
         if days is None:

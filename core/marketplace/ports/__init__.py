@@ -7,19 +7,19 @@ These define the contracts that adapters must implement.
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from core.marketplace.domain import (
-    MarketplaceItem,
-    MarketplaceService,
-    ServiceSubscription,
-    ItemPurchase,
-    ItemReview,
+    BillingCycle,
     Bundle,
     ItemCategory,
+    ItemPurchase,
+    ItemReview,
+    MarketplaceItem,
+    MarketplaceService,
     ServiceCategory,
-    BillingCycle,
+    ServiceSubscription,
     SubscriptionStatus,
 )
 
@@ -29,40 +29,35 @@ class MarketplaceItemRepositoryPort(ABC):
     Port for marketplace items repository.
     Handles CRUD operations for one-time purchase items.
     """
-    
+
     @abstractmethod
-    async def get_item_by_id(self, item_id: int) -> Optional[MarketplaceItem]:
+    async def get_item_by_id(self, item_id: int) -> MarketplaceItem | None:
         """Get item by ID"""
-        pass
-    
+
     @abstractmethod
-    async def get_item_by_key(self, unique_key: str) -> Optional[MarketplaceItem]:
+    async def get_item_by_key(self, unique_key: str) -> MarketplaceItem | None:
         """Get item by unique key"""
-        pass
-    
+
     @abstractmethod
     async def list_items(
         self,
-        category: Optional[ItemCategory] = None,
-        is_featured: Optional[bool] = None,
+        category: ItemCategory | None = None,
+        is_featured: bool | None = None,
         is_active: bool = True,
-        search_query: Optional[str] = None,
+        search_query: str | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> List[MarketplaceItem]:
+    ) -> list[MarketplaceItem]:
         """List items with filtering"""
-        pass
-    
+
     @abstractmethod
-    async def get_user_purchases(self, user_id: int) -> List[ItemPurchase]:
+    async def get_user_purchases(self, user_id: int) -> list[ItemPurchase]:
         """Get all purchases for a user"""
-        pass
-    
+
     @abstractmethod
     async def has_user_purchased(self, user_id: int, item_id: int) -> bool:
         """Check if user has purchased an item"""
-        pass
-    
+
     @abstractmethod
     async def create_purchase(
         self,
@@ -71,28 +66,25 @@ class MarketplaceItemRepositoryPort(ABC):
         price_paid: int,
     ) -> ItemPurchase:
         """Create a new purchase"""
-        pass
-    
+
     @abstractmethod
     async def get_item_reviews(
         self,
         item_id: int,
         limit: int = 10,
         offset: int = 0,
-    ) -> List[ItemReview]:
+    ) -> list[ItemReview]:
         """Get reviews for an item"""
-        pass
-    
+
     @abstractmethod
     async def create_review(
         self,
         user_id: int,
         item_id: int,
         rating: int,
-        review_text: Optional[str] = None,
+        review_text: str | None = None,
     ) -> ItemReview:
         """Create a new review"""
-        pass
 
 
 class MarketplaceServiceRepositoryPort(ABC):
@@ -100,47 +92,42 @@ class MarketplaceServiceRepositoryPort(ABC):
     Port for marketplace services repository.
     Handles CRUD operations for subscription services.
     """
-    
+
     @abstractmethod
-    async def get_service_by_id(self, service_id: int) -> Optional[MarketplaceService]:
+    async def get_service_by_id(self, service_id: int) -> MarketplaceService | None:
         """Get service by ID"""
-        pass
-    
+
     @abstractmethod
-    async def get_service_by_key(self, service_key: str) -> Optional[MarketplaceService]:
+    async def get_service_by_key(self, service_key: str) -> MarketplaceService | None:
         """Get service by key"""
-        pass
-    
+
     @abstractmethod
     async def list_services(
         self,
-        category: Optional[ServiceCategory] = None,
-        is_featured: Optional[bool] = None,
+        category: ServiceCategory | None = None,
+        is_featured: bool | None = None,
         is_active: bool = True,
         limit: int = 50,
         offset: int = 0,
-    ) -> List[MarketplaceService]:
+    ) -> list[MarketplaceService]:
         """List services with filtering"""
-        pass
-    
+
     @abstractmethod
     async def get_user_subscriptions(
         self,
         user_id: int,
-        status: Optional[SubscriptionStatus] = None,
-    ) -> List[ServiceSubscription]:
+        status: SubscriptionStatus | None = None,
+    ) -> list[ServiceSubscription]:
         """Get user's subscriptions"""
-        pass
-    
+
     @abstractmethod
     async def get_active_subscription(
         self,
         user_id: int,
         service_key: str,
-    ) -> Optional[ServiceSubscription]:
+    ) -> ServiceSubscription | None:
         """Get user's active subscription for a service"""
-        pass
-    
+
     @abstractmethod
     async def has_active_subscription(
         self,
@@ -148,8 +135,7 @@ class MarketplaceServiceRepositoryPort(ABC):
         service_key: str,
     ) -> bool:
         """Check if user has active subscription"""
-        pass
-    
+
     @abstractmethod
     async def create_subscription(
         self,
@@ -161,8 +147,7 @@ class MarketplaceServiceRepositoryPort(ABC):
         expires_at: datetime,
     ) -> ServiceSubscription:
         """Create a new subscription"""
-        pass
-    
+
     @abstractmethod
     async def renew_subscription(
         self,
@@ -171,16 +156,14 @@ class MarketplaceServiceRepositoryPort(ABC):
         price_paid: int,
     ) -> ServiceSubscription:
         """Renew an existing subscription"""
-        pass
-    
+
     @abstractmethod
     async def cancel_subscription(
         self,
         subscription_id: int,
     ) -> ServiceSubscription:
         """Cancel a subscription"""
-        pass
-    
+
     @abstractmethod
     async def update_auto_renew(
         self,
@@ -188,61 +171,53 @@ class MarketplaceServiceRepositoryPort(ABC):
         auto_renew: bool,
     ) -> ServiceSubscription:
         """Update auto-renew setting"""
-        pass
-    
+
     @abstractmethod
     async def log_usage(
         self,
         subscription_id: int,
         action: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Log service usage"""
-        pass
-    
+
     @abstractmethod
     async def increment_usage(
         self,
         subscription_id: int,
     ) -> None:
         """Increment usage counters"""
-        pass
-    
+
     @abstractmethod
     async def reset_daily_usage(self) -> int:
         """Reset daily usage for all subscriptions. Returns count reset."""
-        pass
-    
+
     @abstractmethod
     async def reset_monthly_usage(self) -> int:
         """Reset monthly usage for all subscriptions. Returns count reset."""
-        pass
 
 
 class BundleRepositoryPort(ABC):
     """
     Port for bundle repository.
     """
-    
+
     @abstractmethod
-    async def get_bundle_by_id(self, bundle_id: int) -> Optional[Bundle]:
+    async def get_bundle_by_id(self, bundle_id: int) -> Bundle | None:
         """Get bundle by ID"""
-        pass
-    
+
     @abstractmethod
-    async def get_bundle_by_key(self, unique_key: str) -> Optional[Bundle]:
+    async def get_bundle_by_key(self, unique_key: str) -> Bundle | None:
         """Get bundle by unique key"""
-        pass
-    
+
     @abstractmethod
     async def list_bundles(
         self,
         is_active: bool = True,
-        is_featured: Optional[bool] = None,
-    ) -> List[Bundle]:
+        is_featured: bool | None = None,
+    ) -> list[Bundle]:
         """List available bundles"""
-        pass
-    
+
     @abstractmethod
     async def purchase_bundle(
         self,
@@ -251,62 +226,55 @@ class BundleRepositoryPort(ABC):
         price_paid: int,
     ) -> None:
         """Purchase a bundle (creates all item purchases and subscriptions)"""
-        pass
 
 
 class CreditRepositoryPort(ABC):
     """
     Port for credit operations.
     """
-    
+
     @abstractmethod
     async def get_balance(self, user_id: int) -> int:
         """Get user's credit balance"""
-        pass
-    
+
     @abstractmethod
     async def deduct_credits(self, user_id: int, amount: int, reason: str) -> int:
         """Deduct credits from user. Returns new balance."""
-        pass
-    
+
     @abstractmethod
     async def add_credits(self, user_id: int, amount: int, reason: str) -> int:
         """Add credits to user. Returns new balance."""
-        pass
-    
+
     @abstractmethod
     async def transfer_credits(
         self,
         from_user_id: int,
         to_user_id: int,
         amount: int,
-        message: Optional[str] = None,
+        message: str | None = None,
     ) -> None:
         """Transfer credits between users"""
-        pass
 
 
 class FeatureGatePort(ABC):
     """
     Port for feature gating (checking service access).
     """
-    
+
     @abstractmethod
     async def has_access(self, user_id: int, service_key: str) -> bool:
         """Check if user has access to a service"""
-        pass
-    
+
     @abstractmethod
-    async def get_user_services(self, user_id: int) -> List[str]:
+    async def get_user_services(self, user_id: int) -> list[str]:
         """Get list of service keys user has access to"""
-        pass
-    
+
     @abstractmethod
     async def check_quota(
         self,
         user_id: int,
         service_key: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Check quota status for a service.
         Returns: {
@@ -315,4 +283,3 @@ class FeatureGatePort(ABC):
             "monthly_remaining": int | None,
         }
         """
-        pass

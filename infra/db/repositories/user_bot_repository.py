@@ -5,7 +5,12 @@ User Bot Credentials Repository Implementation
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.models.user_bot_domain import AdminBotAction, BotStatus, BotRole, UserBotCredentials
+from core.models.user_bot_domain import (
+    AdminBotAction,
+    BotRole,
+    BotStatus,
+    UserBotCredentials,
+)
 from core.ports.user_bot_repository import IUserBotRepository
 from infra.db.models.user_bot_orm import AdminBotActionORM, UserBotCredentialsORM
 
@@ -105,7 +110,11 @@ class UserBotRepository(IUserBotRepository):
         return False
 
     async def list_all(
-        self, limit: int = 50, offset: int = 0, status: str | None = None, role: str | None = None
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        status: str | None = None,
+        role: str | None = None,
     ) -> list[UserBotCredentials]:
         """List all user bot credentials"""
         query = select(UserBotCredentialsORM)
@@ -229,8 +238,9 @@ class UserBotRepository(IUserBotRepository):
     async def increment_request_count(self, user_id: int) -> None:
         """Increment total_requests and update last_used_at for a user's bot"""
         from datetime import datetime
+
         from sqlalchemy import update
-        
+
         await self.session.execute(
             update(UserBotCredentialsORM)
             .where(UserBotCredentialsORM.user_id == user_id)

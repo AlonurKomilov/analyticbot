@@ -11,6 +11,9 @@ All services are framework-agnostic and depend on protocols (ports) for
 external dependencies like image processing, video processing, and file system operations.
 """
 
+from core.services.bot.content.content_protection_service import (
+    ContentProtectionService,
+)
 from core.services.bot.content.models import (
     ContentProtectionRequest,
     ContentProtectionResponse,
@@ -20,10 +23,9 @@ from core.services.bot.content.models import (
     WatermarkPosition,
     WatermarkResult,
 )
-from core.services.bot.content.content_protection_service import ContentProtectionService
-from core.services.bot.content.watermark_service import WatermarkService
-from core.services.bot.content.video_watermark_service import VideoWatermarkService
 from core.services.bot.content.theft_detector import TheftDetectorService
+from core.services.bot.content.video_watermark_service import VideoWatermarkService
+from core.services.bot.content.watermark_service import WatermarkService
 
 __all__ = [
     # Models

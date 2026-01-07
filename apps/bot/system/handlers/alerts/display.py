@@ -8,13 +8,13 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram_i18n import I18nContext
 
+from apps.bot.shared.keyboards.analytics import kb_alerts_main
 from apps.bot.system.handlers.alerts.base import (
     format_alert_subscription,
     get_chat_id,
     logger,
     validate_callback,
 )
-from apps.bot.shared.keyboards.analytics import kb_alerts_main
 from apps.bot.system.middlewares.throttle import throttle
 from config.settings import Settings
 from core.repositories.alert_repository import AlertSubscriptionRepository
@@ -86,9 +86,7 @@ async def cmd_alerts(
 
                 response_parts.append(f"  {status_icon} {alert_type}: {detail}")
 
-        response_parts.append(
-            "\n💡 Use the buttons below to manage your alert subscriptions."
-        )
+        response_parts.append("\n💡 Use the buttons below to manage your alert subscriptions.")
 
         # Get first channel_id for the keyboard (if multiple channels, use the first one)
         first_channel_id = str(list(channel_alerts.keys())[0]) if channel_alerts else "0"
@@ -101,9 +99,7 @@ async def cmd_alerts(
 
     except Exception as e:
         logger.error(f"Failed to fetch alert subscriptions: {e}")
-        await message.answer(
-            "❌ Failed to load alert subscriptions. Please try again later."
-        )
+        await message.answer("❌ Failed to load alert subscriptions. Please try again later.")
 
 
 @router.callback_query(F.data.startswith("alerts:list:"))
@@ -131,9 +127,7 @@ async def show_channel_alerts(
 
         # Get alerts for this channel
         all_subscriptions = await alert_repo.get_user_subscriptions(chat_id)
-        channel_alerts = [
-            sub for sub in all_subscriptions if sub.channel_id == channel_id
-        ]
+        channel_alerts = [sub for sub in all_subscriptions if sub.channel_id == channel_id]
 
         if not channel_alerts:
             await callback.message.edit_text(
@@ -152,9 +146,7 @@ async def show_channel_alerts(
             alert_list.append(f"\n**Alert #{i}**")
             alert_list.append(format_alert_subscription(sub))
 
-        alert_list.append(
-            "\n\n💡 Toggle or delete alerts using the management options."
-        )
+        alert_list.append("\n\n💡 Toggle or delete alerts using the management options.")
 
         await callback.message.edit_text(
             "\n".join(alert_list),

@@ -6,11 +6,11 @@ Models for users, plans, subscriptions, and alerts.
 """
 
 from .users_orm import (
-    UserORM,
+    AlertSentORM,
     PlanORM,
     SubscriptionORM,
     UserAlertPreferenceORM,
-    AlertSentORM,
+    UserORM,
 )
 
 __all__ = [

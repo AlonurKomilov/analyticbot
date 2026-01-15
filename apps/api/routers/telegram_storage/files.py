@@ -82,7 +82,11 @@ async def upload_file_to_storage(
             )
 
         if not all(
-            [credentials.mtproto_api_id, credentials.telegram_api_hash, credentials.session_string]
+            [
+                credentials.mtproto_api_id,
+                credentials.telegram_api_hash,
+                credentials.session_string,
+            ]
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -384,7 +388,11 @@ async def list_storage_files(
         )
 
 
-@router.get("/files/{media_id}", response_model=TelegramMediaResponse, summary="Get file metadata")
+@router.get(
+    "/files/{media_id}",
+    response_model=TelegramMediaResponse,
+    summary="Get file metadata",
+)
 async def get_file_metadata(
     media_id: int,
     current_user: dict = Depends(get_current_user),
@@ -404,7 +412,8 @@ async def get_file_metadata(
 
     # TODO: Fetch file metadata from database
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail=f"File {media_id} not found or access denied"
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"File {media_id} not found or access denied",
     )
 
 
@@ -428,7 +437,8 @@ async def get_file_url(
 
     # TODO: Generate file access URL
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail=f"File {media_id} not found or access denied"
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"File {media_id} not found or access denied",
     )
 
 
@@ -471,7 +481,8 @@ async def get_file_thumbnail(
 
         if not media_file:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="File not found or access denied"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="File not found or access denied",
             )
 
         # Only generate thumbnails for photos and videos
@@ -489,7 +500,8 @@ async def get_file_thumbnail(
 
         if not storage_channel:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Storage channel not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Storage channel not found",
             )
 
         # Create storage service to download thumbnail
@@ -507,7 +519,8 @@ async def get_file_thumbnail(
 
             if not message or not message.media:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="Media not found in Telegram"
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Media not found in Telegram",
                 )
 
             # Download thumbnail/preview
@@ -554,7 +567,9 @@ async def get_file_thumbnail(
 
 
 @router.delete(
-    "/files/{media_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete file from storage"
+    "/files/{media_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete file from storage",
 )
 async def delete_storage_file(
     media_id: int,
@@ -581,7 +596,8 @@ async def delete_storage_file(
 
     # TODO: Delete file and update database
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail=f"File {media_id} not found or access denied"
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"File {media_id} not found or access denied",
     )
 
 
@@ -610,8 +626,7 @@ async def forward_file_to_channel(
     **Note:** File is forwarded within Telegram's infrastructure (instant, no bandwidth used).
     """
     logger.info(
-        f"User {current_user.get('id')} forwarding file {media_id} "
-        f"to channel {target_channel_id}"
+        f"User {current_user.get('id')} forwarding file {media_id} to channel {target_channel_id}"
     )
 
     # TODO: Forward message using MTProto

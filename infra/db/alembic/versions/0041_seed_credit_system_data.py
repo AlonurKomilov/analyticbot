@@ -25,19 +25,22 @@ def upgrade() -> None:
     # ============================================
     # Seed Credit Packages
     # ============================================
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO credit_packages (name, slug, credits, bonus_credits, price, currency, description, is_popular, sort_order)
         VALUES
             ('Starter Pack', 'starter', 100, 0, 4.99, 'USD', 'Perfect for trying out premium features', false, 1),
             ('Popular Pack', 'popular', 500, 50, 19.99, 'USD', 'Most popular choice - 10% bonus credits!', true, 2),
             ('Pro Pack', 'pro', 1200, 200, 39.99, 'USD', 'Best value for power users - 17% bonus!', false, 3),
             ('Enterprise Pack', 'enterprise', 3000, 750, 89.99, 'USD', 'Maximum savings - 25% bonus credits!', false, 4)
-    """)
+    """
+    )
 
     # ============================================
     # Seed Credit Services
     # ============================================
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO credit_services (service_key, name, description, credit_cost, category, icon, usage_limit_per_day, sort_order)
         VALUES
             -- AI Features
@@ -62,12 +65,14 @@ def upgrade() -> None:
             -- Upgrades
             ('priority_processing', 'Priority Processing', 'Get your analytics processed first', 15, 'upgrade', 'bolt', NULL, 40),
             ('extended_history', 'Extended History', 'Access 1 year of historical data', 100, 'upgrade', 'history', NULL, 41)
-    """)
+    """
+    )
 
     # ============================================
     # Seed Achievements
     # ============================================
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO achievements (achievement_key, name, description, credit_reward, icon, category, requirement_type, requirement_value, sort_order)
         VALUES
             -- Account Achievements
@@ -100,12 +105,14 @@ def upgrade() -> None:
             ('first_referral', 'Friendly Face', 'Refer your first friend', 50, 'person_add', 'referrals', 'count', 1, 50),
             ('five_referrals', 'Social Butterfly', 'Refer 5 friends', 150, 'groups', 'referrals', 'count', 5, 51),
             ('ten_referrals', 'Community Builder', 'Refer 10 friends', 400, 'diversity_3', 'referrals', 'count', 10, 52)
-    """)
+    """
+    )
 
     # ============================================
     # Seed Marketplace Items - Themes
     # ============================================
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO marketplace_items (name, slug, description, category, subcategory, price_credits, is_premium, is_featured, icon_url, metadata, download_count, rating, rating_count)
         VALUES
             ('Dark Mode Pro', 'dark-mode-pro', 'Premium dark theme with OLED-optimized colors and reduced eye strain', 'themes', 'dark', 150, true, true, '/marketplace/themes/dark-pro.png', '{"colors": {"primary": "#1a1a2e", "accent": "#6366f1"}}', 1245, 4.8, 156),
@@ -114,12 +121,14 @@ def upgrade() -> None:
             ('Minimalist White', 'minimalist-white', 'Clean, distraction-free white theme', 'themes', 'light', 75, false, false, '/marketplace/themes/minimal.png', '{"colors": {"primary": "#ffffff", "accent": "#374151"}}', 1532, 4.3, 201),
             ('Neon Cyberpunk', 'neon-cyberpunk', 'Futuristic neon theme with cyberpunk aesthetics', 'themes', 'dark', 200, true, true, '/marketplace/themes/neon.png', '{"colors": {"primary": "#0f0f23", "accent": "#00ff88"}}', 967, 4.9, 178),
             ('Forest Green', 'forest-green', 'Nature-inspired green theme', 'themes', 'nature', 100, false, false, '/marketplace/themes/forest.png', '{"colors": {"primary": "#064e3b", "accent": "#10b981"}}', 445, 4.4, 56)
-    """)
+    """
+    )
 
     # ============================================
     # Seed Marketplace Items - AI Models
     # ============================================
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO marketplace_items (name, slug, description, category, subcategory, price_credits, is_premium, is_featured, icon_url, metadata, download_count, rating, rating_count)
         VALUES
             ('Advanced Sentiment Analyzer', 'advanced-sentiment', 'Deep learning model for nuanced sentiment analysis of comments and reactions', 'ai_models', 'analysis', 500, true, true, '/marketplace/ai/sentiment.png', '{"model_type": "transformer", "accuracy": 0.94}', 324, 4.9, 67),
@@ -128,12 +137,14 @@ def upgrade() -> None:
             ('Audience Insights Engine', 'audience-insights', 'Deep dive into your audience demographics and behavior patterns', 'ai_models', 'analysis', 450, true, false, '/marketplace/ai/audience.png', '{"model_type": "clustering", "insights": ["demographics", "interests", "activity"]}', 289, 4.5, 45),
             ('Viral Content Detector', 'viral-detector', 'Identify content with viral potential before competitors', 'ai_models', 'prediction', 600, true, true, '/marketplace/ai/viral.png', '{"model_type": "neural-network", "accuracy": 0.78}', 198, 4.8, 34),
             ('Auto-Reply Generator', 'auto-reply', 'Generate contextual replies to comments automatically', 'ai_models', 'automation', 300, false, false, '/marketplace/ai/reply.png', '{"model_type": "seq2seq", "languages": ["en", "es", "fr"]}', 756, 4.4, 112)
-    """)
+    """
+    )
 
     # ============================================
     # Seed Marketplace Items - Widgets
     # ============================================
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO marketplace_items (name, slug, description, category, subcategory, price_credits, is_premium, is_featured, icon_url, metadata, download_count, rating, rating_count)
         VALUES
             ('Real-time Analytics Widget', 'realtime-widget', 'Live updating analytics widget for your dashboard', 'widgets', 'analytics', 200, false, true, '/marketplace/widgets/realtime.png', '{"refresh_rate": "5s", "metrics": ["views", "engagement", "growth"]}', 876, 4.7, 134),
@@ -142,12 +153,14 @@ def upgrade() -> None:
             ('Post Scheduler Pro', 'scheduler-widget', 'Advanced scheduling widget with AI-powered time suggestions', 'widgets', 'scheduling', 225, false, true, '/marketplace/widgets/scheduler.png', '{"features": ["drag-drop", "ai-timing", "queue"]}', 1023, 4.8, 167),
             ('Notification Center', 'notification-widget', 'Customizable notification center for important alerts', 'widgets', 'alerts', 150, false, false, '/marketplace/widgets/notifications.png', '{"channels": ["email", "push", "telegram"]}', 534, 4.3, 78),
             ('Revenue Tracker', 'revenue-tracker', 'Track monetization and revenue across channels', 'widgets', 'monetization', 300, true, false, '/marketplace/widgets/revenue.png', '{"currencies": ["USD", "EUR", "GBP"], "integrations": ["stripe", "paypal"]}', 267, 4.7, 42)
-    """)
+    """
+    )
 
     # ============================================
     # Seed Marketplace Bundles
     # ============================================
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO marketplace_bundles (name, slug, description, price_credits, original_price, discount_percent, is_featured, valid_days)
         VALUES
             ('Starter Bundle', 'starter-bundle', 'Perfect for beginners - includes essential themes and widgets', 400, 525, 24, false, 365),
@@ -155,45 +168,56 @@ def upgrade() -> None:
             ('Theme Collection', 'theme-collection', 'All premium themes at a discounted price', 600, 850, 29, false, 365),
             ('AI Power Pack', 'ai-power-pack', 'All AI models for maximum insights', 2000, 2600, 23, true, 365),
             ('Ultimate Bundle', 'ultimate-bundle', 'Everything included - themes, widgets, and AI models', 3500, 5000, 30, true, 365)
-    """)
+    """
+    )
 
     # ============================================
     # Link Bundle Items
     # ============================================
     # Starter Bundle: Dark Mode Pro, Minimalist White, Real-time Widget
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO bundle_items (bundle_id, item_id)
         SELECT b.id, i.id FROM marketplace_bundles b, marketplace_items i
         WHERE b.slug = 'starter-bundle' AND i.slug IN ('dark-mode-pro', 'minimalist-white', 'realtime-widget')
-    """)
+    """
+    )
 
     # Pro Analytics Bundle: Engagement Predictor, Content Optimizer, Growth Heatmap, Real-time Widget
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO bundle_items (bundle_id, item_id)
         SELECT b.id, i.id FROM marketplace_bundles b, marketplace_items i
         WHERE b.slug = 'pro-analytics' AND i.slug IN ('engagement-predictor', 'content-optimizer', 'growth-heatmap', 'realtime-widget')
-    """)
+    """
+    )
 
     # Theme Collection: All themes
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO bundle_items (bundle_id, item_id)
         SELECT b.id, i.id FROM marketplace_bundles b, marketplace_items i
         WHERE b.slug = 'theme-collection' AND i.category = 'themes'
-    """)
+    """
+    )
 
     # AI Power Pack: All AI models
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO bundle_items (bundle_id, item_id)
         SELECT b.id, i.id FROM marketplace_bundles b, marketplace_items i
         WHERE b.slug = 'ai-power-pack' AND i.category = 'ai_models'
-    """)
+    """
+    )
 
     # Ultimate Bundle: Everything
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO bundle_items (bundle_id, item_id)
         SELECT b.id, i.id FROM marketplace_bundles b, marketplace_items i
         WHERE b.slug = 'ultimate-bundle' AND i.is_active = true
-    """)
+    """
+    )
 
 
 def downgrade() -> None:

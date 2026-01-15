@@ -1,15 +1,18 @@
 """
 Check if there are existing bot tokens in the database we can use for testing
 """
+
 import asyncio
 import os
 
 # Set environment
-os.environ.setdefault('ENV', 'development')
+os.environ.setdefault("ENV", "development")
+
 
 async def check_existing_bots():
     try:
         from infra.db.database import async_session_factory
+
         from infra.db.repositories.user_bot_repository import UserBotRepository
 
         print("=" * 60)
@@ -64,6 +67,7 @@ async def check_existing_bots():
         print("Please use @BotFather to create a test bot instead.")
 
     print("=" * 60)
+
 
 if __name__ == "__main__":
     asyncio.run(check_existing_bots())

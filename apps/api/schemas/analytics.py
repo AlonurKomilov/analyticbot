@@ -68,7 +68,8 @@ class AnalyticsResponseMeta(BaseModel):
     """Response metadata"""
 
     source: list[str] = Field(
-        default_factory=lambda: ["mtproto", "db", "legacy"], description="Data sources used"
+        default_factory=lambda: ["mtproto", "db", "legacy"],
+        description="Data sources used",
     )
     generated_at: str = Field(
         default_factory=lambda: datetime.utcnow().isoformat(),

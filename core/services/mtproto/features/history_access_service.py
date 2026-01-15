@@ -15,11 +15,9 @@ Features:
 """
 
 import logging
-from datetime import datetime
 from typing import Any
 
 from core.services.mtproto.features.base_mtproto_service import BaseMTProtoService
-
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +25,7 @@ logger = logging.getLogger(__name__)
 class HistoryAccessService(BaseMTProtoService):
     """
     Full history access service for MTProto users.
-    
+
     Removes the 100-message limit and allows users to fetch
     complete channel history for analysis.
     """
@@ -41,7 +39,7 @@ class HistoryAccessService(BaseMTProtoService):
     ):
         """
         Initialize history access service.
-        
+
         Args:
             user_id: User's ID
             feature_gate_service: Service for access control
@@ -58,7 +56,7 @@ class HistoryAccessService(BaseMTProtoService):
     async def execute(self, **kwargs) -> dict[str, Any]:
         """
         Fetch full channel history without limits.
-        
+
         Args:
             channel_id: Channel/chat ID to fetch from
             limit: Maximum number of messages (default: 1000, max: 5000)
@@ -66,7 +64,7 @@ class HistoryAccessService(BaseMTProtoService):
             min_date: Minimum message date (optional)
             max_date: Maximum message date (optional)
             search: Search query (optional)
-            
+
         Returns:
             dict with messages and metadata
         """
@@ -76,29 +74,29 @@ class HistoryAccessService(BaseMTProtoService):
         min_date = kwargs.get("min_date")
         max_date = kwargs.get("max_date")
         search_query = kwargs.get("search")
-        
+
         if not channel_id:
             return {
                 "error": "Missing required parameter: channel_id",
                 "messages": [],
             }
-        
+
         if not self.mtproto_client:
             return {
                 "error": "MTProto client not available",
                 "messages": [],
             }
-        
+
         try:
             messages = []
             fetched_count = 0
-            
+
             # Fetch messages with pagination
             logger.info(
                 f"[HistoryAccess] User {self.user_id} - Fetching history from channel {channel_id}: "
                 f"limit={limit}, offset_id={offset_id}"
             )
-            
+
             # Use iter_history from the MTProto client
             async for message in self.mtproto_client.iter_history(
                 peer=channel_id,
@@ -110,36 +108,38 @@ class HistoryAccessService(BaseMTProtoService):
                     continue
                 if max_date and message.date > max_date:
                     continue
-                
+
                 # Apply search filter if specified
                 if search_query and message.text:
                     if search_query.lower() not in message.text.lower():
                         continue
-                
+
                 # Convert message to dict (simplified)
                 message_data = {
                     "id": message.id,
                     "date": message.date.isoformat() if message.date else None,
                     "text": message.text or "",
-                    "from_id": getattr(message.from_id, "user_id", None) if message.from_id else None,
+                    "from_id": (
+                        getattr(message.from_id, "user_id", None) if message.from_id else None
+                    ),
                     "views": message.views,
                     "forwards": message.forwards,
-                    "replies": getattr(message.replies, "replies", 0) if message.replies else 0,
-                    "edit_date": message.edit_date.isoformat() if message.edit_date else None,
+                    "replies": (getattr(message.replies, "replies", 0) if message.replies else 0),
+                    "edit_date": (message.edit_date.isoformat() if message.edit_date else None),
                     "has_media": bool(message.media),
                 }
-                
+
                 messages.append(message_data)
                 fetched_count += 1
-                
+
                 if fetched_count >= limit:
                     break
-            
+
             logger.info(
                 f"[HistoryAccess] User {self.user_id} - Fetched {len(messages)} messages "
                 f"from channel {channel_id}"
             )
-            
+
             return {
                 "messages": messages,
                 "fetched_count": len(messages),
@@ -147,7 +147,7 @@ class HistoryAccessService(BaseMTProtoService):
                 "has_more": len(messages) == limit,
                 "last_message_id": messages[-1]["id"] if messages else None,
             }
-            
+
         except Exception as e:
             logger.error(
                 f"[HistoryAccess] Failed to fetch history for user {self.user_id}: {e}",
@@ -170,10 +170,10 @@ class HistoryAccessService(BaseMTProtoService):
     async def get_usage_stats(self, days: int = 30) -> dict:
         """
         Get usage statistics for history access service.
-        
+
         Args:
             days: Number of days to look back
-            
+
         Returns:
             dict with usage statistics
         """
@@ -184,7 +184,7 @@ class HistoryAccessService(BaseMTProtoService):
                 service_key=self.service_key,
                 days=days,
             )
-            
+
             return {
                 "service_key": self.service_key,
                 "days": days,

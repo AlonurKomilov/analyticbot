@@ -19,7 +19,6 @@ from infra.db.models.owner.owner_orm import (
     AdminSession,
     AdminUser,
     SystemUser,
-    UserStatus,
 )
 
 
@@ -61,14 +60,14 @@ class SQLAlchemyAdminRepository:
     async def get_system_stats(self) -> dict[str, Any]:
         """Get comprehensive system statistics"""
         from sqlalchemy import text
-        
+
         # User statistics - using actual users table
         try:
             total_users_result = await self.db.execute(text("SELECT COUNT(*) FROM users"))
             total_users = total_users_result.scalar() or 0
         except Exception:
             total_users = 0
-            
+
         try:
             active_users_result = await self.db.execute(
                 text("SELECT COUNT(*) FROM users WHERE status = 'active' OR status IS NULL")
@@ -76,21 +75,21 @@ class SQLAlchemyAdminRepository:
             active_users = active_users_result.scalar() or 0
         except Exception:
             active_users = total_users
-            
+
         # Channel statistics
         try:
             total_channels_result = await self.db.execute(text("SELECT COUNT(*) FROM channels"))
             total_channels = total_channels_result.scalar() or 0
         except Exception:
             total_channels = 0
-            
-        # Bot statistics  
+
+        # Bot statistics
         try:
             total_bots_result = await self.db.execute(text("SELECT COUNT(*) FROM user_bots"))
             total_bots = total_bots_result.scalar() or 0
         except Exception:
             total_bots = 0
-            
+
         # Database size
         try:
             db_size_result = await self.db.execute(
@@ -113,7 +112,8 @@ class SQLAlchemyAdminRepository:
                 await self.db.scalar(
                     select(func.count(AdminSession.id)).where(
                         and_(
-                            AdminSession.is_active == True, AdminSession.expires_at > datetime.utcnow()
+                            AdminSession.is_active == True,
+                            AdminSession.expires_at > datetime.utcnow(),
                         )
                     )
                 )
@@ -123,7 +123,7 @@ class SQLAlchemyAdminRepository:
             total_admins = 0
             active_admins = 0
             active_sessions = 0
-            
+
         # New users today/this week
         try:
             new_today_result = await self.db.execute(
@@ -132,10 +132,12 @@ class SQLAlchemyAdminRepository:
             new_today = new_today_result.scalar() or 0
         except Exception:
             new_today = 0
-            
+
         try:
             new_this_week_result = await self.db.execute(
-                text("SELECT COUNT(*) FROM users WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'")
+                text(
+                    "SELECT COUNT(*) FROM users WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'"
+                )
             )
             new_this_week = new_this_week_result.scalar() or 0
         except Exception:

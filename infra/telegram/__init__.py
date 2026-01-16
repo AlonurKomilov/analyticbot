@@ -7,7 +7,7 @@ This module consolidates all Telegram-related infrastructure:
   - For sending messages, media, bot operations
   - Implements TelegramService port from core
 
-- telethon/: MTProto client using Telethon library  
+- telethon/: MTProto client using Telethon library
   - For data collection from channels
   - Message history, real-time updates
   - Statistics and analytics data
@@ -15,7 +15,7 @@ This module consolidates all Telegram-related infrastructure:
 Usage:
     # For bot operations (sending messages)
     from infra.telegram.aiogram import AiogramTelegramService
-    
+
     # For data collection (MTProto)
     from infra.telegram.telethon import TelethonTGClient, AccountPool
 """
@@ -23,10 +23,10 @@ Usage:
 # Re-export commonly used classes for convenience
 from infra.telegram.aiogram import AiogramTelegramService
 from infra.telegram.telethon import (
-    TelethonTGClient,
     AccountPool,
     DCRouter,
     ProxyPool,
+    TelethonTGClient,
     normalize_message,
     normalize_update,
 )
@@ -36,7 +36,7 @@ __all__ = [
     "AiogramTelegramService",
     # Telethon (MTProto)
     "TelethonTGClient",
-    "AccountPool", 
+    "AccountPool",
     "DCRouter",
     "ProxyPool",
     "normalize_message",

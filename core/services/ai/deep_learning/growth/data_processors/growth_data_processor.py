@@ -106,7 +106,7 @@ class GrowthDataProcessor:
                 df["trend_strength"] = (
                     df["growth"]
                     .rolling(window=window)
-                    .apply(lambda x: np.corrcoef(np.arange(len(x)), x)[0, 1] if len(x) > 1 else 0)
+                    .apply(lambda x: (np.corrcoef(np.arange(len(x)), x)[0, 1] if len(x) > 1 else 0))
                     .fillna(0)
                 )
             else:

@@ -13,7 +13,11 @@ import numpy as np
 
 from ..protocols.drift_protocols import DriftAlert, DriftDetectionProtocol
 from ..protocols.monitoring_protocols import MonitoringServiceProtocol
-from .drift_coordinator import ComprehensiveDriftAnalysis, DriftCoordinator, DriftCoordinatorConfig
+from .drift_coordinator import (
+    ComprehensiveDriftAnalysis,
+    DriftCoordinator,
+    DriftCoordinatorConfig,
+)
 from .multivariate_analyzer import MultivariateDriftAnalyzer
 from .statistical_analyzer import StatisticalDriftAnalyzer
 
@@ -66,7 +70,10 @@ class DriftDetectionService(DriftDetectionProtocol):
         return await self.coordinator.remove_model_monitoring(model_id)
 
     async def detect_data_drift(
-        self, model_id: str, current_data: np.ndarray, feature_names: list[str] | None = None
+        self,
+        model_id: str,
+        current_data: np.ndarray,
+        feature_names: list[str] | None = None,
     ) -> ComprehensiveDriftAnalysis | None:
         """Detect data drift"""
         return await self.coordinator.detect_data_drift(model_id, current_data, feature_names)

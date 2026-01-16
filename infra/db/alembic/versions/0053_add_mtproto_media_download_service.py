@@ -11,7 +11,6 @@ Create Date: 2025-12-17
 
 from alembic import op
 
-
 # revision identifiers, used by Alembic
 revision = "0053_add_media_download"
 down_revision = "0052_seed_categories"
@@ -21,7 +20,7 @@ depends_on = None
 
 def upgrade() -> None:
     """Add mtproto_media_download service to marketplace_services"""
-    
+
     op.execute(
         """
         INSERT INTO marketplace_services (

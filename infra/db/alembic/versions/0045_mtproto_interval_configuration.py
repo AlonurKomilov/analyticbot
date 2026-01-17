@@ -88,32 +88,38 @@ def upgrade() -> None:
     # Free: 60 min base, can boost to 30 min
     # Pro: 20 min base, can boost to 10 min
     # Business: 10 min base, can boost to 5 min
-    op.execute("""
+    op.execute(
+        """
         UPDATE plans SET
             mtproto_interval_minutes = 60,
             min_mtproto_interval_minutes = 30,
             interval_boost_credits = 5,
             interval_boost_minutes = 10
         WHERE name = 'free';
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         UPDATE plans SET
             mtproto_interval_minutes = 20,
             min_mtproto_interval_minutes = 10,
             interval_boost_credits = 5,
             interval_boost_minutes = 5
         WHERE name = 'pro';
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         UPDATE plans SET
             mtproto_interval_minutes = 10,
             min_mtproto_interval_minutes = 5,
             interval_boost_credits = 10,
             interval_boost_minutes = 2
         WHERE name = 'business';
-    """)
+    """
+    )
 
     # Add index for efficient interval lookups
     op.create_index(

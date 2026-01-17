@@ -1,7 +1,6 @@
 """Worker Registry - Central registry for all manageable workers"""
 
 import logging
-from datetime import datetime
 from typing import Any
 
 from apps.ai.shared.models.worker import (
@@ -249,9 +248,7 @@ class WorkerRegistry:
 
         type_counts = {}
         for worker in self.workers.values():
-            type_counts[worker.worker_type.value] = (
-                type_counts.get(worker.worker_type.value, 0) + 1
-            )
+            type_counts[worker.worker_type.value] = type_counts.get(worker.worker_type.value, 0) + 1
 
         return {
             "total_workers": len(self.workers),

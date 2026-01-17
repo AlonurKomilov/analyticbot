@@ -112,9 +112,7 @@ class AlertRepository(Protocol):
         """
         ...
 
-    async def update_alert_rule(
-        self, rule_id: str, updates: dict[str, Any]
-    ) -> bool:
+    async def update_alert_rule(self, rule_id: str, updates: dict[str, Any]) -> bool:
         """
         Update an existing alert rule
 
@@ -179,9 +177,7 @@ class AlertNotificationPort(Protocol):
         """
         ...
 
-    async def send_bulk_alerts(
-        self, notifications: list[dict[str, Any]]
-    ) -> dict[str, bool]:
+    async def send_bulk_alerts(self, notifications: list[dict[str, Any]]) -> dict[str, bool]:
         """
         Send multiple alert notifications
 

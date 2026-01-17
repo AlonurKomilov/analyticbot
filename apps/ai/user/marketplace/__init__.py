@@ -18,9 +18,9 @@ from apps.ai.user.marketplace.registry import (
     get_marketplace_registry,
 )
 from apps.ai.user.marketplace.services import (
-    ContentSchedulerAdapter,
     AutoPostingAdapter,
     CompetitorAnalysisAdapter,
+    ContentSchedulerAdapter,
 )
 
 __all__ = [

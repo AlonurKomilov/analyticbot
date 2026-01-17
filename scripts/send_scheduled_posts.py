@@ -86,14 +86,15 @@ async def process_scheduled_posts():
         # Parse DATABASE_URL for connection params
         # Format: user:password@host:port/database
         import urllib.parse
+
         parsed = urllib.parse.urlparse(DATABASE_URL)
-        
+
         conn = await asyncpg.connect(
             host=parsed.hostname or "localhost",
             port=parsed.port or 10100,
             user=parsed.username or "analytic",
             password=parsed.password,
-            database=parsed.path.lstrip('/') if parsed.path else "analytic_bot",
+            database=parsed.path.lstrip("/") if parsed.path else "analytic_bot",
         )
 
         logger.info("✅ Connected to database")
@@ -113,7 +114,7 @@ async def process_scheduled_posts():
             post_id = post["id"]
             channel_id = post["channel_id"]
             text = post["post_text"]
-            schedule_time = post["schedule_time"]
+            post["schedule_time"]
 
             try:
                 logger.info(f"📤 Sending post {post_id} to channel {channel_id}")

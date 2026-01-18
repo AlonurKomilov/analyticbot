@@ -186,7 +186,7 @@ class PredictionGenerator:
 
         # Extract temporal factors
         seasonal_trends = temporal_intelligence.seasonal_trends
-        cyclical_patterns = temporal_intelligence.cyclical_patterns
+        temporal_intelligence.cyclical_patterns
         daily_patterns = temporal_intelligence.daily_patterns
         weekly_cycles = temporal_intelligence.weekly_cycles
 

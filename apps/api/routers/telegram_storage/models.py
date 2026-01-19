@@ -19,7 +19,10 @@ class StorageChannelCreate(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {"channel_id": -1001234567890, "channel_username": "my_storage_channel"}
+            "example": {
+                "channel_id": -1001234567890,
+                "channel_username": "my_storage_channel",
+            }
         }
 
 

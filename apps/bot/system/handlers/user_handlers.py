@@ -118,9 +118,9 @@ def _parse_user_agent(user_agent: str) -> str:
     """Parse user agent string to extract browser and OS info."""
     if not user_agent:
         return "Unknown Browser"
-    
+
     ua = user_agent.lower()
-    
+
     # Detect browser
     browser = "Unknown Browser"
     if "edg/" in ua or "edge/" in ua:
@@ -133,22 +133,23 @@ def _parse_user_agent(user_agent: str) -> str:
         browser = "Safari"
     elif "opera" in ua or "opr/" in ua:
         browser = "Opera"
-    
+
     # Try to get version
     import re
+
     version_match = None
     if browser == "Chrome":
-        version_match = re.search(r'chrome/(\d+)', ua)
+        version_match = re.search(r"chrome/(\d+)", ua)
     elif browser == "Firefox":
-        version_match = re.search(r'firefox/(\d+)', ua)
+        version_match = re.search(r"firefox/(\d+)", ua)
     elif browser == "Safari":
-        version_match = re.search(r'version/(\d+)', ua)
+        version_match = re.search(r"version/(\d+)", ua)
     elif browser == "Edge":
-        version_match = re.search(r'edg/(\d+)', ua)
-    
+        version_match = re.search(r"edg/(\d+)", ua)
+
     if version_match:
         browser = f"{browser} {version_match.group(1)}"
-    
+
     # Detect OS
     os_name = "Unknown OS"
     if "windows" in ua:
@@ -162,7 +163,7 @@ def _parse_user_agent(user_agent: str) -> str:
             os_name = "Linux"
     elif "iphone" in ua or "ipad" in ua:
         os_name = "iOS"
-    
+
     return f"{browser} on {os_name}"
 
 
@@ -200,7 +201,9 @@ async def _handle_bot_login(
                 photo = photos.photos[0][-1]
                 file = await message.bot.get_file(photo.file_id)
                 if file.file_path:
-                    photo_url = f"https://api.telegram.org/file/bot{message.bot.token}/{file.file_path}"
+                    photo_url = (
+                        f"https://api.telegram.org/file/bot{message.bot.token}/{file.file_path}"
+                    )
     except Exception as e:
         log.warning(f"Failed to get user photo: {e}")
 
@@ -209,7 +212,9 @@ async def _handle_bot_login(
         "telegram_id": telegram_id,
         "username": username,
         "first_name": full_name.split()[0] if full_name else (username or "User"),
-        "last_name": " ".join(full_name.split()[1:]) if full_name and len(full_name.split()) > 1 else None,
+        "last_name": (
+            " ".join(full_name.split()[1:]) if full_name and len(full_name.split()) > 1 else None
+        ),
         "photo_url": photo_url,
     }
 
@@ -225,27 +230,35 @@ async def _handle_bot_login(
                     client_ip = client_info.get("client_ip", "Unknown")
                     user_agent = client_info.get("user_agent", "")
                     session_token = result.get("session_token", "")
-                    
+
                     # Parse browser and OS from user agent
                     browser_info = _parse_user_agent(user_agent)
-                    
+
                     # Build session info message
                     session_info = f"""<b>🌐 Browser:</b> {browser_info}
 <b>📍 IP:</b> {client_ip}"""
 
                     # Create terminate session keyboard
-                    terminate_kb = InlineKeyboardMarkup(inline_keyboard=[
-                        [InlineKeyboardButton(
-                            text="🚫 Terminate session",
-                            callback_data=f"terminate_session:{session_token[:50]}"
-                        )]
-                    ]) if session_token else None
+                    terminate_kb = (
+                        InlineKeyboardMarkup(
+                            inline_keyboard=[
+                                [
+                                    InlineKeyboardButton(
+                                        text="🚫 Terminate session",
+                                        callback_data=f"terminate_session:{session_token[:50]}",
+                                    )
+                                ]
+                            ]
+                        )
+                        if session_token
+                        else None
+                    )
 
                     # Send success message to user with session info
                     await message.answer(
                         f"""✅ <b>Login Successful!</b>
 
-🎉 Welcome, <b>{full_name or username or 'User'}</b>!
+🎉 Welcome, <b>{full_name or username or "User"}</b>!
 
 You have successfully logged in to <b>AnalyticBot</b>.
 
@@ -388,7 +401,7 @@ async def cmd_start(message: types.Message, i18n: I18nContext):
                     "auth_provider": "telegram",
                     "status": "active",
                 }
-                created_user = await user_repo.create_user(user_data)
+                await user_repo.create_user(user_data)
                 log.info(f"✅ Created new user for telegram_id {uid}")
 
                 # Get the internal user ID for referral processing
@@ -506,7 +519,8 @@ async def _process_referral(
 
             # Check if already referred (use correct table: user_referrals)
             existing = await conn.fetchval(
-                "SELECT 1 FROM user_referrals WHERE referred_user_id = $1", new_user_internal_id
+                "SELECT 1 FROM user_referrals WHERE referred_user_id = $1",
+                new_user_internal_id,
             )
             if existing:
                 log.info(f"User {new_user_internal_id} already has a referrer")
@@ -577,14 +591,16 @@ async def _process_referral(
                 # Log transactions (get current balances for balance_after field)
                 referrer_balance = (
                     await conn.fetchval(
-                        "SELECT balance FROM user_credits WHERE user_id = $1", referrer_id
+                        "SELECT balance FROM user_credits WHERE user_id = $1",
+                        referrer_id,
                     )
                     or 0
                 )
 
                 new_user_balance = (
                     await conn.fetchval(
-                        "SELECT balance FROM user_credits WHERE user_id = $1", new_user_internal_id
+                        "SELECT balance FROM user_credits WHERE user_id = $1",
+                        new_user_internal_id,
                     )
                     or 50
                 )
@@ -633,7 +649,9 @@ Someone just joined using your referral link!
 Keep sharing your link to earn more! 🚀"""
 
                     await bot.send_message(
-                        chat_id=referrer_telegram_id, text=notification_msg, parse_mode="HTML"
+                        chat_id=referrer_telegram_id,
+                        text=notification_msg,
+                        parse_mode="HTML",
                     )
                     log.info(f"📬 Notified referrer {referrer_telegram_id} about new referral")
                 except Exception as notify_err:
@@ -688,21 +706,21 @@ async def callback_quick_commands(callback: CallbackQuery, i18n: I18nContext):
 async def callback_terminate_session(callback: CallbackQuery):
     """Handle terminate session button click from bot login success message."""
     import aiohttp
-    
+
     if not callback.data or not callback.from_user:
         await callback.answer("Unable to process request", show_alert=True)
         return
-    
+
     # Extract session token from callback data
     session_token_partial = callback.data.replace("terminate_session:", "")
     telegram_id = callback.from_user.id
-    
+
     log.info(f"🔐 User {telegram_id} requested session termination")
-    
+
     # Call the API to terminate the session
     api_base_url = os.getenv("API_BASE_URL", "http://localhost:11400")
     terminate_url = f"{api_base_url}/auth/telegram/bot-login/terminate-session"
-    
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -710,11 +728,11 @@ async def callback_terminate_session(callback: CallbackQuery):
                 params={
                     "telegram_id": telegram_id,
                     "session_token": session_token_partial,
-                }
+                },
             ) as response:
                 if response.status == 200:
                     log.info(f"✅ Session terminated for user {telegram_id}")
-                    
+
                     # Update the message to show session was terminated
                     if callback.message:
                         try:
@@ -730,7 +748,7 @@ If you want to log in again, visit:
                             )
                         except Exception as edit_err:
                             log.warning(f"Failed to edit message: {edit_err}")
-                    
+
                     await callback.answer("✅ Session terminated", show_alert=True)
                 else:
                     error_text = await response.text()

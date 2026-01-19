@@ -19,24 +19,24 @@ Structure:
 
 Usage:
     from infra.db.connection_manager import db_manager
-    
+
     # Initialize
     await db_manager.initialize()
-    
+
     # Use connection
     async with db_manager.connection() as conn:
         result = await conn.fetch("SELECT * FROM users")
-    
+
     # Health check
     health = await db_manager.health_check()
 """
 
-from .connection_manager import db_manager, init_database, close_database
+from .connection_manager import close_database, db_manager, init_database
 from .metadata import metadata
 
 __all__ = [
     "db_manager",
-    "init_database", 
+    "init_database",
     "close_database",
     "metadata",
 ]

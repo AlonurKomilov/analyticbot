@@ -32,7 +32,15 @@ for day in range(7):
     else:
         old_results[day] = []  # No recommendations!
 
-day_names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+day_names = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+]
 for day in range(7):
     times = old_results[day] if old_results[day] else ["NO DATA"]
     marker = "✅" if old_results[day] else "❌"
@@ -66,7 +74,7 @@ print(f"   Old logic: {old_days_with_data}/7 days have recommendations")
 print(f"   New logic: {new_days_with_data}/7 days have recommendations")
 
 # Check if all days have DIFFERENT times
-all_different = len(set(tuple(sorted(times)) for times in new_results.values())) == 7
+all_different = len({tuple(sorted(times)) for times in new_results.values()}) == 7
 
 if all_different:
     print("\n✅ SUCCESS: Each day has UNIQUE times!")

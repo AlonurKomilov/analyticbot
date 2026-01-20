@@ -11,7 +11,6 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -71,12 +70,12 @@ class RateLimitConfigCache:
         Args:
             ttl: Time-to-live for cache entries in seconds (default: 30)
         """
-        self._cache: Dict[str, CachedConfig] = {}
+        self._cache: dict[str, CachedConfig] = {}
         self._lock = asyncio.Lock()
         self._ttl = ttl
         logger.info(f"Rate limit config cache initialized with {ttl}s TTL")
 
-    async def get(self, service_key: str, force_refresh: bool = False) -> Optional[CachedConfig]:
+    async def get(self, service_key: str, force_refresh: bool = False) -> CachedConfig | None:
         """
         Get configuration from cache, refresh if expired
 
@@ -92,7 +91,9 @@ class RateLimitConfigCache:
 
             # Return if fresh and not forcing refresh
             if cached and not force_refresh and not cached.is_expired(self._ttl):
-                logger.debug(f"Cache HIT for {service_key} (age: {time.time() - cached.cached_at:.1f}s)")
+                logger.debug(
+                    f"Cache HIT for {service_key} (age: {time.time() - cached.cached_at:.1f}s)"
+                )
                 return cached
 
             # Refresh if expired or forced
@@ -129,7 +130,7 @@ class RateLimitConfigCache:
         except Exception as e:
             logger.warning(f"Failed to refresh config for {service_key}: {e}")
 
-    async def get_all(self, force_refresh: bool = False) -> Dict[str, CachedConfig]:
+    async def get_all(self, force_refresh: bool = False) -> dict[str, CachedConfig]:
         """
         Get all cached configurations
 
@@ -158,7 +159,7 @@ class RateLimitConfigCache:
 
             return self._cache.copy()
 
-    async def invalidate(self, service_key: Optional[str] = None) -> None:
+    async def invalidate(self, service_key: str | None = None) -> None:
         """
         Clear cache for one or all services
 
@@ -209,7 +210,7 @@ class RateLimitConfigCache:
             logger.error(f"Failed to warm up cache: {e}")
             return 0
 
-    def get_stats(self) -> Dict[str, any]:
+    def get_stats(self) -> dict[str, any]:
         """
         Get cache statistics
 
@@ -258,7 +259,7 @@ async def get_cached_limit(service_key: str, default: str = "100/minute") -> str
     return default
 
 
-async def invalidate_cache(service_key: Optional[str] = None) -> None:
+async def invalidate_cache(service_key: str | None = None) -> None:
     """
     Invalidate cache for one or all services
 

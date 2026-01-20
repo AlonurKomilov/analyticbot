@@ -6,7 +6,7 @@ Repository for tracking AI usage (daily and hourly).
 """
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 import asyncpg
 

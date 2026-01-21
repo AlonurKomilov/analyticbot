@@ -54,7 +54,10 @@ class RepositoryManager:
         logger.info("📊 Repository Manager initialized")
 
     async def get_channel_daily_data(
-        self, channel_id: int, start_date: datetime | None = None, end_date: datetime | None = None
+        self,
+        channel_id: int,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> list[Any]:
         """Get channel daily analytics data"""
         try:
@@ -151,7 +154,11 @@ class DataAccessService:
 
         except Exception as e:
             logger.error(f"❌ Error fetching comprehensive data: {e}")
-            return {"channel_id": channel_id, "error": str(e), "fetched_at": datetime.utcnow()}
+            return {
+                "channel_id": channel_id,
+                "error": str(e),
+                "fetched_at": datetime.utcnow(),
+            }
 
     async def get_performance_metrics(self) -> dict[str, Any]:
         """Get data access performance metrics"""
@@ -206,7 +213,11 @@ class DataAccessService:
 
         except Exception as e:
             logger.error(f"❌ Error validating data availability: {e}")
-            return {"channel_id": channel_id, "error": str(e), "validation_passed": False}
+            return {
+                "channel_id": channel_id,
+                "error": str(e),
+                "validation_passed": False,
+            }
 
     async def get_last_update_time(self, channel_id: int) -> datetime | None:
         """Get last update timestamp for channel data"""
@@ -225,7 +236,11 @@ class DataAccessService:
             return None
 
     async def get_time_series_data(
-        self, channel_id: int, from_date: datetime, to_date: datetime, window_days: int = 1
+        self,
+        channel_id: int,
+        from_date: datetime,
+        to_date: datetime,
+        window_days: int = 1,
     ) -> list[dict[str, Any]]:
         """Get time series data for channel"""
         try:

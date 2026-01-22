@@ -57,7 +57,7 @@ async def test_connection():
                 print(f"      Title: {channel.title}")  # type: ignore
                 print(f"      ID: {channel.id}")  # type: ignore
                 print(f"      Username: @{channel.username}")  # type: ignore
-                if hasattr(channel, 'participants_count'):
+                if hasattr(channel, "participants_count"):
                     print(f"      Subscribers: {channel.participants_count}")  # type: ignore
                 print()
 
@@ -75,7 +75,7 @@ async def test_connection():
                         print(f"         Views: {getattr(msg, 'views', 0)}")
                         print(f"         Forwards: {getattr(msg, 'forwards', 0)}")
                         if msg.message:
-                            preview = msg.message[:60].replace('\n', ' ')
+                            preview = msg.message[:60].replace("\n", " ")
                             print(f"         Text: {preview}...")
                         print()
 
@@ -100,16 +100,19 @@ async def test_connection():
             except Exception as e:
                 print(f"   ❌ Error accessing channel: {e}")
                 import traceback
+
                 traceback.print_exc()
 
         except Exception as e:
             print(f"   ❌ Error getting client: {e}")
             import traceback
+
             traceback.print_exc()
 
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
 
 

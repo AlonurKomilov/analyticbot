@@ -7,12 +7,13 @@ Includes circuit breaker pattern for fault tolerance at scale.
 
 import asyncio
 import logging
+from collections.abc import Callable
 from decimal import Decimal
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 import stripe
-from circuitbreaker import circuit, CircuitBreakerError
+from circuitbreaker import CircuitBreakerError, circuit
 
 try:
     from stripe.error import StripeError  # type: ignore
@@ -35,6 +36,7 @@ STRIPE_API_TIMEOUT = 30  # seconds
 
 def stripe_circuit_breaker(func: Callable) -> Callable:
     """Decorator that applies circuit breaker pattern to Stripe API calls"""
+
     @circuit(
         failure_threshold=STRIPE_CIRCUIT_FAILURE_THRESHOLD,
         recovery_timeout=STRIPE_CIRCUIT_RECOVERY_TIMEOUT,
@@ -44,20 +46,18 @@ def stripe_circuit_breaker(func: Callable) -> Callable:
     async def wrapper(*args, **kwargs):
         try:
             # Add timeout to prevent hanging
-            return await asyncio.wait_for(
-                func(*args, **kwargs),
-                timeout=STRIPE_API_TIMEOUT
-            )
-        except asyncio.TimeoutError:
+            return await asyncio.wait_for(func(*args, **kwargs), timeout=STRIPE_API_TIMEOUT)
+        except TimeoutError:
             logger.error(f"Stripe API call {func.__name__} timed out after {STRIPE_API_TIMEOUT}s")
             raise StripeError(f"Stripe API timeout after {STRIPE_API_TIMEOUT}s")
+
     return wrapper
 
 
 class StripePaymentAdapter(PaymentGatewayAdapter):
     """
     Real Stripe implementation of PaymentGatewayAdapter
-    
+
     Includes circuit breaker pattern to prevent cascading failures
     when Stripe API is unavailable.
     """
@@ -119,13 +119,21 @@ class StripePaymentAdapter(PaymentGatewayAdapter):
 
             logger.info(f"Created Stripe customer: {customer.id}")
 
-            return {"success": True, "customer_id": customer.id, "gateway_response": customer}
+            return {
+                "success": True,
+                "customer_id": customer.id,
+                "gateway_response": customer,
+            }
 
         except CircuitBreakerError:
             return self._handle_circuit_breaker_error("create_customer")
         except StripeError as e:
             logger.error(f"Failed to create Stripe customer: {e}")
-            return {"success": False, "error": str(e), "error_code": getattr(e, "code", None)}
+            return {
+                "success": False,
+                "error": str(e),
+                "error_code": getattr(e, "code", None),
+            }
 
     async def create_payment_method(
         self, customer_id: str, method_data: dict[str, Any]
@@ -133,7 +141,10 @@ class StripePaymentAdapter(PaymentGatewayAdapter):
         """Create Stripe payment method with circuit breaker protection"""
         try:
             method_type = method_data.get("type", "card")
-            create_params = {"type": method_type, "metadata": method_data.get("metadata", {})}
+            create_params = {
+                "type": method_type,
+                "metadata": method_data.get("metadata", {}),
+            }
 
             if method_type == "card" and method_data.get("card"):
                 create_params["card"] = method_data["card"]
@@ -155,7 +166,11 @@ class StripePaymentAdapter(PaymentGatewayAdapter):
             return self._handle_circuit_breaker_error("create_payment_method")
         except StripeError as e:
             logger.error(f"Failed to create Stripe payment method: {e}")
-            return {"success": False, "error": str(e), "error_code": getattr(e, "code", None)}
+            return {
+                "success": False,
+                "error": str(e),
+                "error_code": getattr(e, "code", None),
+            }
 
     async def create_payment_intent(
         self,
@@ -194,7 +209,11 @@ class StripePaymentAdapter(PaymentGatewayAdapter):
             return self._handle_circuit_breaker_error("create_payment_intent")
         except StripeError as e:
             logger.error(f"Failed to create Stripe payment intent: {e}")
-            return {"success": False, "error": str(e), "error_code": getattr(e, "code", None)}
+            return {
+                "success": False,
+                "error": str(e),
+                "error_code": getattr(e, "code", None),
+            }
 
     async def create_subscription(
         self,
@@ -229,7 +248,11 @@ class StripePaymentAdapter(PaymentGatewayAdapter):
             return self._handle_circuit_breaker_error("create_subscription")
         except StripeError as e:
             logger.error(f"Failed to create Stripe subscription: {e}")
-            return {"success": False, "error": str(e), "error_code": getattr(e, "code", None)}
+            return {
+                "success": False,
+                "error": str(e),
+                "error_code": getattr(e, "code", None),
+            }
 
     async def cancel_subscription(
         self, subscription_id: str, immediate: bool = False
@@ -256,7 +279,11 @@ class StripePaymentAdapter(PaymentGatewayAdapter):
             return self._handle_circuit_breaker_error("cancel_subscription")
         except StripeError as e:
             logger.error(f"Failed to cancel Stripe subscription: {e}")
-            return {"success": False, "error": str(e), "error_code": getattr(e, "code", None)}
+            return {
+                "success": False,
+                "error": str(e),
+                "error_code": getattr(e, "code", None),
+            }
 
     async def update_subscription(
         self, subscription_id: str, updates: dict[str, Any]
@@ -273,7 +300,11 @@ class StripePaymentAdapter(PaymentGatewayAdapter):
             return self._handle_circuit_breaker_error("update_subscription")
         except StripeError as e:
             logger.error(f"Failed to update Stripe subscription: {e}")
-            return {"success": False, "error": str(e), "error_code": getattr(e, "code", None)}
+            return {
+                "success": False,
+                "error": str(e),
+                "error_code": getattr(e, "code", None),
+            }
 
     async def handle_webhook(
         self, payload: str, signature: str, endpoint_secret: str
@@ -340,7 +371,11 @@ class StripePaymentAdapter(PaymentGatewayAdapter):
         try:
             # Try a simple API call to check connectivity
             stripe.Account.retrieve()
-            return {"status": "healthy", "adapter": "stripe", "api_version": stripe.api_version}
+            return {
+                "status": "healthy",
+                "adapter": "stripe",
+                "api_version": stripe.api_version,
+            }
         except StripeError as e:
             logger.error(f"Stripe health check failed: {e}")
             return {"status": "unhealthy", "adapter": "stripe", "error": str(e)}

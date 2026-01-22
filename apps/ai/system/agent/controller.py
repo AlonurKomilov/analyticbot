@@ -153,23 +153,17 @@ class AIWorkerController:
 
             # Check CPU usage
             if state.cpu_percent > 85.0:
-                logger.warning(
-                    f"⚠️  Worker {worker_def.name} high CPU: {state.cpu_percent}%"
-                )
+                logger.warning(f"⚠️  Worker {worker_def.name} high CPU: {state.cpu_percent}%")
                 # TODO: Decide on action (scale up, adjust interval, etc.)
 
             # Check memory usage
             if state.memory_percent > 85.0:
-                logger.warning(
-                    f"⚠️  Worker {worker_def.name} high memory: {state.memory_percent}%"
-                )
+                logger.warning(f"⚠️  Worker {worker_def.name} high memory: {state.memory_percent}%")
                 # TODO: Decide on action (restart, increase limit, etc.)
 
             # Check error rate
             if state.errors_count > 10:
-                logger.warning(
-                    f"⚠️  Worker {worker_def.name} has {state.errors_count} errors"
-                )
+                logger.warning(f"⚠️  Worker {worker_def.name} has {state.errors_count} errors")
                 # TODO: Analyze errors and decide on action
 
         except Exception as e:
@@ -236,7 +230,9 @@ class AIWorkerController:
             logger.error(f"❌ Failed to make decision: {e}")
             return None
 
-    def _determine_approval_level(self, decision_type: DecisionType, target_worker: str) -> ApprovalLevel:
+    def _determine_approval_level(
+        self, decision_type: DecisionType, target_worker: str
+    ) -> ApprovalLevel:
         """Determine approval level for a decision"""
         # Phase 1: Conservative approach - most things need approval
         risky_actions = {
@@ -258,9 +254,11 @@ class AIWorkerController:
             # Create action from decision
             action = Action(
                 action_id=f"act_{datetime.utcnow().timestamp()}",
-                action_type=ActionType[decision.action.upper()]
-                if hasattr(ActionType, decision.action.upper())
-                else ActionType.UPDATE_CONFIG,
+                action_type=(
+                    ActionType[decision.action.upper()]
+                    if hasattr(ActionType, decision.action.upper())
+                    else ActionType.UPDATE_CONFIG
+                ),
                 target_worker=decision.target_worker,
                 parameters=decision.action_params,
                 triggered_by="ai_worker",
@@ -304,7 +302,9 @@ class AIWorkerController:
             action.completed_at = datetime.utcnow()
 
             result = ActionResult(
-                action_id=action.action_id, success=True, message="Action executed successfully"
+                action_id=action.action_id,
+                success=True,
+                message="Action executed successfully",
             )
 
             self.stats["successful_actions"] += 1

@@ -29,17 +29,23 @@ Usage:
     from core.services.bot.dashboard import DashboardService
 """
 
-# Moderation services (bot features)
-from core.services.bot.moderation.bot_features_manager import BotFeaturesManager
-from core.services.bot.moderation.base_bot_service import BaseBotService
-from core.services.bot.moderation.anti_spam_service import AntiSpamService
-from core.services.bot.moderation.auto_delete_joins_service import AutoDeleteJoinsService
-
 # Analytics services
-from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+from core.services.bot.analytics.analytics_batch_processor import (
+    AnalyticsBatchProcessor,
+)
 
 # Dashboard services
-from core.services.bot.dashboard.dashboard_service import RealTimeDashboard as DashboardService
+from core.services.bot.dashboard.dashboard_service import (
+    RealTimeDashboard as DashboardService,
+)
+from core.services.bot.moderation.anti_spam_service import AntiSpamService
+from core.services.bot.moderation.auto_delete_joins_service import (
+    AutoDeleteJoinsService,
+)
+from core.services.bot.moderation.base_bot_service import BaseBotService
+
+# Moderation services (bot features)
+from core.services.bot.moderation.bot_features_manager import BotFeaturesManager
 
 # Reporting services
 from core.services.bot.reporting.reporting_service import (
@@ -59,4 +65,3 @@ __all__ = [
     # Dashboard
     "DashboardService",
 ]
-

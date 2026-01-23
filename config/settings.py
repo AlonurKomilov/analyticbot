@@ -96,9 +96,11 @@ class Settings:
     )
     ADMIN_IDS_STR: str | None = field(default_factory=lambda: os.getenv("ADMIN_IDS_STR"))
     SUPPORTED_LOCALES: str | list[str] = field(
-        default_factory=lambda: os.getenv("SUPPORTED_LOCALES", "en,uz").split(",")
-        if "," in os.getenv("SUPPORTED_LOCALES", "")
-        else ["en", "uz"]
+        default_factory=lambda: (
+            os.getenv("SUPPORTED_LOCALES", "en,uz").split(",")
+            if "," in os.getenv("SUPPORTED_LOCALES", "")
+            else ["en", "uz"]
+        )
     )
     DEFAULT_LOCALE: str = field(default_factory=lambda: os.getenv("DEFAULT_LOCALE", "en"))
     ENFORCE_PLAN_LIMITS: bool = field(
@@ -126,11 +128,13 @@ class Settings:
     DB_POOL_SIZE: int = field(default_factory=lambda: int(os.getenv("DB_POOL_SIZE", "50")))
     DB_MAX_OVERFLOW: int = field(default_factory=lambda: int(os.getenv("DB_MAX_OVERFLOW", "100")))
     DB_POOL_TIMEOUT: int = field(default_factory=lambda: int(os.getenv("DB_POOL_TIMEOUT", "30")))
-    DB_POOL_RECYCLE: int = field(default_factory=lambda: int(os.getenv("DB_POOL_RECYCLE", "1800")))  # 30 min
+    DB_POOL_RECYCLE: int = field(
+        default_factory=lambda: int(os.getenv("DB_POOL_RECYCLE", "1800"))
+    )  # 30 min
     DB_POOL_PRE_PING: bool = field(
         default_factory=lambda: os.getenv("DB_POOL_PRE_PING", "true").lower() == "true"
     )
-    
+
     # Redis Connection Pool Settings (for 100K+ users)
     REDIS_MAX_CONNECTIONS: int = field(
         default_factory=lambda: int(os.getenv("REDIS_MAX_CONNECTIONS", "100"))

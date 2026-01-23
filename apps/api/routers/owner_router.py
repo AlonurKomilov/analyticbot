@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from core.services.system.backup_service import BackupService
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
@@ -15,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.di import get_db_connection
 from core.security_engine import AdministrativeRole, UserStatus
 from core.security_engine import User as AdminUser
-from core.services.system.backup_service import BackupService
 from core.services.system.cache.materialized_view_service import MaterializedViewService
 from core.services.system.owner_service import OwnerService
 
@@ -108,8 +108,10 @@ async def get_owner_service():
     # This is a temporary solution until the full port interfaces are implemented
     import secrets
     from datetime import datetime, timedelta
+
     from passlib.context import CryptContext
     from sqlalchemy import text
+
     from apps.di import get_db_session
 
     # Get DB session
@@ -125,38 +127,45 @@ async def get_owner_service():
             """Authenticate admin user and create session"""
             # Get admin user from database
             result = await self.db.execute(
-                text("SELECT id, username, password_hash, role, status, first_name, last_name FROM admin_users WHERE username = :username"),
-                {"username": username}
+                text(
+                    "SELECT id, username, password_hash, role, status, first_name, last_name FROM admin_users WHERE username = :username"
+                ),
+                {"username": username},
             )
             admin = result.fetchone()
-            
+
             if not admin:
                 return None
-            
+
             # Verify password
             if not self.pwd_context.verify(password, admin.password_hash):
                 return None
-            
+
             # Create session token
             session_token = secrets.token_urlsafe(32)
             expires_at = datetime.utcnow() + timedelta(hours=8)
-            
+
             # Insert session into database
             await self.db.execute(
                 text("""
                     INSERT INTO admin_sessions (admin_id, session_token, ip_address, expires_at, is_active)
                     VALUES (:admin_id, :token, :ip, :expires, true)
                 """),
-                {"admin_id": admin.id, "token": session_token, "ip": ip_address, "expires": expires_at}
+                {
+                    "admin_id": admin.id,
+                    "token": session_token,
+                    "ip": ip_address,
+                    "expires": expires_at,
+                },
             )
-            
+
             # Update last login
             await self.db.execute(
                 text("UPDATE admin_users SET last_login = NOW() WHERE id = :id"),
-                {"id": admin.id}
+                {"id": admin.id},
             )
             await self.db.commit()
-            
+
             return {
                 "session_token": session_token,
                 "admin_id": str(admin.id),
@@ -172,7 +181,7 @@ async def get_owner_service():
                     JOIN admin_users a ON s.admin_id = a.id
                     WHERE s.session_token = :token AND s.is_active = true AND s.expires_at > NOW()
                 """),
-                {"token": token}
+                {"token": token},
             )
             admin = result.fetchone()
             if admin:
@@ -193,7 +202,7 @@ async def get_owner_service():
                 total_users = total_users_result.scalar() or 0
             except Exception:
                 total_users = 0
-                
+
             try:
                 active_users_result = await self.db.execute(
                     text("SELECT COUNT(*) FROM users WHERE status = 'active' OR status IS NULL")
@@ -201,21 +210,21 @@ async def get_owner_service():
                 active_users = active_users_result.scalar() or 0
             except Exception:
                 active_users = total_users
-                
+
             # Channel statistics
             try:
                 total_channels_result = await self.db.execute(text("SELECT COUNT(*) FROM channels"))
                 total_channels = total_channels_result.scalar() or 0
             except Exception:
                 total_channels = 0
-                
-            # Bot statistics  
+
+            # Bot statistics
             try:
                 total_bots_result = await self.db.execute(text("SELECT COUNT(*) FROM user_bots"))
                 total_bots = total_bots_result.scalar() or 0
             except Exception:
                 total_bots = 0
-                
+
             # Database size
             try:
                 db_size_result = await self.db.execute(
@@ -224,7 +233,7 @@ async def get_owner_service():
                 database_size = db_size_result.scalar() or "N/A"
             except Exception:
                 database_size = "N/A"
-                
+
             # New users today/this week
             try:
                 new_today_result = await self.db.execute(
@@ -233,10 +242,12 @@ async def get_owner_service():
                 new_today = new_today_result.scalar() or 0
             except Exception:
                 new_today = 0
-                
+
             try:
                 new_this_week_result = await self.db.execute(
-                    text("SELECT COUNT(*) FROM users WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'")
+                    text(
+                        "SELECT COUNT(*) FROM users WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'"
+                    )
                 )
                 new_this_week = new_this_week_result.scalar() or 0
             except Exception:
@@ -327,7 +338,7 @@ async def _verify_owner_access(
 ) -> AdminUser:
     """
     Verify owner access using credentials.
-    
+
     This is a helper function for endpoints that need to verify admin access
     without using dependency injection for the admin user.
     """
@@ -335,32 +346,32 @@ async def _verify_owner_access(
 
     container = get_container()
     admin_repo = await container.database.admin_repo()
-    
+
     try:
         token = credentials.credentials
         ip_address = "unknown"
-        
+
         # Create simple admin service
         class SimpleAdminService:
             def __init__(self, repo):
                 self.admin_repo = repo
-            
+
             async def validate_admin_session(self, token: str, ip_address: str):
                 # Basic token validation - in production, verify JWT
                 if not token:
                     return None
                 return {"id": 1, "username": "admin"}  # Placeholder
-        
+
         admin_service = SimpleAdminService(admin_repo)
         admin_user = await admin_service.validate_admin_session(token, ip_address)
-        
+
         if not admin_user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired session",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         # Convert to AdminUser
         return AdminUser(
             id=str(admin_user.get("id", "")),
@@ -398,7 +409,8 @@ async def admin_login(
 
     if not admin_session:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials or account locked"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials or account locked",
         )
 
     # admin_session already contains all the info we need from authenticate_admin
@@ -471,7 +483,7 @@ async def suspend_user(
     admin_service: OwnerService = Depends(get_owner_service),
 ):
     """Suspend a system user"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.suspend_user(
         UUID(str(current_admin.id)), UUID(str(user_id)), suspension_request.reason
@@ -488,7 +500,7 @@ async def reactivate_user(
     admin_service: OwnerService = Depends(get_owner_service),
 ):
     """Reactivate a suspended user"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.reactivate_user(user_id, int(current_admin.id))
 
@@ -531,7 +543,7 @@ async def get_owner_system_health(
     import time as time_module
 
     import psutil
-    
+
     from apps.di import get_db_connection
 
     # Initialize all values with defaults
@@ -596,8 +608,23 @@ async def get_owner_system_health(
     except Exception as e:
         issues.append(f"System metrics error: {str(e)}")
         system_info = {
-            "cpu": {"percent": 0, "cores_physical": 1, "cores_logical": 1, "frequency_mhz": None, "load_avg_1m": 0, "load_avg_5m": 0, "load_avg_15m": 0},
-            "memory": {"percent": 0, "total_gb": 0, "used_gb": 0, "available_gb": 0, "swap_percent": 0, "swap_total_gb": 0},
+            "cpu": {
+                "percent": 0,
+                "cores_physical": 1,
+                "cores_logical": 1,
+                "frequency_mhz": None,
+                "load_avg_1m": 0,
+                "load_avg_5m": 0,
+                "load_avg_15m": 0,
+            },
+            "memory": {
+                "percent": 0,
+                "total_gb": 0,
+                "used_gb": 0,
+                "available_gb": 0,
+                "swap_percent": 0,
+                "swap_total_gb": 0,
+            },
             "disk": {"percent": 0, "total_gb": 0, "used_gb": 0, "free_gb": 0},
             "uptime_hours": 0,
             "platform": "Unknown",
@@ -659,12 +686,17 @@ async def get_owner_system_health(
     try:
         if pool:
             async with pool.acquire() as conn:
-                user_bots_total = await conn.fetchval("SELECT COUNT(*) FROM user_bot_credentials") or 0
-                user_bots_count = await conn.fetchval(
-                    "SELECT COUNT(*) FROM user_bot_credentials WHERE status IN ('active', 'verified') OR is_verified = true"
-                ) or 0
+                user_bots_total = (
+                    await conn.fetchval("SELECT COUNT(*) FROM user_bot_credentials") or 0
+                )
+                user_bots_count = (
+                    await conn.fetchval(
+                        "SELECT COUNT(*) FROM user_bot_credentials WHERE status IN ('active', 'verified') OR is_verified = true"
+                    )
+                    or 0
+                )
                 user_bots_status = "healthy" if user_bots_total > 0 else "idle"
-    except Exception as e:
+    except Exception:
         user_bots_status = "error"
 
     # Check User MTProto Sessions
@@ -674,18 +706,24 @@ async def get_owner_system_health(
     try:
         if pool:
             async with pool.acquire() as conn:
-                user_mtproto_count = await conn.fetchval(
-                    "SELECT COUNT(DISTINCT user_id) FROM channel_mtproto_settings WHERE mtproto_enabled = true"
-                ) or 0
-                user_mtproto_total = await conn.fetchval("SELECT COUNT(*) FROM channel_mtproto_settings") or 0
+                user_mtproto_count = (
+                    await conn.fetchval(
+                        "SELECT COUNT(DISTINCT user_id) FROM channel_mtproto_settings WHERE mtproto_enabled = true"
+                    )
+                    or 0
+                )
+                user_mtproto_total = (
+                    await conn.fetchval("SELECT COUNT(*) FROM channel_mtproto_settings") or 0
+                )
                 user_mtproto_status = "healthy" if user_mtproto_count > 0 else "idle"
-    except Exception as e:
+    except Exception:
         user_mtproto_status = "error"
 
     # Get Performance Metrics
     performance_metrics = {}
     try:
         from apps.api.middleware.performance_monitoring import get_performance_metrics
+
         performance_metrics = get_performance_metrics()
     except Exception:
         performance_metrics = {
@@ -697,7 +735,7 @@ async def get_owner_system_health(
             "cache_hit_rate_percent": 0,
             "slow_endpoints": [],
             "slow_queries": [],
-            "recent_db_query_avg_ms": 0
+            "recent_db_query_avg_ms": 0,
         }
 
     # Determine overall status
@@ -813,7 +851,7 @@ async def update_system_config(
     admin_service: OwnerService = Depends(get_owner_service),
 ):
     """Update system configuration (Owner only)"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.update_system_config(
         {key: config_update.value}, int(current_admin.id)
@@ -845,14 +883,16 @@ async def get_database_stats(
         "table_count": stats.table_count,
         "total_records": stats.total_records,
         "backup_count": stats.backup_count,
-        "last_backup": {
-            "filename": stats.last_backup.filename,
-            "size": stats.last_backup.size_human,
-            "created_at": stats.last_backup.created_at.isoformat(),
-            "age_days": stats.last_backup.age_days,
-        }
-        if stats.last_backup
-        else None,
+        "last_backup": (
+            {
+                "filename": stats.last_backup.filename,
+                "size": stats.last_backup.size_human,
+                "created_at": stats.last_backup.created_at.isoformat(),
+                "age_days": stats.last_backup.age_days,
+            }
+            if stats.last_backup
+            else None
+        ),
     }
 
 
@@ -990,7 +1030,8 @@ async def get_backup_info(
 
     if not backup:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Backup not found: {filename}"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Backup not found: {filename}",
         )
 
     return {
@@ -1534,7 +1575,8 @@ async def manual_vacuum_table(
     except Exception as e:
         await db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"VACUUM failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"VACUUM failed: {str(e)}",
         )
 
 
@@ -1764,9 +1806,11 @@ async def get_index_usage_statistics(
         "unused_indexes": total_unused,
         "total_size_bytes": total_size_bytes,
         "total_size": _bytes_to_human(total_size_bytes),
-        "usage_rate_percent": round((total_indexes - total_unused) / total_indexes * 100, 2)
-        if total_indexes > 0
-        else 0,
+        "usage_rate_percent": (
+            round((total_indexes - total_unused) / total_indexes * 100, 2)
+            if total_indexes > 0
+            else 0
+        ),
     }
 
     return {
@@ -1824,6 +1868,7 @@ def _bytes_to_human(size_bytes: int) -> str:
 
 class SmartCollectionStatsResponse(BaseModel):
     """Statistics for smart collection efficiency."""
+
     total_posts: int
     total_checks: int
     total_snapshots_saved: int
@@ -1836,6 +1881,7 @@ class SmartCollectionStatsResponse(BaseModel):
 
 class StorageAnalysisResponse(BaseModel):
     """Database storage analysis with smart collection impact."""
+
     current_storage_mb: float
     projected_storage_without_smart_mb: float
     savings_mb: float
@@ -1858,10 +1904,10 @@ async def get_smart_collection_stats(
 ) -> SmartCollectionStatsResponse:
     """Get comprehensive statistics about smart collection efficiency."""
     from sqlalchemy import text
-    
+
     # Verify admin authentication
     await _verify_owner_access(credentials, db)
-    
+
     # Get total posts and checks
     query = text("""
         SELECT 
@@ -1874,22 +1920,22 @@ async def get_smart_collection_stats(
         LEFT JOIN post_metrics_checks c ON p.channel_id = c.channel_id AND p.msg_id = c.msg_id
         WHERE p.is_deleted = FALSE
     """)
-    
+
     result = await db.execute(query)
     row = result.fetchone()
-    
+
     total_posts = row.total_posts or 0
     total_checks = row.total_checks or 0
     total_snapshots_saved = row.total_snapshots_saved or 0
     stable_posts = row.stable_posts or 0
     active_posts = row.active_posts or 0
-    
+
     # Calculate efficiency rate
     efficiency_rate = (total_snapshots_saved / total_checks * 100) if total_checks > 0 else 0.0
-    
+
     # Estimate storage saved (each skipped snapshot = ~100 bytes saved)
     storage_saved_mb = (total_checks - total_snapshots_saved) * 100 / (1024 * 1024)
-    
+
     # Get collection by age brackets
     age_query = text("""
         SELECT 
@@ -1908,10 +1954,10 @@ async def get_smart_collection_stats(
         GROUP BY age_bracket
         ORDER BY age_bracket
     """)
-    
+
     age_result = await db.execute(age_query)
     collection_by_age = {}
-    
+
     for age_row in age_result.fetchall():
         collection_by_age[age_row.age_bracket] = {
             "post_count": age_row.post_count,
@@ -1919,7 +1965,7 @@ async def get_smart_collection_stats(
             "avg_saves": round(float(age_row.avg_saves or 0), 1),
             "efficiency_pct": round(float(age_row.efficiency_pct or 0), 1),
         }
-    
+
     return SmartCollectionStatsResponse(
         total_posts=total_posts,
         total_checks=total_checks,
@@ -1944,10 +1990,10 @@ async def get_storage_analysis(
 ) -> StorageAnalysisResponse:
     """Get comprehensive storage analysis showing smart collection impact."""
     from sqlalchemy import text
-    
+
     # Verify admin authentication
     await _verify_owner_access(credentials, db)
-    
+
     # Get current post_metrics storage
     storage_query = text("""
         SELECT 
@@ -1956,22 +2002,22 @@ async def get_storage_analysis(
             COUNT(*) as record_count
         FROM post_metrics
     """)
-    
+
     storage_result = await db.execute(storage_query)
     storage_row = storage_result.fetchone()
-    
+
     current_storage_mb = storage_row.size_bytes / (1024 * 1024) if storage_row.size_bytes else 0
     post_metrics_records = storage_row.record_count or 0
-    
+
     # Get checks table size
     checks_query = text("""
         SELECT COUNT(*) as count FROM post_metrics_checks
     """)
-    
+
     checks_result = await db.execute(checks_query)
     checks_row = checks_result.fetchone()
     post_metrics_checks_records = checks_row.count or 0
-    
+
     # Calculate average snapshots per post
     avg_query = text("""
         SELECT 
@@ -1984,32 +2030,36 @@ async def get_storage_analysis(
             GROUP BY channel_id, msg_id
         ) grouped
     """)
-    
+
     avg_result = await db.execute(avg_query)
     avg_row = avg_result.fetchone()
-    
-    unique_posts = avg_row.unique_posts or 0
+
+    avg_row.unique_posts or 0
     avg_snapshots_per_post = float(avg_row.avg_per_post or 0)
-    
+
     # Estimate duplicates (same metrics saved multiple times)
     duplicate_query = text("""
         SELECT 
             COUNT(*) - COUNT(DISTINCT (channel_id, msg_id, views, forwards, reactions_count, replies_count)) as duplicate_estimate
         FROM post_metrics
     """)
-    
+
     dup_result = await db.execute(duplicate_query)
     dup_row = dup_result.fetchone()
     duplicate_snapshots_estimate = dup_row.duplicate_estimate or 0
-    
+
     # Project storage without smart collection
     # Assume old system would have 10x more snapshots (no change detection)
     projected_storage_without_smart_mb = current_storage_mb * 10
-    
+
     # Calculate savings
     savings_mb = projected_storage_without_smart_mb - current_storage_mb
-    savings_pct = (savings_mb / projected_storage_without_smart_mb * 100) if projected_storage_without_smart_mb > 0 else 0
-    
+    savings_pct = (
+        (savings_mb / projected_storage_without_smart_mb * 100)
+        if projected_storage_without_smart_mb > 0
+        else 0
+    )
+
     return StorageAnalysisResponse(
         current_storage_mb=round(current_storage_mb, 2),
         projected_storage_without_smart_mb=round(projected_storage_without_smart_mb, 2),
@@ -2027,6 +2077,7 @@ async def get_storage_analysis(
 # =============================================================================
 
 import os
+
 from core.services.k8s import K8sService
 
 # Initialize K8s service (lazy loading)
@@ -2038,9 +2089,9 @@ def get_k8s_service() -> K8sService:
     global _k8s_service
     if _k8s_service is None:
         _k8s_service = K8sService(
-            kubeconfig_path=os.environ.get('KUBECONFIG'),
-            context=os.environ.get('K8S_CONTEXT'),
-            in_cluster=os.environ.get('K8S_IN_CLUSTER', 'false').lower() == 'true'
+            kubeconfig_path=os.environ.get("KUBECONFIG"),
+            context=os.environ.get("K8S_CONTEXT"),
+            in_cluster=os.environ.get("K8S_IN_CLUSTER", "false").lower() == "true",
         )
     return _k8s_service
 
@@ -2069,130 +2120,122 @@ class K8sPodLogsRequest(BaseModel):
 
 
 @router.get("/k8s/status", response_model=K8sStatusResponse)
-async def get_k8s_status(
-    admin: dict = Depends(get_current_admin_user)
-):
+async def get_k8s_status(admin: dict = Depends(get_current_admin_user)):
     """
     Get Kubernetes connection status.
     Returns whether K8s management is enabled and connection health.
     """
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         return K8sStatusResponse(
             enabled=False,
             status="disabled",
-            error="K8s management is disabled. Set K8S_ENABLED=true to enable."
+            error="K8s management is disabled. Set K8S_ENABLED=true to enable.",
         )
-    
+
     k8s = get_k8s_service()
     connection = k8s.connect()
-    
+
     return K8sStatusResponse(
         enabled=True,
-        status=connection.get('status', 'unknown'),
-        cluster=connection.get('cluster'),
-        version=connection.get('version'),
-        error=connection.get('error')
+        status=connection.get("status", "unknown"),
+        cluster=connection.get("cluster"),
+        version=connection.get("version"),
+        error=connection.get("error"),
     )
 
 
 @router.get("/k8s/clusters")
-async def get_k8s_clusters(
-    admin: dict = Depends(get_current_admin_user)
-):
+async def get_k8s_clusters(admin: dict = Depends(get_current_admin_user)):
     """
     Get list of Kubernetes clusters.
     For single-cluster setups, returns info about the connected cluster.
     """
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     clusters = k8s.get_clusters()
-    
+
     if not clusters:
         # Return mock data if not connected
-        return [{
-            'name': 'Not Connected',
-            'endpoint': '-',
-            'status': 'disconnected',
-            'version': '-',
-            'nodes_count': 0,
-            'pods_running': 0,
-            'pods_total': 0,
-            'cpu_usage': 0,
-            'memory_usage': 0
-        }]
-    
+        return [
+            {
+                "name": "Not Connected",
+                "endpoint": "-",
+                "status": "disconnected",
+                "version": "-",
+                "nodes_count": 0,
+                "pods_running": 0,
+                "pods_total": 0,
+                "cpu_usage": 0,
+                "memory_usage": 0,
+            }
+        ]
+
     return clusters
 
 
 @router.get("/k8s/nodes")
-async def get_k8s_nodes(
-    admin: dict = Depends(get_current_admin_user)
-):
+async def get_k8s_nodes(admin: dict = Depends(get_current_admin_user)):
     """Get all Kubernetes nodes in the cluster."""
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     nodes = k8s.get_nodes()
-    
+
     return nodes
 
 
 @router.get("/k8s/pods")
 async def get_k8s_pods(
     namespace: str | None = Query(default=None, description="Filter by namespace"),
-    admin: dict = Depends(get_current_admin_user)
+    admin: dict = Depends(get_current_admin_user),
 ):
     """Get all pods, optionally filtered by namespace."""
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     pods = k8s.get_pods(namespace=namespace)
-    
+
     return pods
 
 
 @router.delete("/k8s/pods/{namespace}/{name}", response_model=K8sActionResponse)
-async def delete_k8s_pod(
-    namespace: str,
-    name: str,
-    admin: dict = Depends(get_current_admin_user)
-):
+async def delete_k8s_pod(namespace: str, name: str, admin: dict = Depends(get_current_admin_user)):
     """
     Delete a specific pod.
     The pod will be recreated if managed by a ReplicaSet/Deployment.
     """
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     result = k8s.delete_pod(name, namespace)
-    
+
     return K8sActionResponse(**result)
 
 
@@ -2201,51 +2244,51 @@ async def get_k8s_pod_logs(
     namespace: str,
     name: str,
     request: K8sPodLogsRequest,
-    admin: dict = Depends(get_current_admin_user)
+    admin: dict = Depends(get_current_admin_user),
 ):
     """Get logs from a specific pod."""
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     result = k8s.get_pod_logs(
         name=name,
         namespace=namespace,
         container=request.container,
-        tail_lines=request.tail_lines
+        tail_lines=request.tail_lines,
     )
-    
-    if not result.get('success'):
+
+    if not result.get("success"):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=result.get('error', 'Failed to get logs')
+            detail=result.get("error", "Failed to get logs"),
         )
-    
-    return {'logs': result.get('logs', '')}
+
+    return {"logs": result.get("logs", "")}
 
 
 @router.get("/k8s/deployments")
 async def get_k8s_deployments(
     namespace: str | None = Query(default=None, description="Filter by namespace"),
-    admin: dict = Depends(get_current_admin_user)
+    admin: dict = Depends(get_current_admin_user),
 ):
     """Get all deployments."""
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     deployments = k8s.get_deployments(namespace=namespace)
-    
+
     return deployments
 
 
@@ -2254,111 +2297,105 @@ async def scale_k8s_deployment(
     namespace: str,
     name: str,
     request: K8sScaleRequest,
-    admin: dict = Depends(get_current_admin_user)
+    admin: dict = Depends(get_current_admin_user),
 ):
     """Scale a deployment to specified replica count."""
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     result = k8s.scale_deployment(name, namespace, request.replicas)
-    
+
     return K8sActionResponse(**result)
 
 
 @router.post("/k8s/deployments/{namespace}/{name}/restart", response_model=K8sActionResponse)
 async def restart_k8s_deployment(
-    namespace: str,
-    name: str,
-    admin: dict = Depends(get_current_admin_user)
+    namespace: str, name: str, admin: dict = Depends(get_current_admin_user)
 ):
     """
     Restart a deployment by triggering a rollout.
     All pods will be recreated with the same configuration.
     """
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     result = k8s.restart_deployment(name, namespace)
-    
+
     return K8sActionResponse(**result)
 
 
 @router.get("/k8s/services")
 async def get_k8s_services(
     namespace: str | None = Query(default=None, description="Filter by namespace"),
-    admin: dict = Depends(get_current_admin_user)
+    admin: dict = Depends(get_current_admin_user),
 ):
     """Get all Kubernetes services."""
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     services = k8s.get_services(namespace=namespace)
-    
+
     return services
 
 
 @router.get("/k8s/ingress")
 async def get_k8s_ingresses(
     namespace: str | None = Query(default=None, description="Filter by namespace"),
-    admin: dict = Depends(get_current_admin_user)
+    admin: dict = Depends(get_current_admin_user),
 ):
     """Get all Kubernetes ingresses."""
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     ingresses = k8s.get_ingresses(namespace=namespace)
-    
+
     return ingresses
 
 
 @router.get("/k8s/metrics")
-async def get_k8s_metrics(
-    admin: dict = Depends(get_current_admin_user)
-):
+async def get_k8s_metrics(admin: dict = Depends(get_current_admin_user)):
     """
     Get cluster-wide Kubernetes metrics.
     Note: Detailed CPU/memory metrics require metrics-server to be installed.
     """
-    k8s_enabled = os.environ.get('K8S_ENABLED', 'false').lower() == 'true'
-    
+    k8s_enabled = os.environ.get("K8S_ENABLED", "false").lower() == "true"
+
     if not k8s_enabled:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="K8s management is disabled"
+            detail="K8s management is disabled",
         )
-    
+
     k8s = get_k8s_service()
     metrics = k8s.get_metrics()
-    
-    if 'error' in metrics and not 'nodes' in metrics:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=metrics['error']
-        )
-    
-    return metrics
 
+    if "error" in metrics and "nodes" not in metrics:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=metrics["error"]
+        )
+
+    return metrics

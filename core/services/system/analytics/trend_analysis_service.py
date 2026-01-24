@@ -271,9 +271,9 @@ class TrendAnalysisService:
                                 "before_mean": float(before_mean),
                                 "after_mean": float(after_mean),
                                 "change_magnitude": float(mean_change),
-                                "change_direction": "increase"
-                                if after_mean > before_mean
-                                else "decrease",
+                                "change_direction": (
+                                    "increase" if after_mean > before_mean else "decrease"
+                                ),
                                 "statistical_significance": float(p_value),
                                 "confidence": "high" if p_value < 0.01 else "medium",
                             }
@@ -282,9 +282,11 @@ class TrendAnalysisService:
             return {
                 "detected_changes": change_points,
                 "total_change_points": len(change_points),
-                "most_significant": max(change_points, key=lambda x: x["change_magnitude"])
-                if change_points
-                else None,
+                "most_significant": (
+                    max(change_points, key=lambda x: x["change_magnitude"])
+                    if change_points
+                    else None
+                ),
             }
 
         except Exception as e:
@@ -435,7 +437,13 @@ class TrendAnalysisService:
 
         except Exception as e:
             logger.error(f"Trend insights generation failed: {e}")
-            return [{"type": "error", "insight": "Failed to generate insights", "priority": "low"}]
+            return [
+                {
+                    "type": "error",
+                    "insight": "Failed to generate insights",
+                    "priority": "low",
+                }
+            ]
 
     # Helper methods for data retrieval
     async def _get_daily_views(

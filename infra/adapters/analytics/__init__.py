@@ -32,11 +32,14 @@ else:
         """Lazy import for MTProto components"""
         if name == "TelegramAnalyticsAdapter":
             from .tg_analytics_adapter import TelegramAnalyticsAdapter
+
             return TelegramAnalyticsAdapter
         elif name == "RateLimitConfig":
             from .tg_analytics_adapter import RateLimitConfig
+
             return RateLimitConfig
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "AnalyticsAdapterFactory",

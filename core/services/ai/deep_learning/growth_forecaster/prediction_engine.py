@@ -115,7 +115,9 @@ class PredictionEngine(PredictionEngineProtocol):
 
             # Process results
             result = self._create_prediction_result(
-                predictions, uncertainty_list if request.include_uncertainty else None, start_time
+                predictions,
+                uncertainty_list if request.include_uncertainty else None,
+                start_time,
             )
 
             # Update health metrics
@@ -158,7 +160,9 @@ class PredictionEngine(PredictionEngineProtocol):
                     logger.error(f"❌ Batch prediction {i} failed: {e}")
                     # Create error result
                     error_result = PredictionResult(
-                        predictions=np.array([]), execution_time_ms=0, model_version="error"
+                        predictions=np.array([]),
+                        execution_time_ms=0,
+                        model_version="error",
                     )
                     results.append(error_result)
 

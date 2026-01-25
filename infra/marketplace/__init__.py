@@ -22,7 +22,7 @@ Usage
         MarketplaceItemRepository,
         MarketplaceServiceRepository,
     )
-    
+
     # Or use through dependency injection
     from apps.di import get_marketplace_item_repo, get_marketplace_service_repo
 
@@ -36,8 +36,10 @@ Database Tables
 - service_usage_log        - Service usage tracking
 """
 
+from infra.db.repositories.marketplace_service_repository import (
+    MarketplaceServiceRepository,
+)
 from infra.marketplace.repositories.items import MarketplaceItemRepository
-from infra.db.repositories.marketplace_service_repository import MarketplaceServiceRepository
 
 __all__ = [
     "MarketplaceItemRepository",

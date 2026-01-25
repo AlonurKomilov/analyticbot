@@ -115,7 +115,7 @@ class ResultFormatter(ResultFormatterProtocol):
                     pred_value * 0.1,  # 10% of prediction (momentum proxy)
                     pred_value * 0.05,  # 5% of prediction (volatility proxy)
                     np.log(abs(pred_value) + 1e-8),  # Log-scaled value
-                    pred_value**2 if abs(pred_value) < 10 else pred_value,  # Quadratic feature
+                    (pred_value**2 if abs(pred_value) < 10 else pred_value),  # Quadratic feature
                     np.tanh(pred_value),  # Bounded feature
                 ]
             ).reshape(1, -1)
@@ -204,9 +204,11 @@ class ResultFormatter(ResultFormatterProtocol):
                 "total_results": len(results),
                 "successful_results": len(results) - error_count,
                 "error_count": error_count,
-                "success_rate": (len(results) - error_count) / len(results) if results else 0,
+                "success_rate": ((len(results) - error_count) / len(results) if results else 0),
                 "performance": {
-                    "average_execution_time_ms": np.mean(execution_times) if execution_times else 0,
+                    "average_execution_time_ms": (
+                        np.mean(execution_times) if execution_times else 0
+                    ),
                     "total_execution_time_ms": sum(execution_times),
                 },
                 "predictions_summary": self._summarize_predictions(all_predictions),

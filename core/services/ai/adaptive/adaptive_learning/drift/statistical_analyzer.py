@@ -286,7 +286,12 @@ class StatisticalDriftAnalyzer:
         try:
             results = await asyncio.gather(*test_tasks, return_exceptions=True)
 
-            test_names = ["kolmogorov_smirnov", "mann_whitney", "chi_square", "anderson_darling"]
+            test_names = [
+                "kolmogorov_smirnov",
+                "mann_whitney",
+                "chi_square",
+                "anderson_darling",
+            ]
 
             for test_name, result in zip(test_names, results, strict=False):
                 if isinstance(result, StatisticalTestResult):

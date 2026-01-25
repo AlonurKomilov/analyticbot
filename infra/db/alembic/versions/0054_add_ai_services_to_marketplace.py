@@ -10,13 +10,15 @@ Adds four AI-powered services to the marketplace:
 - ai_smart_replies: AI-generated reply suggestions (150 cr/mo)
 - ai_content_moderation: AI-powered content moderation (175 cr/mo)
 """
-from alembic import op
-import sqlalchemy as sa
+
 from datetime import datetime
 
+import sqlalchemy as sa
+from alembic import op
+
 # revision identifiers, used by Alembic.
-revision = '0054'
-down_revision = '0053_add_media_download'
+revision = "0054"
+down_revision = "0053_add_media_download"
 branch_labels = None
 depends_on = None
 
@@ -24,17 +26,18 @@ depends_on = None
 def upgrade() -> None:
     # Get connection for raw SQL
     conn = op.get_bind()
-    
+
     # First, ensure the ai_services category exists
     result = conn.execute(
         sa.text("SELECT id FROM marketplace_categories WHERE slug = 'ai_services'")
     ).fetchone()
-    
+
     if result:
         ai_category_id = result[0]
     else:
         # Create category if it doesn't exist
-        conn.execute(sa.text("""
+        conn.execute(
+            sa.text("""
             INSERT INTO marketplace_categories (name, slug, description, icon, color, sort_order, is_active, created_at, updated_at)
             VALUES (
                 'AI Services',
@@ -47,13 +50,15 @@ def upgrade() -> None:
                 :now,
                 :now
             )
-        """), {"now": datetime.utcnow()})
-        
+        """),
+            {"now": datetime.utcnow()},
+        )
+
         result = conn.execute(
             sa.text("SELECT id FROM marketplace_categories WHERE slug = 'ai_services'")
         ).fetchone()
         ai_category_id = result[0]
-    
+
     # Insert AI services
     services = [
         {
@@ -121,16 +126,17 @@ def upgrade() -> None:
             "quota_monthly": 10000,
         },
     ]
-    
+
     for service in services:
         # Check if service already exists
         exists = conn.execute(
             sa.text("SELECT id FROM marketplace_services WHERE service_key = :key"),
-            {"key": service["service_key"]}
+            {"key": service["service_key"]},
         ).fetchone()
-        
+
         if not exists:
-            conn.execute(sa.text("""
+            conn.execute(
+                sa.text("""
                 INSERT INTO marketplace_services (
                     service_key, name, description, category_id, price_credits,
                     billing_period, features, icon, color, is_active, is_featured,
@@ -140,7 +146,9 @@ def upgrade() -> None:
                     :billing_period, :features, :icon, :color, :is_active, :is_featured,
                     :sort_order, :quota_daily, :quota_monthly, :now, :now
                 )
-            """), {**service, "now": datetime.utcnow()})
+            """),
+                {**service, "now": datetime.utcnow()},
+            )
             print(f"✅ Added AI service: {service['name']}")
         else:
             print(f"⏭️  AI service already exists: {service['name']}")
@@ -148,18 +156,18 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     conn = op.get_bind()
-    
+
     # Remove AI services
     service_keys = [
-        'ai_content_optimizer',
-        'ai_sentiment_analyzer', 
-        'ai_smart_replies',
-        'ai_content_moderation',
+        "ai_content_optimizer",
+        "ai_sentiment_analyzer",
+        "ai_smart_replies",
+        "ai_content_moderation",
     ]
-    
+
     for key in service_keys:
         conn.execute(
             sa.text("DELETE FROM marketplace_services WHERE service_key = :key"),
-            {"key": key}
+            {"key": key},
         )
         print(f"🗑️  Removed AI service: {key}")

@@ -87,7 +87,9 @@ class TestPaymentProcessingService:
         mock_payment_repository.create_payment.return_value = payment_record
 
         # Mock payment adapter
-        with patch("apps.bot.services.adapters.payment_adapter_factory.PaymentAdapterFactory") as mock_factory:
+        with patch(
+            "apps.bot.services.adapters.payment_adapter_factory.PaymentAdapterFactory"
+        ) as mock_factory:
             mock_adapter = AsyncMock()
             mock_adapter.process_payment = AsyncMock(
                 return_value={"success": True, "transaction_id": "pi_test123"}
@@ -236,7 +238,9 @@ class TestPaymentProcessingService:
         mock_payment_repository.get_payment.return_value = payment_record
 
         # Mock payment adapter
-        with patch("apps.bot.services.adapters.payment_adapter_factory.PaymentAdapterFactory") as mock_factory:
+        with patch(
+            "apps.bot.services.adapters.payment_adapter_factory.PaymentAdapterFactory"
+        ) as mock_factory:
             mock_adapter = AsyncMock()
             mock_adapter.process_refund = AsyncMock(
                 return_value={"success": True, "refund_id": "re_test123"}
@@ -281,7 +285,9 @@ class TestPaymentProcessingService:
         mock_payment_repository.get_payment.return_value = payment_record
 
         # Mock payment adapter
-        with patch("apps.bot.services.adapters.payment_adapter_factory.PaymentAdapterFactory") as mock_factory:
+        with patch(
+            "apps.bot.services.adapters.payment_adapter_factory.PaymentAdapterFactory"
+        ) as mock_factory:
             mock_adapter = AsyncMock()
             mock_adapter.process_refund = AsyncMock(
                 return_value={"success": True, "refund_id": "re_test123"}
@@ -303,9 +309,7 @@ class TestPaymentProcessingService:
             assert call_args[1]["amount"] == refund_amount
 
     @pytest.mark.asyncio
-    async def test_process_refund_payment_not_found(
-        self, payment_service, mock_payment_repository
-    ):
+    async def test_process_refund_payment_not_found(self, payment_service, mock_payment_repository):
         """Test refund fails for non-existent payment"""
         # Arrange
         payment_id = 999
@@ -365,7 +369,9 @@ class TestPaymentProcessingEdgeCases:
         user_id = 123
 
         # Mock adapter to fail first time, succeed second time
-        with patch("apps.bot.services.adapters.payment_adapter_factory.PaymentAdapterFactory") as mock_factory:
+        with patch(
+            "apps.bot.services.adapters.payment_adapter_factory.PaymentAdapterFactory"
+        ) as mock_factory:
             mock_adapter = AsyncMock()
             mock_adapter.process_payment = AsyncMock(
                 side_effect=[

@@ -11,7 +11,6 @@ Repository for managing user bot moderation features:
 """
 
 from datetime import datetime
-from typing import Sequence
 
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -50,9 +49,7 @@ class UserBotServiceRepository:
     # Chat Settings
     # ===========================================
 
-    async def get_chat_settings(
-        self, user_id: int, chat_id: int
-    ) -> ChatSettings | None:
+    async def get_chat_settings(self, user_id: int, chat_id: int) -> ChatSettings | None:
         """Get settings for a specific chat."""
         result = await self.session.execute(
             select(UserBotSettingsORM).where(
@@ -114,7 +111,7 @@ class UserBotServiceRepository:
             )
         )
         orm = result.scalar_one()
-        
+
         # Update all fields
         orm.chat_type = settings.chat_type.value
         orm.chat_title = settings.chat_title
@@ -141,7 +138,7 @@ class UserBotServiceRepository:
         orm.whitelisted_users = settings.whitelisted_users
         orm.admin_users = settings.admin_users
         orm.updated_at = datetime.now()
-        
+
         await self.session.flush()
         await self.session.refresh(orm)
         return self._settings_to_domain(orm)
@@ -202,9 +199,7 @@ class UserBotServiceRepository:
     # Banned Words
     # ===========================================
 
-    async def get_banned_words(
-        self, user_id: int, chat_id: int | None = None
-    ) -> list[BannedWord]:
+    async def get_banned_words(self, user_id: int, chat_id: int | None = None) -> list[BannedWord]:
         """Get banned words for a user/chat."""
         query = select(UserBotBannedWordORM).where(
             UserBotBannedWordORM.user_id == user_id,
@@ -213,10 +208,9 @@ class UserBotServiceRepository:
         if chat_id is not None:
             # Get words for specific chat + global words (chat_id is NULL)
             query = query.where(
-                (UserBotBannedWordORM.chat_id == chat_id)
-                | (UserBotBannedWordORM.chat_id.is_(None))
+                (UserBotBannedWordORM.chat_id == chat_id) | (UserBotBannedWordORM.chat_id.is_(None))
             )
-        
+
         result = await self.session.execute(query)
         return [self._banned_word_to_domain(orm) for orm in result.scalars().all()]
 
@@ -287,9 +281,7 @@ class UserBotServiceRepository:
         await self.session.refresh(orm)
         return self._invite_to_domain(orm)
 
-    async def mark_user_left(
-        self, user_id: int, chat_id: int, invited_tg_id: int
-    ) -> bool:
+    async def mark_user_left(self, user_id: int, chat_id: int, invited_tg_id: int) -> bool:
         """Mark a user as having left the chat."""
         result = await self.session.execute(
             update(UserBotInviteTrackingORM)
@@ -302,40 +294,43 @@ class UserBotServiceRepository:
         )
         return result.rowcount > 0
 
-    async def get_invite_stats(
-        self, user_id: int, chat_id: int
-    ) -> list[InviteStats]:
+    async def get_invite_stats(self, user_id: int, chat_id: int) -> list[InviteStats]:
         """Get invite statistics per inviter."""
-        query = select(
-            UserBotInviteTrackingORM.inviter_tg_id,
-            UserBotInviteTrackingORM.inviter_username,
-            UserBotInviteTrackingORM.inviter_name,
-            func.count(UserBotInviteTrackingORM.id).label("total_invited"),
-            func.count(
-                func.nullif(UserBotInviteTrackingORM.is_still_member, False)
-            ).label("still_members"),
-        ).where(
-            UserBotInviteTrackingORM.user_id == user_id,
-            UserBotInviteTrackingORM.chat_id == chat_id,
-        ).group_by(
-            UserBotInviteTrackingORM.inviter_tg_id,
-            UserBotInviteTrackingORM.inviter_username,
-            UserBotInviteTrackingORM.inviter_name,
-        ).order_by(
-            func.count(UserBotInviteTrackingORM.id).desc()
+        query = (
+            select(
+                UserBotInviteTrackingORM.inviter_tg_id,
+                UserBotInviteTrackingORM.inviter_username,
+                UserBotInviteTrackingORM.inviter_name,
+                func.count(UserBotInviteTrackingORM.id).label("total_invited"),
+                func.count(func.nullif(UserBotInviteTrackingORM.is_still_member, False)).label(
+                    "still_members"
+                ),
+            )
+            .where(
+                UserBotInviteTrackingORM.user_id == user_id,
+                UserBotInviteTrackingORM.chat_id == chat_id,
+            )
+            .group_by(
+                UserBotInviteTrackingORM.inviter_tg_id,
+                UserBotInviteTrackingORM.inviter_username,
+                UserBotInviteTrackingORM.inviter_name,
+            )
+            .order_by(func.count(UserBotInviteTrackingORM.id).desc())
         )
-        
+
         result = await self.session.execute(query)
         stats = []
         for row in result.all():
-            stats.append(InviteStats(
-                inviter_tg_id=row.inviter_tg_id,
-                inviter_username=row.inviter_username,
-                inviter_name=row.inviter_name,
-                total_invited=row.total_invited,
-                still_members=row.still_members,
-                left_count=row.total_invited - row.still_members,
-            ))
+            stats.append(
+                InviteStats(
+                    inviter_tg_id=row.inviter_tg_id,
+                    inviter_username=row.inviter_username,
+                    inviter_name=row.inviter_name,
+                    total_invited=row.total_invited,
+                    still_members=row.still_members,
+                    left_count=row.total_invited - row.still_members,
+                )
+            )
         return stats
 
     async def get_invites_by_inviter(
@@ -343,11 +338,13 @@ class UserBotServiceRepository:
     ) -> list[InviteRecord]:
         """Get all invites by a specific inviter."""
         result = await self.session.execute(
-            select(UserBotInviteTrackingORM).where(
+            select(UserBotInviteTrackingORM)
+            .where(
                 UserBotInviteTrackingORM.user_id == user_id,
                 UserBotInviteTrackingORM.chat_id == chat_id,
                 UserBotInviteTrackingORM.inviter_tg_id == inviter_tg_id,
-            ).order_by(UserBotInviteTrackingORM.joined_at.desc())
+            )
+            .order_by(UserBotInviteTrackingORM.joined_at.desc())
         )
         return [self._invite_to_domain(orm) for orm in result.scalars().all()]
 
@@ -400,18 +397,18 @@ class UserBotServiceRepository:
     ) -> list[Warning]:
         """Get active warnings for a user in a chat."""
         result = await self.session.execute(
-            select(UserBotWarningORM).where(
+            select(UserBotWarningORM)
+            .where(
                 UserBotWarningORM.user_id == user_id,
                 UserBotWarningORM.chat_id == chat_id,
                 UserBotWarningORM.warned_tg_id == warned_tg_id,
                 UserBotWarningORM.is_active == True,
-            ).order_by(UserBotWarningORM.created_at.desc())
+            )
+            .order_by(UserBotWarningORM.created_at.desc())
         )
         return [self._warning_to_domain(orm) for orm in result.scalars().all()]
 
-    async def get_warning_count(
-        self, user_id: int, chat_id: int, warned_tg_id: int
-    ) -> int:
+    async def get_warning_count(self, user_id: int, chat_id: int, warned_tg_id: int) -> int:
         """Get count of active warnings for a user."""
         result = await self.session.execute(
             select(func.count(UserBotWarningORM.id)).where(
@@ -423,9 +420,7 @@ class UserBotServiceRepository:
         )
         return result.scalar() or 0
 
-    async def clear_warnings(
-        self, user_id: int, chat_id: int, warned_tg_id: int
-    ) -> int:
+    async def clear_warnings(self, user_id: int, chat_id: int, warned_tg_id: int) -> int:
         """Clear all warnings for a user."""
         result = await self.session.execute(
             update(UserBotWarningORM)
@@ -451,7 +446,7 @@ class UserBotServiceRepository:
             warning_type=WarningType(orm.warning_type),
             message_id=orm.message_id,
             message_text=orm.message_text,
-            action_taken=ModerationAction(orm.action_taken) if orm.action_taken else None,
+            action_taken=(ModerationAction(orm.action_taken) if orm.action_taken else None),
             is_active=orm.is_active,
             expires_at=orm.expires_at,
             created_at=orm.created_at,
@@ -545,13 +540,11 @@ class UserBotServiceRepository:
         existing = await self.get_welcome_message(
             message.user_id, message.chat_id, message.message_type
         )
-        
+
         if existing:
             # Update existing
             result = await self.session.execute(
-                select(UserBotWelcomeMessageORM).where(
-                    UserBotWelcomeMessageORM.id == existing.id
-                )
+                select(UserBotWelcomeMessageORM).where(UserBotWelcomeMessageORM.id == existing.id)
             )
             orm = result.scalar_one()
             orm.message_text = message.message_text
@@ -577,7 +570,7 @@ class UserBotServiceRepository:
                 is_active=message.is_active,
             )
             self.session.add(orm)
-        
+
         await self.session.flush()
         await self.session.refresh(orm)
         return self._welcome_to_domain(orm)

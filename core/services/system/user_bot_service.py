@@ -8,7 +8,6 @@ Business logic for user bot moderation features:
 - Warning system
 """
 
-import asyncio
 import logging
 import re
 from datetime import datetime, timedelta
@@ -37,7 +36,6 @@ from infra.db.repositories.user_bot_service_repository import (
     UserBotServiceRepository,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +47,7 @@ FLOOD_CACHE_TTL = 300  # 5 minutes TTL
 class UserBotService:
     """
     Service for user bot moderation operations.
-    
+
     Handles all moderation logic including:
     - Message checking (banned words, spam, links, forwards)
     - Member events (join/leave, welcome messages)
@@ -60,14 +58,14 @@ class UserBotService:
 
     def __init__(self, repository: UserBotServiceRepository):
         self.repository = repository
-        
+
         # Bounded flood detection cache with TTL (per user per chat)
         # Key: (user_id, chat_id, sender_tg_id) -> list of message timestamps
         # Uses TTLCache to prevent unbounded memory growth at scale
         self._flood_cache: TTLCache[tuple[int, int, int], list[datetime]] = TTLCache(
             maxsize=FLOOD_CACHE_MAX_SIZE, ttl=FLOOD_CACHE_TTL
         )
-        
+
         # Spam detection patterns
         self._spam_patterns = [
             r"(https?://[^\s]+)",  # URLs
@@ -78,17 +76,13 @@ class UserBotService:
             r"(free|bonus|gift|prize)\s*(coin|token|crypto|money)",  # Crypto spam
             r"\b(DM|PM)\s*(me|for)\b",  # DM solicitation
         ]
-        self._compiled_spam_patterns = [
-            re.compile(p, re.IGNORECASE) for p in self._spam_patterns
-        ]
+        self._compiled_spam_patterns = [re.compile(p, re.IGNORECASE) for p in self._spam_patterns]
 
     # ===========================================
     # Settings Management
     # ===========================================
 
-    async def get_settings(
-        self, user_id: int, chat_id: int
-    ) -> ChatSettings | None:
+    async def get_settings(self, user_id: int, chat_id: int) -> ChatSettings | None:
         """Get moderation settings for a chat."""
         return await self.repository.get_chat_settings(user_id, chat_id)
 
@@ -103,7 +97,7 @@ class UserBotService:
         settings = await self.repository.get_chat_settings(user_id, chat_id)
         if settings:
             return settings
-        
+
         # Create with defaults
         new_settings = ChatSettings(
             user_id=user_id,
@@ -137,35 +131,35 @@ class UserBotService:
     ) -> ModerationCheckResult:
         """
         Check a message against all moderation rules.
-        
+
         Returns:
             ModerationCheckResult with actions to take
         """
         result = ModerationCheckResult()
-        
+
         # Get settings
         settings = await self.repository.get_chat_settings(user_id, chat_id)
         if not settings:
             return result  # No settings = no moderation
-        
+
         # Check if user is whitelisted
         if settings.is_user_whitelisted(sender_tg_id):
             return result
-        
+
         # Check forward blocking
         if settings.anti_forward_enabled and is_forward:
             result.should_delete = True
             result.action = ModerationAction.DELETE
             result.user_message = "⚠️ Forwarded messages are not allowed in this chat."
             return result
-        
+
         # Check link blocking
         if settings.anti_link_enabled and has_links:
             result.should_delete = True
             result.action = ModerationAction.DELETE
             result.user_message = "⚠️ Links are not allowed in this chat."
             return result
-        
+
         if message_text:
             # Check banned words
             if settings.banned_words_enabled:
@@ -175,12 +169,16 @@ class UserBotService:
                         result.banned_word_match = word
                         result.should_delete = True
                         result.action = word.action
-                        
-                        if word.action in [ModerationAction.WARN, ModerationAction.MUTE, 
-                                          ModerationAction.KICK, ModerationAction.BAN]:
+
+                        if word.action in [
+                            ModerationAction.WARN,
+                            ModerationAction.MUTE,
+                            ModerationAction.KICK,
+                            ModerationAction.BAN,
+                        ]:
                             result.should_warn = True
                         break
-            
+
             # Check spam patterns
             if settings.anti_spam_enabled and not result.banned_word_match:
                 spam_result = self._detect_spam(message_text)
@@ -189,42 +187,45 @@ class UserBotService:
                     result.should_delete = True
                     result.action = settings.spam_action
                     result.should_warn = settings.spam_action != ModerationAction.DELETE
-        
+
         # Check flood
         flood_result = self._check_flood(
-            user_id, chat_id, sender_tg_id,
-            settings.flood_limit, settings.flood_interval_seconds
+            user_id,
+            chat_id,
+            sender_tg_id,
+            settings.flood_limit,
+            settings.flood_interval_seconds,
         )
         if flood_result.is_flooding:
             result.flood_result = flood_result
             result.should_delete = True
             result.action = ModerationAction.MUTE
             result.should_warn = True
-            result.user_message = f"⚠️ Slow down! You're sending messages too fast."
-        
+            result.user_message = "⚠️ Slow down! You're sending messages too fast."
+
         return result
 
     def _detect_spam(self, text: str) -> SpamDetectionResult:
         """Detect spam patterns in text."""
         result = SpamDetectionResult()
-        
+
         for pattern in self._compiled_spam_patterns:
             matches = pattern.findall(text)
             if matches:
                 result.matched_patterns.append(pattern.pattern)
                 result.reasons.append(f"Matched pattern: {pattern.pattern}")
-        
+
         # Count links
-        url_pattern = re.compile(r'https?://[^\s]+|t\.me/\w+', re.IGNORECASE)
+        url_pattern = re.compile(r"https?://[^\s]+|t\.me/\w+", re.IGNORECASE)
         result.link_count = len(url_pattern.findall(text))
-        
+
         # Calculate confidence
         if result.matched_patterns:
             base_confidence = min(len(result.matched_patterns) * 0.3, 0.9)
             link_boost = min(result.link_count * 0.1, 0.3)
             result.confidence = min(base_confidence + link_boost, 1.0)
             result.is_spam = result.confidence >= 0.5
-        
+
         return result
 
     def _check_flood(
@@ -239,27 +240,27 @@ class UserBotService:
         key = (user_id, chat_id, sender_tg_id)
         now = datetime.now()
         cutoff = now - timedelta(seconds=interval_seconds)
-        
+
         # Get/initialize message timestamps
         timestamps = self._flood_cache.get(key, [])
-        
+
         # Remove old timestamps
         timestamps = [ts for ts in timestamps if ts > cutoff]
-        
+
         # Add current message
         timestamps.append(now)
         self._flood_cache[key] = timestamps
-        
+
         # Check flood
         result = FloodDetectionResult(
             message_count=len(timestamps),
             time_window_seconds=interval_seconds,
         )
-        
+
         if len(timestamps) > limit:
             result.is_flooding = True
             result.messages_per_second = len(timestamps) / interval_seconds
-        
+
         return result
 
     # ===========================================
@@ -281,7 +282,7 @@ class UserBotService:
     ) -> tuple[Warning, int, ModerationAction | None]:
         """
         Issue a warning to a user.
-        
+
         Returns:
             Tuple of (Warning, total_warnings, action_to_take if max reached)
         """
@@ -289,7 +290,7 @@ class UserBotService:
         settings = await self.repository.get_chat_settings(user_id, chat_id)
         max_warnings = settings.max_warnings if settings else 3
         warning_action = settings.warning_action if settings else ModerationAction.MUTE
-        
+
         # Create warning
         warning = Warning(
             user_id=user_id,
@@ -303,33 +304,27 @@ class UserBotService:
             message_text=message_text,
             created_by_tg_id=issued_by_tg_id,
         )
-        
+
         saved_warning = await self.repository.add_warning(warning)
-        
+
         # Get warning count
-        total_warnings = await self.repository.get_warning_count(
-            user_id, chat_id, warned_tg_id
-        )
-        
+        total_warnings = await self.repository.get_warning_count(user_id, chat_id, warned_tg_id)
+
         # Check if max warnings reached
         action_to_take = None
         if total_warnings >= max_warnings:
             action_to_take = warning_action
             saved_warning.action_taken = warning_action
-        
+
         return saved_warning, total_warnings, action_to_take
 
     async def get_user_warnings(
         self, user_id: int, chat_id: int, warned_tg_id: int
     ) -> list[Warning]:
         """Get all active warnings for a user."""
-        return await self.repository.get_active_warnings(
-            user_id, chat_id, warned_tg_id
-        )
+        return await self.repository.get_active_warnings(user_id, chat_id, warned_tg_id)
 
-    async def clear_user_warnings(
-        self, user_id: int, chat_id: int, warned_tg_id: int
-    ) -> int:
+    async def clear_user_warnings(self, user_id: int, chat_id: int, warned_tg_id: int) -> int:
         """Clear all warnings for a user. Returns count cleared."""
         return await self.repository.clear_warnings(user_id, chat_id, warned_tg_id)
 
@@ -355,9 +350,7 @@ class UserBotService:
         )
         return await self.repository.add_banned_word(banned_word)
 
-    async def get_banned_words(
-        self, user_id: int, chat_id: int | None = None
-    ) -> list[BannedWord]:
+    async def get_banned_words(self, user_id: int, chat_id: int | None = None) -> list[BannedWord]:
         """Get all banned words for user/chat."""
         return await self.repository.get_banned_words(user_id, chat_id)
 
@@ -402,9 +395,7 @@ class UserBotService:
         message_type: MessageType = MessageType.WELCOME,
     ) -> WelcomeMessage | None:
         """Get welcome message for a chat."""
-        return await self.repository.get_welcome_message(
-            user_id, chat_id, message_type
-        )
+        return await self.repository.get_welcome_message(user_id, chat_id, message_type)
 
     async def format_welcome_message(
         self,
@@ -421,7 +412,7 @@ class UserBotService:
         welcome = await self.get_welcome_message(user_id, chat_id, message_type)
         if not welcome:
             return None
-        
+
         return welcome.format_message(
             user_name=new_member_name,
             user_username=new_member_username,
@@ -460,15 +451,11 @@ class UserBotService:
         )
         return await self.repository.track_invite(record)
 
-    async def mark_member_left(
-        self, user_id: int, chat_id: int, member_tg_id: int
-    ) -> bool:
+    async def mark_member_left(self, user_id: int, chat_id: int, member_tg_id: int) -> bool:
         """Mark a member as having left."""
         return await self.repository.mark_user_left(user_id, chat_id, member_tg_id)
 
-    async def get_invite_stats(
-        self, user_id: int, chat_id: int
-    ) -> list[InviteStats]:
+    async def get_invite_stats(self, user_id: int, chat_id: int) -> list[InviteStats]:
         """Get invite statistics for a chat."""
         return await self.repository.get_invite_stats(user_id, chat_id)
 
@@ -476,9 +463,7 @@ class UserBotService:
         self, user_id: int, chat_id: int, inviter_tg_id: int
     ) -> list[InviteRecord]:
         """Get all invites by a specific user."""
-        return await self.repository.get_invites_by_inviter(
-            user_id, chat_id, inviter_tg_id
-        )
+        return await self.repository.get_invites_by_inviter(user_id, chat_id, inviter_tg_id)
 
     # ===========================================
     # Moderation Log
@@ -520,9 +505,7 @@ class UserBotService:
         offset: int = 0,
     ) -> list[ModerationLogEntry]:
         """Get moderation log for a chat."""
-        return await self.repository.get_moderation_log(
-            user_id, chat_id, limit, offset
-        )
+        return await self.repository.get_moderation_log(user_id, chat_id, limit, offset)
 
 
 def get_user_bot_service(

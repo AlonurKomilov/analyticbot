@@ -198,7 +198,9 @@ async def main():
 
         # Test marketplace repository
         try:
-            from infra.db.repositories.marketplace_repository import MarketplaceRepository
+            from infra.db.repositories.marketplace_repository import (
+                MarketplaceRepository,
+            )
 
             marketplace_repo = MarketplaceRepository(pool)
 

@@ -9,7 +9,7 @@ Two-layer AI architecture:
    - Worker scaling and health
    - Configured via environment
    - Admin-only access
-   
+
 2. **User AI** (apps.ai.user)
    - Per-user AI assistants
    - Analytics insights
@@ -20,17 +20,6 @@ Two-layer AI architecture:
 Version: 2.0.0
 Status: Phase 1 - Foundation + Separation
 """
-
-# System AI - Infrastructure management
-from apps.ai.system import (
-    AIApprovalMode,
-    SystemAIConfig,
-    SystemAIController,
-    get_system_ai_config,
-)
-
-# User AI - User-facing features
-from apps.ai.user import UserAIAgent, UserAIConfig, UserAISettings
 
 # Shared models
 from apps.ai.shared.models import (
@@ -47,9 +36,20 @@ from apps.ai.shared.models import (
     WorkerType,
 )
 
+# System AI - Infrastructure management
+from apps.ai.system import (
+    AIApprovalMode,
+    SystemAIConfig,
+    SystemAIController,
+    get_system_ai_config,
+)
+
 # Legacy compatibility
 from apps.ai.system.controller import SystemAIController as AIWorkerController
 from apps.ai.system.registry import WorkerRegistry
+
+# User AI - User-facing features
+from apps.ai.user import UserAIAgent, UserAIConfig, UserAISettings
 
 __version__ = "2.0.0"
 __all__ = [

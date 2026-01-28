@@ -12,8 +12,8 @@ The infra.tg.parsers import is acceptable because:
 
 from dependency_injector import containers, providers
 
-from apps.mtproto.system.config import MTProtoSettings
 from apps.mtproto.shared.metrics import MTProtoMetrics
+from apps.mtproto.system.config import MTProtoSettings
 
 # MTProto-specific utility functions (acceptable - stateless data transformation)
 from infra.telegram.telethon import normalize_message, normalize_update
@@ -33,9 +33,7 @@ class ProcessorsContainer(containers.DeclarativeContainer):
         lambda: normalize_message  # Function wrapper
     )
 
-    update_normalizer = providers.Factory(
-        lambda: normalize_update  # Function wrapper
-    )
+    update_normalizer = providers.Factory(lambda: normalize_update)  # Function wrapper
 
     # Processing services would go here
     # message_processor = providers.Factory(MessageProcessor, ...)

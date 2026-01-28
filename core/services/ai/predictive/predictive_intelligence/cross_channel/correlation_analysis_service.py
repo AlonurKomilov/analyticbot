@@ -319,13 +319,15 @@ class CorrelationAnalysisService:
                 connected_channels.add(channel_b)
 
         # Find isolated channels
-        all_channels = set(str(ch) for ch in correlation_matrix.get("channels", []))
+        all_channels = {str(ch) for ch in correlation_matrix.get("channels", [])}
         isolated = list(all_channels - connected_channels)
 
         return isolated
 
     def calculate_correlation_confidence(
-        self, correlation_matrix: dict[str, Any], channels_data: dict[int, dict[str, Any]]
+        self,
+        correlation_matrix: dict[str, Any],
+        channels_data: dict[int, dict[str, Any]],
     ) -> float:
         """
         Calculate confidence score for correlation analysis.

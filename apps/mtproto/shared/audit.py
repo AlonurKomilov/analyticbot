@@ -9,7 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 async def log_mtproto_event(
-    user_id: int, action: str, channel_id: int | None = None, metadata: dict[str, Any] | None = None
+    user_id: int,
+    action: str,
+    channel_id: int | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> None:
     """Log MTProto collection event to audit table.
 

@@ -22,18 +22,18 @@ logger = logging.getLogger(__name__)
 def _create_fsm_storage(settings: Settings) -> BaseStorage:
     """
     Create FSM storage - Redis for production scalability, Memory for development.
-    
+
     Redis storage is required for:
     - Multi-instance deployments (100K+ users)
     - State persistence across restarts
     - Horizontal scaling
     """
-    redis_url = getattr(settings, 'REDIS_URL', None)
-    
+    redis_url = getattr(settings, "REDIS_URL", None)
+
     if redis_url:
         try:
             from aiogram.fsm.storage.redis import RedisStorage
-            
+
             storage = RedisStorage.from_url(
                 str(redis_url),
                 key_builder=DefaultKeyBuilder(with_bot_id=True, with_destiny=True),
@@ -46,7 +46,7 @@ def _create_fsm_storage(settings: Settings) -> BaseStorage:
             logger.warning("⚠️ aiogram Redis storage not available, falling back to memory")
         except Exception as e:
             logger.warning(f"⚠️ Redis connection failed ({e}), falling back to memory")
-    
+
     logger.warning("⚠️ FSM using MemoryStorage - NOT suitable for production scaling!")
     return MemoryStorage()
 
@@ -58,12 +58,14 @@ class AnalyticBot:
         # Lazy imports to avoid circular dependencies
         from apps.bot.system.handlers import alerts, exports
         from apps.bot.system.handlers.bot_microhandlers import bot_microhandlers_router
-        from apps.bot.system.middlewares.suspension_middleware import SuspensionCheckMiddleware
+        from apps.bot.system.middlewares.suspension_middleware import (
+            SuspensionCheckMiddleware,
+        )
         from apps.bot.system.middlewares.throttle import ThrottleMiddleware
-        
+
         self.settings = Settings()
         self.bot = Bot(token=token)
-        
+
         # Use Redis storage for production scalability
         storage = _create_fsm_storage(self.settings)
         self.dp = Dispatcher(storage=storage)
@@ -76,7 +78,7 @@ class AnalyticBot:
         # Throttling to prevent spam
         self.dp.message.middleware(ThrottleMiddleware())
         self.dp.callback_query.middleware(ThrottleMiddleware())
-        
+
         # Store references for handler registration
         self._alerts = alerts
         self._exports = exports

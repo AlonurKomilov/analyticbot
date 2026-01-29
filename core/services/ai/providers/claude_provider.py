@@ -6,15 +6,19 @@ Adapter for Claude models (Claude 3.5 Sonnet, Opus, Haiku)
 """
 
 from anthropic import AsyncAnthropic
-from typing import Optional
 
 from core.services.ai.base_provider import BaseAIProvider
-from core.services.ai.models import AIMessage, AIResponse, AIProviderConfig, ProviderInfo
+from core.services.ai.models import (
+    AIMessage,
+    AIProviderConfig,
+    AIResponse,
+    ProviderInfo,
+)
 
 
 class ClaudeProvider(BaseAIProvider):
     """Anthropic Claude provider implementation."""
-    
+
     # Pricing per 1M tokens (USD) - Updated Dec 2024
     PRICING = {
         "claude-3-5-sonnet-20241022": {"input": 3.00, "output": 15.00},
@@ -26,14 +30,14 @@ class ClaudeProvider(BaseAIProvider):
         "claude-3-haiku-20240307": {"input": 0.25, "output": 1.25},
         "claude-3-haiku": {"input": 0.25, "output": 1.25},
     }
-    
+
     AVAILABLE_MODELS = [
         "claude-3-5-sonnet-20241022",
         "claude-3-opus-20240229",
         "claude-3-sonnet-20240229",
         "claude-3-haiku-20240307",
     ]
-    
+
     def __init__(self, config: AIProviderConfig):
         """Initialize Claude provider."""
         super().__init__(config)
@@ -41,27 +45,24 @@ class ClaudeProvider(BaseAIProvider):
             api_key=config.api_key,
             timeout=config.timeout,
         )
-    
+
     async def complete(
         self,
         messages: list[AIMessage],
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
     ) -> AIResponse:
         """Generate completion using Claude API."""
         # Extract system message (Claude requires it separately)
         system_message = None
         user_messages = []
-        
+
         for msg in messages:
             if msg.role == "system":
                 system_message = msg.content
             else:
-                user_messages.append({
-                    "role": msg.role,
-                    "content": msg.content
-                })
-        
+                user_messages.append({"role": msg.role, "content": msg.content})
+
         try:
             response = await self.client.messages.create(
                 model=self.config.model,
@@ -69,12 +70,12 @@ class ClaudeProvider(BaseAIProvider):
                 messages=user_messages,
                 temperature=temperature or self.config.temperature,
                 max_tokens=max_tokens or self.config.max_tokens,
-                **self.config.extra_params
+                **self.config.extra_params,
             )
-            
+
             usage = response.usage
             cost = self.calculate_cost(usage.input_tokens, usage.output_tokens)
-            
+
             return AIResponse(
                 content=response.content[0].text,
                 model=response.model,
@@ -89,7 +90,7 @@ class ClaudeProvider(BaseAIProvider):
         except Exception as e:
             self.logger.error(f"Claude API error: {e}")
             raise
-    
+
     def count_tokens(self, text: str) -> int:
         """
         Estimate tokens for Claude.
@@ -98,7 +99,7 @@ class ClaudeProvider(BaseAIProvider):
         # More accurate would be to use anthropic.count_tokens()
         # but this requires async call, so we estimate
         return int(len(text) / 3.5)
-    
+
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         """Calculate cost based on Claude pricing."""
         # Get pricing for model (with fallback)
@@ -112,15 +113,15 @@ class ClaudeProvider(BaseAIProvider):
             else:
                 # Default to Sonnet pricing
                 model_key = "claude-3-5-sonnet"
-        
+
         pricing = self.PRICING[model_key]
-        
+
         # Calculate cost per million tokens
         input_cost = (input_tokens / 1_000_000) * pricing["input"]
         output_cost = (output_tokens / 1_000_000) * pricing["output"]
-        
+
         return input_cost + output_cost
-    
+
     @property
     def provider_info(self) -> ProviderInfo:
         """Get Claude provider information."""

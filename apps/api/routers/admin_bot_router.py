@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from apps.api.middleware.auth import require_admin_user  # Use existing auth system
 from apps.api.services.bot_service_factory import create_admin_bot_service
 from apps.di import get_container
-from core.models.user_bot_domain import BotStatus, BotRole
+from core.models.user_bot_domain import BotRole, BotStatus
 from core.ports.user_bot_repository import IUserBotRepository
 from core.schemas.user_bot_schemas import (
     AdminAccessResponse,
@@ -223,7 +223,9 @@ async def verify_user_bot(
             test_message=None,
         )
 
-        logger.info(f"[ADMIN VERIFY BOT] Verification result for user {user_id}: success={success}, message={message}")
+        logger.info(
+            f"[ADMIN VERIFY BOT] Verification result for user {user_id}: success={success}, message={message}"
+        )
 
         if not success:
             if "No bot found" in message:
@@ -247,7 +249,10 @@ async def verify_user_bot(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error verifying bot for user {user_id} by admin {admin_id}: {e}", exc_info=True)
+        logger.error(
+            f"Error verifying bot for user {user_id} by admin {admin_id}: {e}",
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to verify user bot: {str(e)}",
@@ -573,14 +578,20 @@ async def delete_user_bot(
                 admin_user_id=admin_id,
                 target_user_id=user_id,
                 action="delete_bot",
-                details={"bot_username": credentials.bot_username, "bot_id": credentials.bot_id},
+                details={
+                    "bot_username": credentials.bot_username,
+                    "bot_id": credentials.bot_id,
+                },
                 timestamp=datetime.utcnow(),
             )
         )
 
         logger.info(f"Admin {admin_id} deleted bot for user {user_id}")
 
-        return {"message": f"Bot for user {user_id} deleted successfully", "deleted": True}
+        return {
+            "message": f"Bot for user {user_id} deleted successfully",
+            "deleted": True,
+        }
 
     except HTTPException:
         raise

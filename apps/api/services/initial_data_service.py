@@ -56,13 +56,15 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
                 id=user["id"],
                 username=user.get("username"),
             ),
-            plan=Plan(
-                name=plan.get("name", "Free"),
-                max_channels=plan.get("channels_limit", 5),
-                max_posts_per_month=plan.get("posts_limit", 100),
-            )
-            if plan
-            else None,
+            plan=(
+                Plan(
+                    name=plan.get("name", "Free"),
+                    max_channels=plan.get("channels_limit", 5),
+                    max_posts_per_month=plan.get("posts_limit", 100),
+                )
+                if plan
+                else None
+            ),
             channels=[
                 Channel(
                     id=ch["id"],

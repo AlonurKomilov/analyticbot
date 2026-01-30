@@ -8,7 +8,12 @@ import logging
 from typing import cast
 
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 
 from apps.bot.system.models.content_protection import PremiumFeatureLimits, UserTier
 
@@ -48,18 +53,18 @@ async def handle_usage_stats(callback: CallbackQuery):
 📊 **Usage Statistics - {user_tier.value.title()}**
 
 **This Month:**
-🖼️ **Image Watermarks:** {format_limit(
-        current_usage.get('watermarks', 0), limits.watermarks_per_month
-    )}
-🎥 **Video Watermarks:** {format_limit(
-        current_usage.get('video_watermarks', 0), limits.watermarks_per_month
-    )}
-🎭 **Custom Emojis:** {format_limit(
-        current_usage.get('custom_emojis', 0), limits.custom_emojis_per_month
-    )}
-🔍 **Theft Scans:** {format_limit(
-        current_usage.get('theft_scans', 0), limits.theft_scans_per_month
-    )}
+🖼️ **Image Watermarks:** {
+        format_limit(current_usage.get("watermarks", 0), limits.watermarks_per_month)
+    }
+🎥 **Video Watermarks:** {
+        format_limit(current_usage.get("video_watermarks", 0), limits.watermarks_per_month)
+    }
+🎭 **Custom Emojis:** {
+        format_limit(current_usage.get("custom_emojis", 0), limits.custom_emojis_per_month)
+    }
+🔍 **Theft Scans:** {
+        format_limit(current_usage.get("theft_scans", 0), limits.theft_scans_per_month)
+    }
 
 **File Size Limit:** {limits.max_file_size_mb}MB
 """

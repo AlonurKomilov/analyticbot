@@ -34,7 +34,8 @@ class AsyncpgPaymentRepository:
         async with self.pool.acquire() as conn:
             if is_default:
                 await conn.execute(
-                    "UPDATE payment_methods SET is_default = false WHERE user_id = $1", user_id
+                    "UPDATE payment_methods SET is_default = false WHERE user_id = $1",
+                    user_id,
                 )
             await conn.execute(
                 """
@@ -373,8 +374,7 @@ class AsyncpgPaymentRepository:
     async def get_subscription_stats(self) -> dict[str, Any]:
         """Get subscription statistics"""
         async with self.pool.acquire() as conn:
-            row = await conn.fetchrow(
-                """
+            row = await conn.fetchrow("""
                 SELECT
                     COUNT(*) as total_subscriptions,
                     COUNT(CASE WHEN status = 'active' THEN 1 END) as active_subscriptions,
@@ -382,8 +382,7 @@ class AsyncpgPaymentRepository:
                     COUNT(CASE WHEN status = 'past_due' THEN 1 END) as past_due_subscriptions,
                     AVG(CASE WHEN status = 'active' THEN amount END) as avg_subscription_amount
                 FROM subscriptions
-                """
-            )
+                """)
             return dict(row) if row else {}
 
     async def get_plan_with_pricing(self, plan_id: int) -> dict[str, Any] | None:

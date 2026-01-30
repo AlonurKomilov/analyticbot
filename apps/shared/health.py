@@ -167,7 +167,10 @@ async def di_health() -> dict[str, Any]:
         for name, factory in dependencies:
             try:
                 repo = await factory()
-                di_info["dependencies"][name] = {"status": "resolved", "type": type(repo).__name__}
+                di_info["dependencies"][name] = {
+                    "status": "resolved",
+                    "type": type(repo).__name__,
+                }
             except Exception as e:
                 di_info["dependencies"][name] = {"status": "failed", "error": str(e)}
                 di_info["status"] = "degraded"

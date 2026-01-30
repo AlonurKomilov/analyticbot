@@ -4,7 +4,9 @@ Modular analytics architecture with clean separation of concerns
 """
 
 # Core modules
-from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+from core.services.bot.analytics.analytics_batch_processor import (
+    AnalyticsBatchProcessor,
+)
 from core.services.bot.analytics.analytics_coordinator import (
     AnalyticsCoordinator,
     AnalyticsService,  # Backward compatibility alias

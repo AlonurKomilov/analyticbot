@@ -7,18 +7,18 @@ DO NOT create alternative cache implementations.
 
 Usage:
     from infra.caching import CacheService, InMemoryCacheAdapter
-    
+
     # Production - Redis
     cache = CacheService(redis_url="redis://localhost:6379")
     await cache.set("key", "value", ttl=3600)
     value = await cache.get("key")
-    
+
     # Testing - In-memory
     cache = InMemoryCacheAdapter()
     await cache.set("key", "value")
 """
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from core.ports.cache_port import AsyncCachePort
 
@@ -34,15 +34,15 @@ else:
 class CacheService(AsyncCachePort):
     """
     Unified async Redis cache service implementing AsyncCachePort.
-    
+
     This consolidates all Redis caching functionality into one class.
     Use this for all caching needs throughout the application.
     """
 
-    def __init__(self, redis_client: Optional[Any] = None, redis_url: str = "redis://localhost:6379"):
+    def __init__(self, redis_client: Any | None = None, redis_url: str = "redis://localhost:6379"):
         """
         Initialize cache service.
-        
+
         Args:
             redis_client: Pre-configured redis client (preferred)
             redis_url: Redis connection URL (fallback if client not provided)
@@ -55,14 +55,12 @@ class CacheService(AsyncCachePort):
         """Ensure Redis connection is established."""
         if not self._connected and redis:
             self._redis_client = await redis.from_url(
-                self._redis_url, 
-                encoding="utf-8",
-                decode_responses=True
+                self._redis_url, encoding="utf-8", decode_responses=True
             )
             self._connected = True
 
     # AsyncCachePort protocol methods (set operations)
-    
+
     async def sadd(self, key: str, *values: str) -> int:
         """Add values to Redis set."""
         await self._ensure_connection()
@@ -107,18 +105,18 @@ class CacheService(AsyncCachePort):
         return int(result) if result is not None else 0
 
     # Additional common cache operations
-    
-    async def get(self, key: str) -> Optional[str]:
+
+    async def get(self, key: str) -> str | None:
         """Get value by key."""
         await self._ensure_connection()
         if not self._redis_client:
             return None
         return await self._redis_client.get(key)
 
-    async def set(self, key: str, value: str, ttl: Optional[int] = None) -> bool:
+    async def set(self, key: str, value: str, ttl: int | None = None) -> bool:
         """
         Set key-value pair with optional TTL.
-        
+
         Args:
             key: Cache key
             value: Value to store
@@ -141,7 +139,7 @@ class CacheService(AsyncCachePort):
 class InMemoryCacheAdapter(AsyncCachePort):
     """
     In-memory cache for testing or when Redis is unavailable.
-    
+
     Implements AsyncCachePort protocol using simple dictionary storage.
     """
 
@@ -188,11 +186,11 @@ class InMemoryCacheAdapter(AsyncCachePort):
                 count += 1
         return count
 
-    async def get(self, key: str) -> Optional[str]:
+    async def get(self, key: str) -> str | None:
         """Get value by key."""
         return self._values.get(key)
 
-    async def set(self, key: str, value: str, ttl: Optional[int] = None) -> bool:
+    async def set(self, key: str, value: str, ttl: int | None = None) -> bool:
         """Set key-value pair (TTL ignored in memory)."""
         self._values[key] = value
         return True
@@ -207,7 +205,7 @@ class InMemoryCacheAdapter(AsyncCachePort):
 def create_redis_cache_adapter(redis_client: Any) -> CacheService:
     """
     Create cache adapter from Redis client.
-    
+
     This function exists for backward compatibility with existing code.
     New code should use CacheService directly.
     """

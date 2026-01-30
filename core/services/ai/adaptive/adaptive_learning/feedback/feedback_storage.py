@@ -364,13 +364,15 @@ class FeedbackStorageService:
 
                 # Count items to be deleted
                 cursor.execute(
-                    "SELECT COUNT(*) FROM feedback WHERE timestamp < ?", (cutoff_date.isoformat(),)
+                    "SELECT COUNT(*) FROM feedback WHERE timestamp < ?",
+                    (cutoff_date.isoformat(),),
                 )
                 count_to_delete = cursor.fetchone()[0]
 
                 # Delete old feedback
                 cursor.execute(
-                    "DELETE FROM feedback WHERE timestamp < ?", (cutoff_date.isoformat(),)
+                    "DELETE FROM feedback WHERE timestamp < ?",
+                    (cutoff_date.isoformat(),),
                 )
 
                 conn.commit()
@@ -573,7 +575,7 @@ class FeedbackStorageService:
                             feedback.rating,
                             feedback.feedback_text,
                             feedback.timestamp.isoformat(),
-                            json.dumps(feedback.metadata) if feedback.metadata else None,
+                            (json.dumps(feedback.metadata) if feedback.metadata else None),
                         ),
                     )
 
@@ -591,7 +593,8 @@ class FeedbackStorageService:
             # Load feedback from last 7 days
             cutoff_date = datetime.utcnow() - timedelta(days=7)
             recent_feedback = await self.get_feedback(
-                time_range=(cutoff_date, datetime.utcnow()), limit=self.config.cache_size_limit
+                time_range=(cutoff_date, datetime.utcnow()),
+                limit=self.config.cache_size_limit,
             )
 
             # Organize by user

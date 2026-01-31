@@ -5,15 +5,12 @@ Churn Intelligence Protocols Package
 Export all churn intelligence protocol interfaces and data models.
 """
 
-from .churn_protocols import (
+from .churn_protocols import (  # Protocol Interfaces; Enums; Data Models
     BehavioralAnalysisProtocol,
     ChurnAnalytics,
     ChurnOrchestratorProtocol,
-    # Protocol Interfaces
     ChurnPredictionProtocol,
-    # Enums
     ChurnRiskLevel,
-    # Data Models
     ChurnRiskProfile,
     ChurnStage,
     ConfidenceLevel,

@@ -199,7 +199,11 @@ class TemporalIntelligenceService(TemporalIntelligenceProtocol):
                 },
                 "best_days": ["tuesday", "wednesday", "saturday"],
                 "worst_days": ["sunday", "friday"],
-                "weekly_trends": {"weekday_avg": 0.81, "weekend_avg": 0.75, "midweek_peak": True},
+                "weekly_trends": {
+                    "weekday_avg": 0.81,
+                    "weekend_avg": 0.75,
+                    "midweek_peak": True,
+                },
                 "confidence": 0.80,
                 "analyzed_at": datetime.now().isoformat(),
             }
@@ -234,11 +238,13 @@ class TemporalIntelligenceService(TemporalIntelligenceProtocol):
             season = (
                 "spring"
                 if 3 <= current_month <= 5
-                else "summer"
-                if 6 <= current_month <= 8
-                else "fall"
-                if 9 <= current_month <= 11
-                else "winter"
+                else (
+                    "summer"
+                    if 6 <= current_month <= 8
+                    else "fall"
+                    if 9 <= current_month <= 11
+                    else "winter"
+                )
             )
 
             return {

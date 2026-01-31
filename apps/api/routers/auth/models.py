@@ -31,7 +31,7 @@ class RegisterRequest(BaseModel):
     full_name: str | None = None  # Legacy field
     first_name: str | None = None
     last_name: str | None = None
-    
+
     def get_full_name(self) -> str | None:
         """Get full name, combining first_name and last_name if full_name not provided"""
         if self.full_name:

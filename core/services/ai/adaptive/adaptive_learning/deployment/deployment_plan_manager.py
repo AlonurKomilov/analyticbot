@@ -238,7 +238,10 @@ class DeploymentPlanManager:
             logger.info(f"🔍 Plan validation: {'✅ VALID' if is_valid else '❌ INVALID'}")
 
             return ValidationResult(
-                is_valid=is_valid, errors=errors, warnings=warnings, validation_details=details
+                is_valid=is_valid,
+                errors=errors,
+                warnings=warnings,
+                validation_details=details,
             )
 
         except Exception as e:
@@ -335,7 +338,7 @@ class DeploymentPlanManager:
                                     "type": "performance_degradation",
                                     "metric": metric,
                                     "degradation": degradation,
-                                    "severity": "high" if degradation > 0.2 else "medium",
+                                    "severity": ("high" if degradation > 0.2 else "medium"),
                                 }
                             )
                             mitigation_strategies.append(

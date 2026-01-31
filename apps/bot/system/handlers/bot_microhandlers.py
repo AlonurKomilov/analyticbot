@@ -20,7 +20,9 @@ from apps.bot.system.handlers.alerts import router as legacy_alerts_router
 from apps.bot.system.handlers.bot_alerts_handler import router as bot_alerts_router
 
 # Import bot microhandlers (replaces monolithic analytics_v2.py)
-from apps.bot.system.handlers.bot_analytics_handler import router as bot_analytics_router
+from apps.bot.system.handlers.bot_analytics_handler import (
+    router as bot_analytics_router,
+)
 from apps.bot.system.handlers.bot_export_handler import router as bot_export_router
 from apps.bot.system.handlers.exports import router as legacy_exports_router
 

@@ -24,7 +24,8 @@ def upgrade() -> None:
 
     # Add is_active column (default true, not null)
     op.add_column(
-        "channels", sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true")
+        "channels",
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
     )
 
     # Add index for efficient queries (filtering by active/inactive channels)

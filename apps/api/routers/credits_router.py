@@ -913,6 +913,7 @@ async def purchase_interval_boost(
 
             # Calculate cost (convert to Decimal for DB compatibility)
             from decimal import Decimal
+
             total_cost = Decimal(actual_boosts * credits_per_boost)
 
             if credits_balance < float(total_cost):

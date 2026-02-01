@@ -9,14 +9,14 @@ Domain: API rate limiting - database persistence
 
 import logging
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any
 
-from sqlalchemy import select, update, delete, and_, desc
+from sqlalchemy import and_, delete, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infra.db.models.rate_limit_orm import (
-    RateLimitConfig,
     RateLimitAuditLog,
+    RateLimitConfig,
     RateLimitStats,
 )
 
@@ -42,7 +42,7 @@ class RateLimitRepository:
 
     # === CONFIG OPERATIONS ===
 
-    async def get_config(self, service_key: str) -> Optional[RateLimitConfig]:
+    async def get_config(self, service_key: str) -> RateLimitConfig | None:
         """
         Get configuration for a specific service
 
@@ -61,7 +61,7 @@ class RateLimitRepository:
             logger.error(f"Error getting config for {service_key}: {e}")
             return None
 
-    async def get_all_configs(self, enabled_only: bool = False) -> List[RateLimitConfig]:
+    async def get_all_configs(self, enabled_only: bool = False) -> list[RateLimitConfig]:
         """
         Get all configurations
 
@@ -75,9 +75,9 @@ class RateLimitRepository:
             query = select(RateLimitConfig)
             if enabled_only:
                 query = query.where(RateLimitConfig.enabled == True)
-            
+
             query = query.order_by(RateLimitConfig.service_name)
-            
+
             result = await self.session.execute(query)
             return list(result.scalars().all())
         except Exception as e:
@@ -91,9 +91,9 @@ class RateLimitRepository:
         limit_value: int,
         period: str,
         enabled: bool = True,
-        description: Optional[str] = None,
-        created_by: Optional[str] = None,
-    ) -> Optional[RateLimitConfig]:
+        description: str | None = None,
+        created_by: str | None = None,
+    ) -> RateLimitConfig | None:
         """
         Create a new configuration
 
@@ -120,14 +120,14 @@ class RateLimitRepository:
                 created_by=created_by,
                 updated_by=created_by,
             )
-            
+
             self.session.add(config)
             await self.session.commit()
             await self.session.refresh(config)
-            
+
             logger.info(f"Created rate limit config: {service_key} = {limit_value}/{period}")
             return config
-            
+
         except Exception as e:
             await self.session.rollback()
             logger.error(f"Error creating config for {service_key}: {e}")
@@ -136,12 +136,12 @@ class RateLimitRepository:
     async def update_config(
         self,
         service_key: str,
-        limit_value: Optional[int] = None,
-        period: Optional[str] = None,
-        enabled: Optional[bool] = None,
-        description: Optional[str] = None,
-        updated_by: Optional[str] = None,
-    ) -> Optional[RateLimitConfig]:
+        limit_value: int | None = None,
+        period: str | None = None,
+        enabled: bool | None = None,
+        description: str | None = None,
+        updated_by: str | None = None,
+    ) -> RateLimitConfig | None:
         """
         Update an existing configuration
 
@@ -162,7 +162,7 @@ class RateLimitRepository:
             if not config:
                 logger.warning(f"Config not found for update: {service_key}")
                 return None
-            
+
             # Update fields
             if limit_value is not None:
                 config.limit_value = limit_value
@@ -174,15 +174,15 @@ class RateLimitRepository:
                 config.description = description
             if updated_by is not None:
                 config.updated_by = updated_by
-            
+
             config.updated_at = datetime.utcnow()
-            
+
             await self.session.commit()
             await self.session.refresh(config)
-            
+
             logger.info(f"Updated rate limit config: {service_key}")
             return config
-            
+
         except Exception as e:
             await self.session.rollback()
             logger.error(f"Error updating config for {service_key}: {e}")
@@ -203,15 +203,15 @@ class RateLimitRepository:
                 delete(RateLimitConfig).where(RateLimitConfig.service_key == service_key)
             )
             await self.session.commit()
-            
+
             deleted = result.rowcount > 0
             if deleted:
                 logger.info(f"Deleted rate limit config: {service_key}")
             else:
                 logger.warning(f"Config not found for deletion: {service_key}")
-            
+
             return deleted
-            
+
         except Exception as e:
             await self.session.rollback()
             logger.error(f"Error deleting config for {service_key}: {e}")
@@ -223,14 +223,14 @@ class RateLimitRepository:
         self,
         service_key: str,
         action: str,
-        old_config: Optional[RateLimitConfig],
-        new_config: Optional[RateLimitConfig],
+        old_config: RateLimitConfig | None,
+        new_config: RateLimitConfig | None,
         changed_by: str,
-        changed_by_username: Optional[str] = None,
-        changed_by_ip: Optional[str] = None,
-        change_reason: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Optional[RateLimitAuditLog]:
+        changed_by_username: str | None = None,
+        changed_by_ip: str | None = None,
+        change_reason: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> RateLimitAuditLog | None:
         """
         Log a configuration change to audit trail
 
@@ -264,16 +264,16 @@ class RateLimitRepository:
                 change_reason=change_reason,
                 metadata=metadata,
             )
-            
+
             self.session.add(audit_entry)
             await self.session.commit()
             await self.session.refresh(audit_entry)
-            
+
             logger.info(
                 f"Logged rate limit change: {action} on {service_key} by {changed_by_username or changed_by}"
             )
             return audit_entry
-            
+
         except Exception as e:
             await self.session.rollback()
             logger.error(f"Error logging audit entry for {service_key}: {e}")
@@ -281,12 +281,12 @@ class RateLimitRepository:
 
     async def get_audit_trail(
         self,
-        service_key: Optional[str] = None,
-        changed_by: Optional[str] = None,
-        action: Optional[str] = None,
+        service_key: str | None = None,
+        changed_by: str | None = None,
+        action: str | None = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> List[RateLimitAuditLog]:
+    ) -> list[RateLimitAuditLog]:
         """
         Get audit trail with optional filters
 
@@ -302,7 +302,7 @@ class RateLimitRepository:
         """
         try:
             query = select(RateLimitAuditLog)
-            
+
             # Apply filters
             conditions = []
             if service_key:
@@ -311,24 +311,24 @@ class RateLimitRepository:
                 conditions.append(RateLimitAuditLog.changed_by == changed_by)
             if action:
                 conditions.append(RateLimitAuditLog.action == action)
-            
+
             if conditions:
                 query = query.where(and_(*conditions))
-            
+
             # Order by newest first
             query = query.order_by(desc(RateLimitAuditLog.created_at))
-            
+
             # Pagination
             query = query.limit(limit).offset(offset)
-            
+
             result = await self.session.execute(query)
             return list(result.scalars().all())
-            
+
         except Exception as e:
             logger.error(f"Error getting audit trail: {e}")
             return []
 
-    async def get_recent_changes(self, hours: int = 24, limit: int = 50) -> List[RateLimitAuditLog]:
+    async def get_recent_changes(self, hours: int = 24, limit: int = 50) -> list[RateLimitAuditLog]:
         """
         Get recent configuration changes
 
@@ -341,17 +341,17 @@ class RateLimitRepository:
         """
         try:
             cutoff_time = datetime.utcnow().replace(hour=datetime.utcnow().hour - hours)
-            
+
             query = (
                 select(RateLimitAuditLog)
                 .where(RateLimitAuditLog.created_at >= cutoff_time)
                 .order_by(desc(RateLimitAuditLog.created_at))
                 .limit(limit)
             )
-            
+
             result = await self.session.execute(query)
             return list(result.scalars().all())
-            
+
         except Exception as e:
             logger.error(f"Error getting recent changes: {e}")
             return []
@@ -380,7 +380,7 @@ class RateLimitRepository:
             now = datetime.utcnow()
             window_start = now.replace(minute=0, second=0, microsecond=0)
             window_end = window_start.replace(hour=window_start.hour + 1)
-            
+
             # Try to find existing record
             result = await self.session.execute(
                 select(RateLimitStats).where(
@@ -392,7 +392,7 @@ class RateLimitRepository:
                 )
             )
             stats = result.scalar_one_or_none()
-            
+
             if stats:
                 # Update existing
                 stats.requests_made += 1
@@ -414,10 +414,10 @@ class RateLimitRepository:
                     window_end=window_end,
                 )
                 self.session.add(stats)
-            
+
             await self.session.commit()
             return True
-            
+
         except Exception as e:
             await self.session.rollback()
             logger.error(f"Error recording request stats: {e}")
@@ -425,10 +425,10 @@ class RateLimitRepository:
 
     async def get_stats(
         self,
-        service_key: Optional[str] = None,
-        ip_address: Optional[str] = None,
+        service_key: str | None = None,
+        ip_address: str | None = None,
         hours: int = 24,
-    ) -> List[RateLimitStats]:
+    ) -> list[RateLimitStats]:
         """
         Get usage statistics
 
@@ -442,19 +442,19 @@ class RateLimitRepository:
         """
         try:
             cutoff_time = datetime.utcnow().replace(hour=datetime.utcnow().hour - hours)
-            
+
             query = select(RateLimitStats).where(RateLimitStats.window_start >= cutoff_time)
-            
+
             if service_key:
                 query = query.where(RateLimitStats.service_key == service_key)
             if ip_address:
                 query = query.where(RateLimitStats.ip_address == ip_address)
-            
+
             query = query.order_by(desc(RateLimitStats.window_start))
-            
+
             result = await self.session.execute(query)
             return list(result.scalars().all())
-            
+
         except Exception as e:
             logger.error(f"Error getting stats: {e}")
             return []

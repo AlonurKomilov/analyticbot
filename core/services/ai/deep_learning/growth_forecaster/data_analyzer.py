@@ -180,7 +180,7 @@ class DataAnalyzer(DataAnalyzerProtocol):
             cv = std_growth / abs(mean_growth) if mean_growth != 0 else float("inf")
 
             # Trend analysis
-            trend_strength = self._calculate_trend_strength(growth_rates)
+            self._calculate_trend_strength(growth_rates)
 
             # Pattern classification logic
             if mean_growth > 0.1 and cv < 0.5:
@@ -317,9 +317,11 @@ class DataAnalyzer(DataAnalyzerProtocol):
                         "std_growth": float(growth_rates.std()),
                         "min_growth": float(growth_rates.min()),
                         "max_growth": float(growth_rates.max()),
-                        "volatility": float(growth_rates.std() / abs(growth_rates.mean()))
-                        if growth_rates.mean() != 0
-                        else float("inf"),
+                        "volatility": (
+                            float(growth_rates.std() / abs(growth_rates.mean()))
+                            if growth_rates.mean() != 0
+                            else float("inf")
+                        ),
                     }
                 )
 
@@ -371,7 +373,12 @@ class DataAnalyzer(DataAnalyzerProtocol):
                 return self.data_processor.get_feature_importance_weights()
 
             # Default feature importance
-            return {"growth_rate": 0.4, "trend_strength": 0.3, "momentum": 0.2, "volatility": 0.1}
+            return {
+                "growth_rate": 0.4,
+                "trend_strength": 0.3,
+                "momentum": 0.2,
+                "volatility": 0.1,
+            }
 
         except Exception as e:
             logger.error(f"❌ Feature importance extraction failed: {e}")

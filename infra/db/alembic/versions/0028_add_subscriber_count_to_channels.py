@@ -24,7 +24,8 @@ def upgrade() -> None:
 
     # Add subscriber_count column (default 0, not null)
     op.add_column(
-        "channels", sa.Column("subscriber_count", sa.Integer(), nullable=False, server_default="0")
+        "channels",
+        sa.Column("subscriber_count", sa.Integer(), nullable=False, server_default="0"),
     )
 
     # Add index for efficient queries

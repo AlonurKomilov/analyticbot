@@ -150,7 +150,12 @@ def check_business_logic_placement():
     project_root = Path.cwd()
 
     # Services that should be in core (contain business logic)
-    business_services = ["channel_management", "payment", "subscription", "user_management"]
+    business_services = [
+        "channel_management",
+        "payment",
+        "subscription",
+        "user_management",
+    ]
 
     for service_name in business_services:
         core_path = project_root / f"core/services/{service_name}_service.py"

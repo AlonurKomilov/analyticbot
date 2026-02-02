@@ -61,7 +61,10 @@ class MultivariateDriftAnalyzer:
         logger.info("🌐 Multivariate Drift Analyzer initialized")
 
     async def analyze_multivariate_drift(
-        self, reference_data: np.ndarray, current_data: np.ndarray, methods: list[str] | None = None
+        self,
+        reference_data: np.ndarray,
+        current_data: np.ndarray,
+        methods: list[str] | None = None,
     ) -> dict[str, MultivariateDriftResult]:
         """Analyze multivariate drift using multiple methods"""
         try:
@@ -98,7 +101,10 @@ class MultivariateDriftAnalyzer:
             return {}
 
     async def maximum_mean_discrepancy(
-        self, reference_data: np.ndarray, current_data: np.ndarray, gamma: float | None = None
+        self,
+        reference_data: np.ndarray,
+        current_data: np.ndarray,
+        gamma: float | None = None,
     ) -> MultivariateDriftResult:
         """Calculate Maximum Mean Discrepancy using RBF kernel"""
         start_time = datetime.utcnow()
@@ -294,7 +300,10 @@ class MultivariateDriftAnalyzer:
             return self._create_failed_result("hotelling_t2")
 
     async def pca_based_drift_detection(
-        self, reference_data: np.ndarray, current_data: np.ndarray, n_components: int | None = None
+        self,
+        reference_data: np.ndarray,
+        current_data: np.ndarray,
+        n_components: int | None = None,
     ) -> MultivariateDriftResult:
         """Detect drift using PCA-based dimensionality reduction"""
         start_time = datetime.utcnow()

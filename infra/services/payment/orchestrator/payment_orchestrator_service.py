@@ -83,7 +83,8 @@ class PaymentOrchestratorService(PaymentOrchestratorProtocol):
 
                 if payment_method.user_id != user_id:
                     return PaymentResult(
-                        success=False, error_message="Payment method does not belong to user"
+                        success=False,
+                        error_message="Payment method does not belong to user",
                     )
 
             # Step 2: Pre-flight validation
@@ -100,9 +101,9 @@ class PaymentOrchestratorService(PaymentOrchestratorProtocol):
             payment_result = await self.payment_processing_service.process_payment(
                 user_id=user_id,
                 payment_data=payment_data,
-                idempotency_key=workflow_options.get("idempotency_key")
-                if workflow_options
-                else None,
+                idempotency_key=(
+                    workflow_options.get("idempotency_key") if workflow_options else None
+                ),
             )
 
             # Step 4: Handle post-payment actions
@@ -148,7 +149,8 @@ class PaymentOrchestratorService(PaymentOrchestratorProtocol):
             existing_subscription = await self.subscription_service.get_user_subscription(user_id)
             if existing_subscription and existing_subscription.status.value == "active":
                 return SubscriptionResult(
-                    success=False, error_message="User already has an active subscription"
+                    success=False,
+                    error_message="User already has an active subscription",
                 )
 
             # Step 2: Validate payment method if provided
@@ -163,7 +165,8 @@ class PaymentOrchestratorService(PaymentOrchestratorProtocol):
 
                 if payment_method.user_id != user_id:
                     return SubscriptionResult(
-                        success=False, error_message="Payment method does not belong to user"
+                        success=False,
+                        error_message="Payment method does not belong to user",
                     )
 
             # Step 3: Validate plan availability
@@ -313,7 +316,10 @@ class PaymentOrchestratorService(PaymentOrchestratorProtocol):
             }
 
     async def _handle_successful_payment(
-        self, user_id: int, payment_result: PaymentResult, workflow_options: dict[str, Any] | None
+        self,
+        user_id: int,
+        payment_result: PaymentResult,
+        workflow_options: dict[str, Any] | None,
     ):
         """Handle post-payment actions for successful payments."""
         try:
@@ -329,7 +335,10 @@ class PaymentOrchestratorService(PaymentOrchestratorProtocol):
             logger.warning(f"⚠️ Post-payment success handling failed: {e}")
 
     async def _handle_failed_payment(
-        self, user_id: int, payment_result: PaymentResult, workflow_options: dict[str, Any] | None
+        self,
+        user_id: int,
+        payment_result: PaymentResult,
+        workflow_options: dict[str, Any] | None,
     ):
         """Handle post-payment actions for failed payments."""
         try:

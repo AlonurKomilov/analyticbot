@@ -11,7 +11,7 @@ SQLAlchemy ORM models for analytics system including:
 - Stats cache
 """
 
-from datetime import datetime, date
+from datetime import date, datetime
 
 from sqlalchemy import (
     BigInteger,
@@ -19,25 +19,25 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
-    Index,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from infra.db.models.base import Base
-
 
 # =============================================================================
 # CHANNELS
 # =============================================================================
 
+
 class ChannelORM(Base):
     """
     Telegram channels tracked by users.
-    
+
     Each user can have multiple channels they're monitoring.
     """
 
@@ -47,18 +47,18 @@ class ChannelORM(Base):
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    
+
     # Channel info
     title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     username: Mapped[str | None] = mapped_column(String(255), nullable=True, unique=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    
+
     # Stats
     subscriber_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    
+
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
-    
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default="NOW()", nullable=False
@@ -74,10 +74,11 @@ class ChannelORM(Base):
 # POSTS
 # =============================================================================
 
+
 class PostORM(Base):
     """
     Telegram messages/posts collected via MTProto.
-    
+
     Primary key is composite: (channel_id, msg_id)
     """
 
@@ -85,11 +86,11 @@ class PostORM(Base):
 
     channel_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     msg_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    
+
     # Content
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     text: Mapped[str | None] = mapped_column(Text, nullable=True)
-    
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default="NOW()", nullable=False
@@ -107,7 +108,7 @@ class PostORM(Base):
 class PostMetricsORM(Base):
     """
     Time-series metrics for posts.
-    
+
     Captures engagement metrics at different points in time
     to track growth and trends.
     """
@@ -116,10 +117,8 @@ class PostMetricsORM(Base):
 
     channel_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     msg_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    snapshot_time: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), primary_key=True
-    )
-    
+    snapshot_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
+
     # Metrics
     views: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     forwards: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
@@ -137,10 +136,11 @@ class PostMetricsORM(Base):
 # RAW STATS
 # =============================================================================
 
+
 class StatsRawORM(Base):
     """
     Raw statistics from Telegram API.
-    
+
     Stores JSON responses from stat endpoints for later processing.
     """
 
@@ -151,7 +151,7 @@ class StatsRawORM(Base):
     fetched_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), primary_key=True, server_default="NOW()"
     )
-    
+
     # Raw JSON data
     json: Mapped[dict] = mapped_column(JSONB, nullable=False)
 
@@ -159,7 +159,7 @@ class StatsRawORM(Base):
 class ChannelDailyORM(Base):
     """
     Daily aggregated channel metrics.
-    
+
     Pre-computed daily stats for fast dashboard queries.
     """
 
@@ -168,7 +168,7 @@ class ChannelDailyORM(Base):
     channel_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     day: Mapped[date] = mapped_column(Date, primary_key=True)
     metric: Mapped[str] = mapped_column(Text, primary_key=True)
-    
+
     # Value
     value: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
@@ -176,7 +176,7 @@ class ChannelDailyORM(Base):
 class ChannelStatsCacheORM(Base):
     """
     Cached channel statistics for fast API responses.
-    
+
     Periodically refreshed to avoid expensive queries.
     """
 
@@ -185,10 +185,10 @@ class ChannelStatsCacheORM(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     channel_id: Mapped[int] = mapped_column(BigInteger, nullable=False, unique=True)
     user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    
+
     # Cached stats
     stats_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    
+
     # Cache metadata
     cached_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default="NOW()", nullable=False

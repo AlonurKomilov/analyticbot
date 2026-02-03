@@ -28,9 +28,7 @@ class PSUtilSystemMetricsAdapter:
         if self._psutil_available:
             logger.info("PSUtilSystemMetricsAdapter initialized successfully")
         else:
-            logger.warning(
-                "psutil not available - system metrics will return default values"
-            )
+            logger.warning("psutil not available - system metrics will return default values")
 
     def _check_psutil_availability(self) -> bool:
         """

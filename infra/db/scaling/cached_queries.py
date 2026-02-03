@@ -10,26 +10,25 @@ Usage:
         get_cached_channel,
         invalidate_user_cache,
     )
-    
+
     # In your service:
     user = await get_cached_user(user_id, user_repo)
-    
+
     # After user update:
     await invalidate_user_cache(user_id)
 
 Design Decision: Wrapper approach instead of decorators on repositories
 - Safer: No modification to existing repository code
-- Flexible: Can be adopted incrementally 
+- Flexible: Can be adopted incrementally
 - Testable: Easy to mock cache in tests
 - Reversible: Can disable caching per-call
 """
 
-import hashlib
-import json
 import logging
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
-from infra.db.scaling.cache_manager import CacheKey, CacheTier, QueryCacheManager
+from infra.db.scaling.cache_manager import CacheTier, QueryCacheManager
 
 logger = logging.getLogger(__name__)
 
@@ -66,34 +65,36 @@ async def get_cached_user(
 ) -> dict | None:
     """
     Get user with caching (STANDARD tier - 5 min TTL).
-    
+
     Args:
         user_id: User ID to fetch
         fetch_func: Repository function to call on cache miss
         *args, **kwargs: Arguments to pass to fetch_func
         bypass_cache: If True, always fetch from DB
-        
+
     Returns:
         User dict or None
     """
     if bypass_cache or not _cache_manager:
         return await fetch_func(*args, **kwargs)
-    
+
     cache_key = f"user:{user_id}"
-    
+
     # Try cache first
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         logger.debug(f"Cache HIT: {cache_key}")
         return cached
-    
+
     # Cache miss - fetch from DB
     logger.debug(f"Cache MISS: {cache_key}")
     result = await fetch_func(*args, **kwargs)
-    
+
     if result is not None:
-        await _cache_manager.set(cache_key, result, tier=CacheTier.STANDARD, tags=["user", f"user:{user_id}"])
-    
+        await _cache_manager.set(
+            cache_key, result, tier=CacheTier.STANDARD, tags=["user", f"user:{user_id}"]
+        )
+
     return result
 
 
@@ -107,18 +108,23 @@ async def get_cached_user_by_telegram_id(
     """Get user by Telegram ID with caching (STANDARD tier)"""
     if bypass_cache or not _cache_manager:
         return await fetch_func(*args, **kwargs)
-    
+
     cache_key = f"user:tg:{telegram_id}"
-    
+
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         return cached
-    
+
     result = await fetch_func(*args, **kwargs)
-    
+
     if result is not None:
-        await _cache_manager.set(cache_key, result, tier=CacheTier.STANDARD, tags=["user", f"tg:{telegram_id}"])
-    
+        await _cache_manager.set(
+            cache_key,
+            result,
+            tier=CacheTier.STANDARD,
+            tags=["user", f"tg:{telegram_id}"],
+        )
+
     return result
 
 
@@ -126,7 +132,7 @@ async def invalidate_user_cache(user_id: int, telegram_id: int | None = None) ->
     """Invalidate user cache entries"""
     if not _cache_manager:
         return
-    
+
     await _cache_manager.invalidate(f"user:{user_id}")
     if telegram_id:
         await _cache_manager.invalidate(f"user:tg:{telegram_id}")
@@ -147,23 +153,28 @@ async def get_cached_channel(
 ) -> dict | None:
     """
     Get channel with caching (WARM tier - 2 min TTL).
-    
+
     Channels change more frequently than users, so shorter TTL.
     """
     if bypass_cache or not _cache_manager:
         return await fetch_func(*args, **kwargs)
-    
+
     cache_key = f"channel:{channel_id}"
-    
+
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         return cached
-    
+
     result = await fetch_func(*args, **kwargs)
-    
+
     if result is not None:
-        await _cache_manager.set(cache_key, result, tier=CacheTier.WARM, tags=["channel", f"channel:{channel_id}"])
-    
+        await _cache_manager.set(
+            cache_key,
+            result,
+            tier=CacheTier.WARM,
+            tags=["channel", f"channel:{channel_id}"],
+        )
+
     return result
 
 
@@ -177,17 +188,19 @@ async def get_cached_user_channels(
     """Get user's channels with caching (WARM tier)"""
     if bypass_cache or not _cache_manager:
         return await fetch_func(*args, **kwargs) or []
-    
+
     cache_key = f"channels:user:{user_id}"
-    
+
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         return cached
-    
+
     result = await fetch_func(*args, **kwargs) or []
-    
-    await _cache_manager.set(cache_key, result, tier=CacheTier.WARM, tags=["channels", f"user:{user_id}"])
-    
+
+    await _cache_manager.set(
+        cache_key, result, tier=CacheTier.WARM, tags=["channels", f"user:{user_id}"]
+    )
+
     return result
 
 
@@ -195,10 +208,10 @@ async def invalidate_channel_cache(channel_id: int, user_id: int | None = None) 
     """Invalidate channel cache entries"""
     if not _cache_manager:
         return
-    
+
     await _cache_manager.invalidate(f"channel:{channel_id}")
     await _cache_manager.invalidate_by_tag(f"channel:{channel_id}")
-    
+
     if user_id:
         await _cache_manager.invalidate(f"channels:user:{user_id}")
 
@@ -217,24 +230,29 @@ async def get_cached_channel_stats(
 ) -> dict | None:
     """
     Get channel stats with caching (HOT tier - 30s TTL).
-    
+
     Stats are queried very frequently but change often.
     Short TTL ensures freshness while reducing DB load.
     """
     if bypass_cache or not _cache_manager:
         return await fetch_func(*args, **kwargs)
-    
+
     cache_key = f"stats:channel:{channel_id}"
-    
+
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         return cached
-    
+
     result = await fetch_func(*args, **kwargs)
-    
+
     if result is not None:
-        await _cache_manager.set(cache_key, result, tier=CacheTier.HOT, tags=["stats", f"channel:{channel_id}"])
-    
+        await _cache_manager.set(
+            cache_key,
+            result,
+            tier=CacheTier.HOT,
+            tags=["stats", f"channel:{channel_id}"],
+        )
+
     return result
 
 
@@ -242,7 +260,7 @@ async def invalidate_channel_stats_cache(channel_id: int) -> None:
     """Invalidate channel stats cache"""
     if not _cache_manager:
         return
-    
+
     await _cache_manager.invalidate(f"stats:channel:{channel_id}")
 
 
@@ -261,18 +279,23 @@ async def get_cached_user_subscription(
     """Get user subscription with caching (WARM tier - 2 min TTL)"""
     if bypass_cache or not _cache_manager:
         return await fetch_func(*args, **kwargs)
-    
+
     cache_key = f"subscription:{user_id}"
-    
+
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         return cached
-    
+
     result = await fetch_func(*args, **kwargs)
-    
+
     if result is not None:
-        await _cache_manager.set(cache_key, result, tier=CacheTier.WARM, tags=["subscription", f"user:{user_id}"])
-    
+        await _cache_manager.set(
+            cache_key,
+            result,
+            tier=CacheTier.WARM,
+            tags=["subscription", f"user:{user_id}"],
+        )
+
     return result
 
 
@@ -287,18 +310,20 @@ async def get_cached_user_credits(
     if bypass_cache or not _cache_manager:
         result = await fetch_func(*args, **kwargs)
         return result if result is not None else 0
-    
+
     cache_key = f"credits:{user_id}"
-    
+
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         return cached
-    
+
     result = await fetch_func(*args, **kwargs)
     result = result if result is not None else 0
-    
-    await _cache_manager.set(cache_key, result, tier=CacheTier.WARM, tags=["credits", f"user:{user_id}"])
-    
+
+    await _cache_manager.set(
+        cache_key, result, tier=CacheTier.WARM, tags=["credits", f"user:{user_id}"]
+    )
+
     return result
 
 
@@ -306,7 +331,7 @@ async def invalidate_user_subscription_cache(user_id: int) -> None:
     """Invalidate user subscription and credit caches"""
     if not _cache_manager:
         return
-    
+
     await _cache_manager.invalidate(f"subscription:{user_id}")
     await _cache_manager.invalidate(f"credits:{user_id}")
 
@@ -325,17 +350,17 @@ async def get_cached_marketplace_services(
     """Get marketplace services list (COLD tier - rarely changes)"""
     if bypass_cache or not _cache_manager:
         return await fetch_func(*args, **kwargs) or []
-    
+
     cache_key = "marketplace:services"
-    
+
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         return cached
-    
+
     result = await fetch_func(*args, **kwargs) or []
-    
+
     await _cache_manager.set(cache_key, result, tier=CacheTier.COLD, tags=["marketplace"])
-    
+
     return result
 
 
@@ -343,7 +368,7 @@ async def invalidate_marketplace_cache() -> None:
     """Invalidate marketplace cache"""
     if not _cache_manager:
         return
-    
+
     await _cache_manager.invalidate_by_tag("marketplace")
 
 
@@ -361,17 +386,17 @@ async def get_cached_feature_flags(
     """Get feature flags (STATIC tier - almost never changes)"""
     if bypass_cache or not _cache_manager:
         return await fetch_func(*args, **kwargs) or {}
-    
+
     cache_key = "system:feature_flags"
-    
+
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         return cached
-    
+
     result = await fetch_func(*args, **kwargs) or {}
-    
+
     await _cache_manager.set(cache_key, result, tier=CacheTier.STATIC, tags=["system"])
-    
+
     return result
 
 
@@ -379,7 +404,7 @@ async def invalidate_feature_flags_cache() -> None:
     """Invalidate feature flags cache (call after admin changes)"""
     if not _cache_manager:
         return
-    
+
     await _cache_manager.invalidate("system:feature_flags")
 
 
@@ -399,17 +424,19 @@ async def get_cached_rate_limit(
     """Get rate limit info (HOT tier - needs fresh data)"""
     if bypass_cache or not _cache_manager:
         return await fetch_func(*args, **kwargs) or {}
-    
+
     cache_key = f"ratelimit:{user_id}:{action}"
-    
+
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         return cached
-    
+
     result = await fetch_func(*args, **kwargs) or {}
-    
-    await _cache_manager.set(cache_key, result, tier=CacheTier.HOT, tags=["ratelimit", f"user:{user_id}"])
-    
+
+    await _cache_manager.set(
+        cache_key, result, tier=CacheTier.HOT, tags=["ratelimit", f"user:{user_id}"]
+    )
+
     return result
 
 
@@ -429,9 +456,9 @@ async def cached_query(
 ) -> T | None:
     """
     Generic cached query wrapper.
-    
+
     Use for custom queries not covered by specific wrappers.
-    
+
     Example:
         result = await cached_query(
             f"custom:{user_id}:{channel_id}",
@@ -443,16 +470,16 @@ async def cached_query(
     """
     if bypass_cache or not _cache_manager:
         return await fetch_func(*args, **kwargs)
-    
+
     cached = await _cache_manager.get(cache_key)
     if cached is not None:
         return cached
-    
+
     result = await fetch_func(*args, **kwargs)
-    
+
     if result is not None:
         await _cache_manager.set(cache_key, result, tier=tier, tags=tags)
-    
+
     return result
 
 
@@ -465,7 +492,7 @@ async def get_cache_stats() -> dict[str, Any]:
     """Get cache statistics for monitoring"""
     if not _cache_manager:
         return {"enabled": False, "reason": "Cache manager not configured"}
-    
+
     stats = await _cache_manager.get_stats()
     stats["enabled"] = True
     return stats

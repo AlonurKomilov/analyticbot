@@ -5,9 +5,9 @@ Handles new user account creation.
 """
 
 import logging
-from pydantic import BaseModel, EmailStr
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from pydantic import BaseModel, EmailStr
 
 from apps.api.middleware.auth import get_user_repository
 from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
@@ -34,23 +34,29 @@ async def check_username_availability(
     request: Request,
     response: Response,
     data: UsernameCheckRequest,
-    user_repo: UserRepository = Depends(get_user_repository)
+    user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Check if username is available"""
     username = data.username.strip().lower()
-    
+
     # Validate username format
     if len(username) < 3:
         return {"available": False, "message": "Username must be at least 3 characters"}
     if len(username) > 50:
-        return {"available": False, "message": "Username must be less than 50 characters"}
+        return {
+            "available": False,
+            "message": "Username must be less than 50 characters",
+        }
     if not username.replace("_", "").replace("-", "").isalnum():
-        return {"available": False, "message": "Username can only contain letters, numbers, underscores and hyphens"}
-    
+        return {
+            "available": False,
+            "message": "Username can only contain letters, numbers, underscores and hyphens",
+        }
+
     existing = await user_repo.get_user_by_username(username)
     if existing:
         return {"available": False, "message": "This username is already occupied"}
-    
+
     return {"available": True, "message": "This username is available"}
 
 
@@ -60,15 +66,18 @@ async def check_email_availability(
     request: Request,
     response: Response,
     data: EmailCheckRequest,
-    user_repo: UserRepository = Depends(get_user_repository)
+    user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Check if email is available"""
     email = data.email.strip().lower()
-    
+
     existing = await user_repo.get_user_by_email(email)
     if existing:
-        return {"available": False, "message": "This email is already registered. Please sign in instead."}
-    
+        return {
+            "available": False,
+            "message": "This email is already registered. Please sign in instead.",
+        }
+
     return {"available": True, "message": "This email is available"}
 
 
@@ -78,7 +87,7 @@ async def register(
     request: Request,
     response: Response,
     register_data: RegisterRequest,
-    user_repo: UserRepository = Depends(get_user_repository)
+    user_repo: UserRepository = Depends(get_user_repository),
 ):
     """
     Register new user account
@@ -93,7 +102,8 @@ async def register(
         existing_user = await user_repo.get_user_by_email(register_data.email)
         if existing_user:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
             )
 
         # Check if username already exists
@@ -105,7 +115,7 @@ async def register(
 
         # Create User object
         logger.debug("Creating User object...")
-        
+
         # Get full name from request (supports both full_name and first_name/last_name)
         full_name = register_data.get_full_name()
 
@@ -129,7 +139,7 @@ async def register(
             "full_name": user.full_name,
             "hashed_password": user.hashed_password,
             "role": user.role,  # role is now a string, no .value needed
-            "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
+            "status": (user.status.value if isinstance(user.status, UserStatus) else user.status),
             "plan_id": 1,  # Default plan
         }
 
@@ -148,5 +158,6 @@ async def register(
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Registration failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Registration failed",
         )

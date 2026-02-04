@@ -10,23 +10,22 @@ API endpoints for marketplace items (one-time purchases):
 - Gift credits
 """
 
-from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 
 from apps.api.dependencies import CurrentUser
+from apps.api.marketplace.dependencies import MarketplaceItemRepoDep
 from apps.api.marketplace.schemas import (
-    MarketplaceItemResponse,
+    BundlePurchaseRequest,
+    BundlePurchaseResponse,
+    BundleResponse,
+    GiftCreditsRequest,
+    GiftResponse,
     ItemPurchaseRequest,
     ItemPurchaseResponse,
     ItemReviewRequest,
     ItemReviewResponse,
-    GiftCreditsRequest,
-    GiftResponse,
-    BundleResponse,
-    BundlePurchaseRequest,
-    BundlePurchaseResponse,
+    MarketplaceItemResponse,
 )
-from apps.api.marketplace.dependencies import MarketplaceItemRepoDep
 
 router = APIRouter(tags=["marketplace-items"])
 
@@ -35,14 +34,15 @@ router = APIRouter(tags=["marketplace-items"])
 # BROWSE ITEMS
 # =============================================================================
 
+
 @router.get("/items", response_model=list[MarketplaceItemResponse])
 async def get_items(
     repo: MarketplaceItemRepoDep,
     current_user: CurrentUser,
-    category: Optional[str] = Query(None, description="Filter by category"),
-    subcategory: Optional[str] = Query(None, description="Filter by subcategory"),
-    is_featured: Optional[bool] = Query(None, description="Filter featured items"),
-    search: Optional[str] = Query(None, description="Search term"),
+    category: str | None = Query(None, description="Filter by category"),
+    subcategory: str | None = Query(None, description="Filter by subcategory"),
+    is_featured: bool | None = Query(None, description="Filter featured items"),
+    search: str | None = Query(None, description="Search term"),
     limit: int = Query(50, le=100),
     offset: int = Query(0, ge=0),
 ):
@@ -55,14 +55,14 @@ async def get_items(
         limit=limit,
         offset=offset,
     )
-    
+
     # Mark user-owned items
     if current_user:
         user_purchases = await repo.get_user_purchases(current_user.id)
         owned_ids = {p["item_id"] for p in user_purchases}
         for item in items:
             item["user_owned"] = item["id"] in owned_ids
-    
+
     return items
 
 
@@ -76,11 +76,11 @@ async def get_item_by_slug(
     item = await repo.get_item_by_slug(slug)
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-    
+
     # Check if user owns this item
     if current_user:
         item["user_owned"] = await repo.has_purchased(current_user.id, item["id"])
-    
+
     return item
 
 
@@ -94,6 +94,7 @@ async def get_categories(repo: MarketplaceItemRepoDep):
 # PURCHASES
 # =============================================================================
 
+
 @router.post("/items/purchase", response_model=ItemPurchaseResponse)
 async def purchase_item(
     request: ItemPurchaseRequest,
@@ -105,17 +106,17 @@ async def purchase_item(
     item = await repo.get_item_by_id(request.item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-    
+
     # Attempt purchase
     result = await repo.purchase_item(
         user_id=current_user.id,
         item_id=request.item_id,
         price=item["price_credits"],
     )
-    
+
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["error"])
-    
+
     return result
 
 
@@ -131,6 +132,7 @@ async def get_user_purchases(
 # =============================================================================
 # REVIEWS
 # =============================================================================
+
 
 @router.post("/items/review")
 async def add_review(
@@ -163,6 +165,7 @@ async def get_item_reviews(
 # BUNDLES
 # =============================================================================
 
+
 @router.get("/bundles", response_model=list[BundleResponse])
 async def get_bundles(
     repo: MarketplaceItemRepoDep,
@@ -170,11 +173,11 @@ async def get_bundles(
 ):
     """Get available bundles."""
     bundles = await repo.get_bundles(featured_only=featured_only)
-    
+
     # Add bundle items
     for bundle in bundles:
         bundle["items"] = await repo.get_bundle_items(bundle["id"])
-    
+
     return bundles
 
 
@@ -189,10 +192,10 @@ async def purchase_bundle(
         user_id=current_user.id,
         bundle_id=request.bundle_id,
     )
-    
+
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["error"])
-    
+
     return result
 
 
@@ -209,6 +212,7 @@ async def get_user_bundles(
 # GIFTING
 # =============================================================================
 
+
 @router.post("/gift", response_model=GiftResponse)
 async def send_gift(
     request: GiftCreditsRequest,
@@ -222,10 +226,10 @@ async def send_gift(
         amount=request.amount,
         message=request.message,
     )
-    
+
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["error"])
-    
+
     return result
 
 

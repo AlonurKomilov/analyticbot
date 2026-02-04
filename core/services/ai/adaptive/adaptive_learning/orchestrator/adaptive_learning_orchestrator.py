@@ -19,7 +19,11 @@ from ..protocols.monitoring_protocols import MonitoringServiceProtocol
 from .orchestration_scheduler import OrchestrationScheduler
 from .stage_executor import StageExecutor
 from .workflow_manager import WorkflowManager
-from .workflow_models import OrchestrationConfig, OrchestrationMetrics, OrchestrationStrategy
+from .workflow_models import (
+    OrchestrationConfig,
+    OrchestrationMetrics,
+    OrchestrationStrategy,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +141,9 @@ class AdaptiveLearningOrchestrator:
 
             # Add to scheduler
             success = await self.scheduler.add_model_scheduling(
-                model_id=model_id, strategy=orchestration_strategy, auto_learning=auto_learning
+                model_id=model_id,
+                strategy=orchestration_strategy,
+                auto_learning=auto_learning,
             )
 
             if success:
@@ -225,10 +231,10 @@ class AdaptiveLearningOrchestrator:
                 "status": workflow.status.value,
                 "triggered_by": workflow.triggered_by,
                 "created_at": workflow.created_at.isoformat(),
-                "started_at": workflow.started_at.isoformat() if workflow.started_at else None,
-                "completed_at": workflow.completed_at.isoformat()
-                if workflow.completed_at
-                else None,
+                "started_at": (workflow.started_at.isoformat() if workflow.started_at else None),
+                "completed_at": (
+                    workflow.completed_at.isoformat() if workflow.completed_at else None
+                ),
                 "metadata": workflow.metadata,
                 "learning_results": workflow.learning_results,
                 "deployment_results": workflow.deployment_results,
@@ -269,7 +275,7 @@ class AdaptiveLearningOrchestrator:
                         "workflow_id": w.workflow_id,
                         "status": w.status.value,
                         "triggered_by": w.triggered_by,
-                        "completed_at": w.completed_at.isoformat() if w.completed_at else None,
+                        "completed_at": (w.completed_at.isoformat() if w.completed_at else None),
                     }
                     for w in history
                 ],

@@ -32,7 +32,8 @@ async def create_real_repositories():
 
     # Get database URL from environment
     database_url = os.getenv(
-        "DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5433/analytic_bot"
+        "DATABASE_URL",
+        "postgresql+asyncpg://analytic:change_me@localhost:5433/analytic_bot",
     )
 
     # Convert for asyncpg

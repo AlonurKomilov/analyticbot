@@ -139,6 +139,7 @@ def configure_container() -> ApplicationContainer:
 
             from config.settings import settings
             from core.security_engine.container import get_security_container
+
             # NOTE: RedisCache is synchronous (CachePort) for JWT tokens
             # For async caching, use: from infra.caching import CacheService
             from infra.security.adapters import RedisCache
@@ -414,16 +415,16 @@ _query_cache_instance = None
 async def initialize_scaling_infrastructure():
     """
     Initialize Phase 3 scaling infrastructure after containers are ready.
-    
+
     Call this after initialize_container() to wire:
     - PgBouncer pool (if enabled)
     - Read replica router (if replicas configured)
     - Query cache manager (with Redis client from cache container)
     """
     global _query_cache_instance
-    
+
     container = get_container()
-    
+
     # Initialize PgBouncer pool (managed by provider lifecycle)
     try:
         pgbouncer = await container.database.pgbouncer_pool()
@@ -431,7 +432,7 @@ async def initialize_scaling_infrastructure():
             logger.info("✅ PgBouncer pool ready for use")
     except Exception as e:
         logger.warning(f"PgBouncer initialization skipped: {e}")
-    
+
     # Initialize read replica router (managed by provider lifecycle)
     try:
         router = await container.database.read_replica_router()
@@ -439,12 +440,12 @@ async def initialize_scaling_infrastructure():
             logger.info("✅ Read replica router ready for use")
     except Exception as e:
         logger.warning(f"Read replica router initialization skipped: {e}")
-    
+
     # Initialize query cache with Redis client from cache container
     try:
         from apps.di.database_container import _create_query_cache_manager
         from infra.db.scaling.cached_queries import set_cache_manager
-        
+
         redis_client = await container.cache.redis_client()
         if redis_client:
             _query_cache_instance = await _create_query_cache_manager(redis_client)

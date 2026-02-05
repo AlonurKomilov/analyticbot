@@ -40,7 +40,10 @@ router = APIRouter()
     response_model=MTProtoActionResponse,
     status_code=status.HTTP_200_OK,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid verification code or password"},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid verification code or password",
+        },
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
@@ -68,7 +71,8 @@ async def verify_mtproto(
         encryption = get_encryption_service()
         if not credentials.telegram_api_hash:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="MTProto credentials not configured"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="MTProto credentials not configured",
             )
         api_hash = encryption.decrypt(credentials.telegram_api_hash)
 
@@ -78,7 +82,7 @@ async def verify_mtproto(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=(
-                    "Session expired. Please click 'Resend code' to get a new " "verification code."
+                    "Session expired. Please click 'Resend code' to get a new verification code."
                 ),
             )
 
@@ -97,7 +101,8 @@ async def verify_mtproto(
             phone = credentials.mtproto_phone
             if not phone:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="No phone number configured"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No phone number configured",
                 )
 
             hash_preview = request.phone_code_hash[:8]
@@ -155,15 +160,16 @@ async def verify_mtproto(
         # Check if this MTProto Telegram account is the same as user's login account
         # Get user's telegram_id from database to compare
         from core.repositories.user_repository import UserRepository
+
         from apps.di.database_container import get_db_session
-        
+
         async with get_db_session() as session_db:
             user_repo = UserRepository(session_db)
             user_data = await user_repo.get_user_by_id(user_id)
-            
+
             if user_data and user_data.get("telegram_id"):
                 user_telegram_id = user_data.get("telegram_id")
-                
+
                 # Warn if using same Telegram account for both login and MTProto
                 if mtproto_id == user_telegram_id:
                     logger.warning(

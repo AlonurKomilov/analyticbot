@@ -25,13 +25,13 @@ HEAVY_HANDLER_TIMEOUT = 55  # seconds - for heavy operations like exports
 def with_timeout(timeout: float = DEFAULT_HANDLER_TIMEOUT):
     """
     Decorator to add timeout protection to bot handlers.
-    
+
     Prevents handlers from running indefinitely, which is critical at scale.
     Telegram has internal timeouts; handlers must complete within those limits.
-    
+
     Args:
         timeout: Maximum execution time in seconds (default 25s)
-    
+
     Example:
         @router.message(Command("export"))
         @with_timeout(30)
@@ -39,6 +39,7 @@ def with_timeout(timeout: float = DEFAULT_HANDLER_TIMEOUT):
             # This will timeout after 30 seconds
             ...
     """
+
     def decorator(handler: Callable) -> Callable:
         @wraps(handler)
         async def wrapper(*args, **kwargs):
@@ -48,14 +49,12 @@ def with_timeout(timeout: float = DEFAULT_HANDLER_TIMEOUT):
                 if isinstance(arg, (types.Message, types.CallbackQuery)):
                     event = arg
                     break
-            
+
             try:
                 async with asyncio.timeout(timeout):
                     return await handler(*args, **kwargs)
-            except asyncio.TimeoutError:
-                logger.warning(
-                    f"⏰ Handler {handler.__name__} timed out after {timeout}s"
-                )
+            except TimeoutError:
+                logger.warning(f"⏰ Handler {handler.__name__} timed out after {timeout}s")
                 # Notify user gracefully
                 if event:
                     error_msg = (
@@ -72,8 +71,9 @@ def with_timeout(timeout: float = DEFAULT_HANDLER_TIMEOUT):
                 return None
             except Exception:
                 raise  # Re-raise other exceptions
-        
+
         return wrapper
+
     return decorator
 
 
@@ -138,11 +138,12 @@ class ThrottleMiddleware(BaseMiddleware):
                 if isinstance(event, types.Message):
                     await event.answer(
                         f"⏰ Too fast! Please wait {remaining:.1f} seconds.",
-                        show_alert=True if isinstance(event, types.CallbackQuery) else False,
+                        show_alert=(True if isinstance(event, types.CallbackQuery) else False),
                     )
                 elif isinstance(event, types.CallbackQuery):
                     await event.answer(
-                        f"⏰ Too fast! Please wait {remaining:.1f} seconds.", show_alert=True
+                        f"⏰ Too fast! Please wait {remaining:.1f} seconds.",
+                        show_alert=True,
                     )
 
                 return  # Don't process the request
@@ -261,7 +262,7 @@ async def cleanup_throttle_entries():
 def rate_limit(key: str = "default", per_minute: int = 60, rate: float | None = None):
     """
     Decorator for rate limiting bot handlers.
-    
+
     Uses sliding window algorithm for accurate rate limiting.
     Falls back to in-memory tracking if Redis unavailable.
 
@@ -282,10 +283,9 @@ def rate_limit(key: str = "default", per_minute: int = 60, rate: float | None = 
         async def wrapper(*args, **kwargs):
             import logging
             import os
-            from datetime import datetime
-            
+
             logger = logging.getLogger(__name__)
-            
+
             # Extract event from arguments
             event = None
             for arg in args:
@@ -300,28 +300,28 @@ def rate_limit(key: str = "default", per_minute: int = 60, rate: float | None = 
             user_id = None
             if hasattr(event, "from_user") and event.from_user:
                 user_id = event.from_user.id
-            
+
             throttle_key = f"rate_limit:{key}:{user_id or 'anon'}:{handler.__name__}"
-            
+
             now = time.time()
             window_size = 60.0  # 1 minute window
             max_requests = per_minute
-            
+
             # Try Redis first for distributed rate limiting
             redis_url = os.getenv("REDIS_URL")
             rate_limited = False
             remaining = 0
-            
+
             if redis_url:
                 try:
                     import redis.asyncio as aioredis
-                    
+
                     redis_client = aioredis.from_url(
                         redis_url,
                         decode_responses=True,
                         socket_timeout=2.0,
                     )
-                    
+
                     async with redis_client.pipeline(transaction=True) as pipe:
                         # Remove old entries (sliding window)
                         window_start = now - window_size
@@ -333,46 +333,47 @@ def rate_limit(key: str = "default", per_minute: int = 60, rate: float | None = 
                         # Set TTL on key
                         await pipe.expire(throttle_key, int(window_size) + 10)
                         results = await pipe.execute()
-                    
+
                     await redis_client.close()
-                    
+
                     current_count = results[1]  # zcard result
-                    
+
                     if current_count >= max_requests:
                         rate_limited = True
                         # Calculate when oldest request will expire
                         remaining = window_size - (now - window_start)
-                        logger.debug(f"Rate limited (Redis): {throttle_key} - {current_count}/{max_requests}")
-                        
+                        logger.debug(
+                            f"Rate limited (Redis): {throttle_key} - {current_count}/{max_requests}"
+                        )
+
                 except Exception as e:
                     logger.warning(f"Redis rate limit failed, using in-memory: {e}")
                     redis_url = None  # Fall back to in-memory
-            
+
             # In-memory fallback
             if not redis_url:
                 storage = cast(Any, rate_limit)._window_storage
-                
+
                 if throttle_key not in storage:
                     storage[throttle_key] = []
-                
+
                 # Clean old entries
                 window_start = now - window_size
                 storage[throttle_key] = [ts for ts in storage[throttle_key] if ts > window_start]
-                
+
                 if len(storage[throttle_key]) >= max_requests:
                     rate_limited = True
                     oldest = storage[throttle_key][0] if storage[throttle_key] else now
                     remaining = window_size - (now - oldest)
                 else:
                     storage[throttle_key].append(now)
-            
+
             if rate_limited:
                 remaining = max(0, remaining)
-                
+
                 if isinstance(event, types.Message):
                     await event.answer(
-                        f"⏰ Rate limit exceeded ({per_minute}/min). "
-                        f"Please wait {remaining:.0f}s."
+                        f"⏰ Rate limit exceeded ({per_minute}/min). Please wait {remaining:.0f}s."
                     )
                 elif isinstance(event, types.CallbackQuery):
                     await event.answer(
@@ -380,7 +381,7 @@ def rate_limit(key: str = "default", per_minute: int = 60, rate: float | None = 
                         show_alert=True,
                     )
                 return None
-            
+
             return await handler(*args, **kwargs)
 
         cast(Any, wrapper).__throttle_key__ = key

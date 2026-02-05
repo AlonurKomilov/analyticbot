@@ -10,6 +10,7 @@ Tests that Phase 1 is complete and functional:
 
 import asyncio
 import os
+
 import asyncpg
 
 
@@ -37,16 +38,14 @@ async def main():
         # 1. Check tables exist
         print("📋 CHECKING TABLES")
         print("-" * 60)
-        tables = await conn.fetch(
-            """
+        tables = await conn.fetch("""
             SELECT tablename FROM pg_tables 
             WHERE schemaname = 'public' 
             AND (tablename LIKE '%marketplace_service%' 
                  OR tablename LIKE '%service_subscription%' 
                  OR tablename LIKE '%service_usage%')
             ORDER BY tablename
-        """
-        )
+        """)
         for table in tables:
             print(f"  ✅ {table['tablename']}")
         print()
@@ -61,14 +60,12 @@ async def main():
         # 3. List services
         print("🛒 MARKETPLACE SERVICES CATALOG")
         print("-" * 60)
-        services = await conn.fetch(
-            """
+        services = await conn.fetch("""
             SELECT service_key, name, price_credits_monthly, 
                    price_credits_yearly, category, is_featured, is_popular
             FROM marketplace_services
             ORDER BY sort_order
-        """
-        )
+        """)
         print(f"  Total services: {len(services)}")
         print()
         for svc in services:
@@ -79,9 +76,7 @@ async def main():
                 badge += "🔥 POPULAR"
 
             yearly = (
-                f" | Yearly: {svc['price_credits_yearly']}cr"
-                if svc["price_credits_yearly"]
-                else ""
+                f" | Yearly: {svc['price_credits_yearly']}cr" if svc["price_credits_yearly"] else ""
             )
 
             print(f"  • {svc['name']} {badge}")
@@ -93,14 +88,12 @@ async def main():
         # 4. Check categories
         print("📂 SERVICE CATEGORIES")
         print("-" * 60)
-        categories = await conn.fetch(
-            """
+        categories = await conn.fetch("""
             SELECT category, COUNT(*) as count
             FROM marketplace_services
             GROUP BY category
             ORDER BY count DESC
-        """
-        )
+        """)
         for cat in categories:
             print(f"  • {cat['category']}: {cat['count']} services")
         print()

@@ -18,75 +18,74 @@ Legacy files (to be migrated):
 - telegram_storage.py - Telegram media storage
 """
 
-from .database_models import metadata
-from .base import Base
-
 # Analytics models
 from .analytics import (
-    ChannelORM,
-    PostORM,
-    PostMetricsORM,
-    StatsRawORM,
     ChannelDailyORM,
+    ChannelORM,
     ChannelStatsCacheORM,
+    PostMetricsORM,
+    PostORM,
+    StatsRawORM,
 )
-
-# Credit system models
-from .credits import (
-    UserCreditsORM,
-    CreditTransactionORM,
-    CreditPackageORM,
-    CreditServiceORM,
-    AchievementORM,
-    UserAchievementORM,
-    UserReferralORM,
-)
-
-# Marketplace models
-from .marketplace import (
-    MarketplaceServiceORM,
-    UserServiceSubscriptionORM,
-    ServiceUsageLogORM,
-    MarketplaceItemORM,
-    UserPurchaseORM,
-    ItemReviewORM,
-    MarketplaceBundleORM,
-    BundleItemORM,
-    MarketplaceCategoryORM,
-)
-
-# User models
-from .users import (
-    UserORM,
-    PlanORM,
-    SubscriptionORM,
-    UserAlertPreferenceORM,
-    AlertSentORM,
-)
-
-# Bot models (legacy location)
-from .user_bot_orm import (
-    UserBotCredentialsORM,
-    AdminBotActionORM,
-    MTProtoAuditLog,
-    ChannelMTProtoSettings,
-)
-
-# Bot service models (legacy location)
-from .user_bot_service_orm import (
-    UserBotSettingsORM,
-    UserBotBannedWordORM,
-    UserBotInviteTrackingORM,
-    UserBotWarningORM,
-    UserBotServiceLogORM,
-    UserBotWelcomeMessageORM,
-)
+from .base import Base
 
 # Health models
 from .bot_health_orm import BotHealthMetricOrm
 
+# Credit system models
+from .credits import (
+    AchievementORM,
+    CreditPackageORM,
+    CreditServiceORM,
+    CreditTransactionORM,
+    UserAchievementORM,
+    UserCreditsORM,
+    UserReferralORM,
+)
+from .database_models import metadata
+
+# Marketplace models
+from .marketplace import (
+    BundleItemORM,
+    ItemReviewORM,
+    MarketplaceBundleORM,
+    MarketplaceCategoryORM,
+    MarketplaceItemORM,
+    MarketplaceServiceORM,
+    ServiceUsageLogORM,
+    UserPurchaseORM,
+    UserServiceSubscriptionORM,
+)
+
 # Telegram storage models
-from .telegram_storage import UserStorageChannel, TelegramMedia
+from .telegram_storage import TelegramMedia, UserStorageChannel
+
+# Bot models (legacy location)
+from .user_bot_orm import (
+    AdminBotActionORM,
+    ChannelMTProtoSettings,
+    MTProtoAuditLog,
+    UserBotCredentialsORM,
+)
+
+# Bot service models (legacy location)
+from .user_bot_service_orm import (
+    UserBotBannedWordORM,
+    UserBotInviteTrackingORM,
+    UserBotServiceLogORM,
+    UserBotSettingsORM,
+    UserBotWarningORM,
+    UserBotWelcomeMessageORM,
+)
+
+# User models
+from .users import (
+    AlertSentORM,
+    PlanORM,
+    SubscriptionORM,
+    UserAlertPreferenceORM,
+    UserORM,
+)
 
 __all__ = [
     # Core

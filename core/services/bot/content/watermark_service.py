@@ -171,14 +171,10 @@ class WatermarkService:
                     b = int(hex_color[4:6], 16)
                 except ValueError:
                     raise ValueError(
-                        f"Invalid hex color format: {color}. "
-                        "Expected #RRGGBB or RRGGBB"
+                        f"Invalid hex color format: {color}. Expected #RRGGBB or RRGGBB"
                     )
             else:
-                raise ValueError(
-                    f"Unknown color: {color}. "
-                    "Use named color or hex format (#RRGGBB)"
-                )
+                raise ValueError(f"Unknown color: {color}. Use named color or hex format (#RRGGBB)")
 
         # Convert opacity to alpha channel (0-255)
         alpha = int(opacity * 255)

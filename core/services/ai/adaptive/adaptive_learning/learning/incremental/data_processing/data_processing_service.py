@@ -180,7 +180,9 @@ class DataProcessingService:
             )
 
     async def preprocess_data(
-        self, data: list[dict[str, Any]], preprocessing_config: dict[str, Any] | None = None
+        self,
+        data: list[dict[str, Any]],
+        preprocessing_config: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         """
         Apply preprocessing to raw data.

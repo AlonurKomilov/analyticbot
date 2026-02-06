@@ -13,7 +13,6 @@ interfaces from infra/marketplace/ for data access.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Optional, List, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,7 @@ class MarketplaceService:
     def __init__(
         self,
         marketplace_repo,  # MarketplaceServiceRepository
-        credit_repo,       # CreditRepository
+        credit_repo,  # CreditRepository
     ):
         self.marketplace_repo = marketplace_repo
         self.credit_repo = credit_repo
@@ -34,18 +33,16 @@ class MarketplaceService:
     # ============================================
 
     async def get_service_catalog(
-        self, 
-        category: Optional[str] = None, 
-        user_id: Optional[int] = None
-    ) -> List[Dict]:
+        self, category: str | None = None, user_id: int | None = None
+    ) -> list[dict]:
         """
         Get marketplace service catalog.
         Optionally filter by category and mark user's active subscriptions.
-        
+
         Args:
             category: Filter by category
             user_id: If provided, mark services user is subscribed to
-            
+
         Returns:
             List of service records with subscription status
         """
@@ -55,26 +52,22 @@ class MarketplaceService:
 
         # If user_id provided, add subscription status
         if user_id:
-            active_services = await self.marketplace_repo.get_user_active_services(
-                user_id
-            )
+            active_services = await self.marketplace_repo.get_user_active_services(user_id)
             for service in services:
                 service["user_subscribed"] = service["service_key"] in active_services
 
         return services
 
     async def get_service_details(
-        self, 
-        service_key: str, 
-        user_id: Optional[int] = None
-    ) -> Optional[Dict]:
+        self, service_key: str, user_id: int | None = None
+    ) -> dict | None:
         """
         Get detailed information about a service.
-        
+
         Args:
             service_key: Service key
             user_id: If provided, include user's subscription status
-            
+
         Returns:
             Service details or None if not found
         """
@@ -84,9 +77,7 @@ class MarketplaceService:
 
         # Add subscription status if user_id provided
         if user_id:
-            subscription = await self.marketplace_repo.check_user_has_service(
-                user_id, service_key
-            )
+            subscription = await self.marketplace_repo.check_user_has_service(user_id, service_key)
             service["user_subscribed"] = subscription is not None
             service["user_subscription"] = subscription
 
@@ -96,7 +87,7 @@ class MarketplaceService:
 
         return service
 
-    async def get_featured_services(self, limit: int = 5) -> List[Dict]:
+    async def get_featured_services(self, limit: int = 5) -> list[dict]:
         """Get featured services"""
         return await self.marketplace_repo.get_featured_services(limit)
 
@@ -109,18 +100,18 @@ class MarketplaceService:
         user_id: int,
         service_key: str,
         billing_cycle: str = "monthly",
-    ) -> Dict:
+    ) -> dict:
         """
         Purchase a marketplace service subscription.
-        
+
         Args:
             user_id: User ID
             service_key: Service key to purchase
             billing_cycle: 'monthly' or 'yearly'
-            
+
         Returns:
             Created subscription record
-            
+
         Raises:
             ValueError: If service not found, user already subscribed,
                        insufficient credits, or invalid billing cycle
@@ -138,13 +129,9 @@ class MarketplaceService:
             raise ValueError(f"Service is not active: {service_key}")
 
         # Check if user already has active subscription
-        existing = await self.marketplace_repo.check_user_has_service(
-            user_id, service_key
-        )
+        existing = await self.marketplace_repo.check_user_has_service(user_id, service_key)
         if existing:
-            raise ValueError(
-                f"User already has active subscription to {service_key}"
-            )
+            raise ValueError(f"User already has active subscription to {service_key}")
 
         # Determine price
         if billing_cycle == "monthly":
@@ -158,9 +145,7 @@ class MarketplaceService:
         balance_data = await self.credit_repo.get_balance(user_id)
         balance = balance_data.get("balance", 0)
         if balance < price:
-            raise ValueError(
-                f"Insufficient credits. Required: {price}, Available: {balance}"
-            )
+            raise ValueError(f"Insufficient credits. Required: {price}, Available: {balance}")
 
         # Calculate expiration
         if billing_cycle == "monthly":
@@ -187,10 +172,7 @@ class MarketplaceService:
             auto_renew=True,
         )
 
-        logger.info(
-            f"User {user_id} purchased {service_key} "
-            f"({billing_cycle}) for {price} credits"
-        )
+        logger.info(f"User {user_id} purchased {service_key} ({billing_cycle}) for {price} credits")
 
         return subscription
 
@@ -200,7 +182,7 @@ class MarketplaceService:
 
     async def get_user_subscriptions(
         self, user_id: int, include_expired: bool = False
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Get user's subscriptions"""
         return await self.marketplace_repo.get_user_subscriptions(
             user_id=user_id,
@@ -209,22 +191,19 @@ class MarketplaceService:
         )
 
     async def cancel_subscription(
-        self, 
-        user_id: int, 
-        subscription_id: int, 
-        reason: Optional[str] = None
-    ) -> Dict:
+        self, user_id: int, subscription_id: int, reason: str | None = None
+    ) -> dict:
         """
         Cancel a subscription.
-        
+
         Args:
             user_id: User ID (for verification)
             subscription_id: Subscription ID to cancel
             reason: Cancellation reason
-            
+
         Returns:
             Updated subscription record
-            
+
         Raises:
             ValueError: If subscription not found or doesn't belong to user
         """
@@ -234,9 +213,7 @@ class MarketplaceService:
         )
 
         # Find the subscription
-        subscription = next(
-            (s for s in subscriptions if s["id"] == subscription_id), None
-        )
+        subscription = next((s for s in subscriptions if s["id"] == subscription_id), None)
         if not subscription:
             raise ValueError("Subscription not found or doesn't belong to user")
 
@@ -248,33 +225,26 @@ class MarketplaceService:
         logger.info(f"User {user_id} cancelled subscription {subscription_id}")
         return result
 
-    async def toggle_auto_renew(
-        self, user_id: int, subscription_id: int, auto_renew: bool
-    ) -> Dict:
+    async def toggle_auto_renew(self, user_id: int, subscription_id: int, auto_renew: bool) -> dict:
         """
         Toggle auto-renewal for a subscription.
-        
+
         Args:
             user_id: User ID (for verification)
             subscription_id: Subscription ID
             auto_renew: New auto-renew setting
-            
+
         Returns:
             Updated subscription record
         """
         # Verify ownership
-        subscriptions = await self.marketplace_repo.get_user_subscriptions(
-            user_id=user_id
-        )
-        subscription = next(
-            (s for s in subscriptions if s["id"] == subscription_id), None
-        )
+        subscriptions = await self.marketplace_repo.get_user_subscriptions(user_id=user_id)
+        subscription = next((s for s in subscriptions if s["id"] == subscription_id), None)
         if not subscription:
             raise ValueError("Subscription not found")
 
         logger.info(
-            f"User {user_id} toggled auto-renew for subscription {subscription_id} "
-            f"to {auto_renew}"
+            f"User {user_id} toggled auto-renew for subscription {subscription_id} to {auto_renew}"
         )
         return subscription
 
@@ -282,20 +252,18 @@ class MarketplaceService:
     # RENEWAL PROCESSING (Background Job)
     # ============================================
 
-    async def process_renewals(self, days_ahead: int = 1) -> Dict:
+    async def process_renewals(self, days_ahead: int = 1) -> dict:
         """
         Process subscription renewals for subscriptions expiring soon.
         Should be called daily by a background job.
-        
+
         Args:
             days_ahead: Process subscriptions expiring within N days
-            
+
         Returns:
             Dict with renewal statistics
         """
-        expiring = await self.marketplace_repo.get_expiring_subscriptions(
-            days_ahead=days_ahead
-        )
+        expiring = await self.marketplace_repo.get_expiring_subscriptions(days_ahead=days_ahead)
 
         stats = {
             "checked": len(expiring),
@@ -348,15 +316,12 @@ class MarketplaceService:
 
                 stats["renewed"] += 1
                 logger.info(
-                    f"Renewed subscription {subscription['id']} "
-                    f"for user {subscription['user_id']}"
+                    f"Renewed subscription {subscription['id']} for user {subscription['user_id']}"
                 )
 
             except Exception as e:
                 stats["failed_other"] += 1
-                logger.error(
-                    f"Renewal failed for subscription {subscription['id']}: {e}"
-                )
+                logger.error(f"Renewal failed for subscription {subscription['id']}: {e}")
 
         logger.info(f"Renewal processing complete: {stats}")
         return stats
@@ -370,15 +335,15 @@ class MarketplaceService:
         user_id: int,
         service_key: str,
         action: str,
-        resource_id: Optional[str] = None,
+        resource_id: str | None = None,
         success: bool = True,
-        error_message: Optional[str] = None,
-        response_time_ms: Optional[int] = None,
-        metadata: Optional[Dict] = None,
+        error_message: str | None = None,
+        response_time_ms: int | None = None,
+        metadata: dict | None = None,
     ) -> None:
         """
         Log a service usage event.
-        
+
         Args:
             user_id: User ID
             service_key: Service key
@@ -390,9 +355,7 @@ class MarketplaceService:
             metadata: Additional metadata
         """
         # Get user's subscription
-        subscription = await self.marketplace_repo.check_user_has_service(
-            user_id, service_key
-        )
+        subscription = await self.marketplace_repo.check_user_has_service(user_id, service_key)
         if not subscription:
             logger.warning(
                 f"Attempted to log usage for service {service_key} "
@@ -424,9 +387,7 @@ class MarketplaceService:
             subscription_id=subscription["id"], count=1
         )
 
-    async def get_subscription_usage_stats(
-        self, subscription_id: int, days: int = 30
-    ) -> Dict:
+    async def get_subscription_usage_stats(self, subscription_id: int, days: int = 30) -> dict:
         """Get usage statistics for a subscription"""
         return await self.marketplace_repo.get_subscription_usage(
             subscription_id=subscription_id, days=days

@@ -14,11 +14,11 @@ Cache TTLs:
 
 import json
 import logging
-from datetime import datetime
 from typing import Any
 
 try:
     import redis.asyncio as aioredis
+
     REDIS_AVAILABLE = True
 except ImportError:
     aioredis = None
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class PublicCatalogCacheService:
     """
     Redis caching service for public catalog data.
-    
+
     Falls back to no-caching if Redis is unavailable.
     """
 
@@ -57,7 +57,7 @@ class PublicCatalogCacheService:
     def __init__(self, redis_url: str | None = None):
         """
         Initialize the cache service.
-        
+
         Args:
             redis_url: Redis connection URL. If None, caching is disabled.
         """
@@ -68,7 +68,7 @@ class PublicCatalogCacheService:
     async def connect(self) -> bool:
         """
         Connect to Redis.
-        
+
         Returns:
             True if connected successfully, False otherwise.
         """
@@ -240,13 +240,17 @@ class PublicCatalogCacheService:
     # Channel Lists Cache
     # ========================================================================
 
-    async def get_channels(self, page: int, per_page: int, filters: dict | None = None) -> dict | None:
+    async def get_channels(
+        self, page: int, per_page: int, filters: dict | None = None
+    ) -> dict | None:
         """Get cached channel list."""
         filter_hash = hash(json.dumps(filters or {}, sort_keys=True))
         key = f"{self.CHANNEL_LIST_KEY}:{page}:{per_page}:{filter_hash}"
         return await self._get(key)
 
-    async def set_channels(self, page: int, per_page: int, data: dict, filters: dict | None = None) -> bool:
+    async def set_channels(
+        self, page: int, per_page: int, data: dict, filters: dict | None = None
+    ) -> bool:
         """Cache channel list."""
         filter_hash = hash(json.dumps(filters or {}, sort_keys=True))
         key = f"{self.CHANNEL_LIST_KEY}:{page}:{per_page}:{filter_hash}"
@@ -322,10 +326,10 @@ class PublicCatalogCacheService:
     async def invalidate_on_channel_change(self, username: str | None = None) -> dict:
         """
         Invalidate caches that should be refreshed when a channel is added/updated/removed.
-        
+
         Args:
             username: Channel username (if known) to invalidate specific channel cache.
-            
+
         Returns:
             Dict with invalidation counts.
         """
@@ -341,7 +345,7 @@ class PublicCatalogCacheService:
 
         if username:
             results["channel"] = await self.invalidate_channel(username)
-        
+
         results["featured"] = await self.invalidate_featured()
         results["trending"] = await self.invalidate_trending()
         results["channels"] = await self.invalidate_channels()
@@ -359,16 +363,17 @@ _cache_instance: PublicCatalogCacheService | None = None
 async def get_public_cache() -> PublicCatalogCacheService:
     """
     Get the global public catalog cache instance.
-    
+
     Returns:
         PublicCatalogCacheService instance (may or may not be connected).
     """
     global _cache_instance
-    
+
     if _cache_instance is None:
         from config import settings
+
         redis_url = getattr(settings, "REDIS_URL", None)
         _cache_instance = PublicCatalogCacheService(redis_url)
         await _cache_instance.connect()
-    
+
     return _cache_instance

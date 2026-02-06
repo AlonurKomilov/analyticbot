@@ -46,12 +46,10 @@ class TheftDetectorService:
         """Initialize the theft detector service."""
         # Compile patterns once for better performance
         self._suspicious_patterns = [
-            re.compile(pattern, re.IGNORECASE)
-            for pattern in self.SUSPICIOUS_PATTERNS
+            re.compile(pattern, re.IGNORECASE) for pattern in self.SUSPICIOUS_PATTERNS
         ]
         self._high_risk_patterns = [
-            re.compile(pattern, re.IGNORECASE)
-            for pattern in self.HIGH_RISK_PATTERNS
+            re.compile(pattern, re.IGNORECASE) for pattern in self.HIGH_RISK_PATTERNS
         ]
 
     async def analyze_content(self, text: str) -> TheftAnalysis:
@@ -228,16 +226,12 @@ class TheftDetectorService:
 
         # Suspicious pattern recommendations
         if suspicious_matches and not high_risk_matches:
-            recommendations.append(
-                f"Found {len(suspicious_matches)} suspicious patterns"
-            )
+            recommendations.append(f"Found {len(suspicious_matches)} suspicious patterns")
             recommendations.append("Review content carefully before sharing")
 
         # Link recommendations
         if link_count > 5:
-            recommendations.append(
-                f"High link density ({link_count} links) - potential spam"
-            )
+            recommendations.append(f"High link density ({link_count} links) - potential spam")
         elif link_count > 0 and risk_level == RiskLevel.MEDIUM:
             recommendations.append("Verify links before clicking")
 

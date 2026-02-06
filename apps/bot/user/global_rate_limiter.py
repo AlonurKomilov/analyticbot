@@ -19,14 +19,12 @@ IMPLEMENTATION:
 - Automatic backoff on 429 errors
 """
 
-from typing import Any
-
 import asyncio
 import logging
 import os
 import time
 from collections import deque
-from typing import ClassVar
+from typing import Any, ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +35,7 @@ class GlobalRateLimiter:
 
     Implements sliding window rate limiting using Redis sorted sets
     to prevent hitting Telegram API limits across all users.
-    
+
     For 100K+ users, uses Redis for distributed coordination.
     Falls back to in-memory for single-instance deployments.
 
@@ -61,9 +59,12 @@ class GlobalRateLimiter:
         "getChatMember": {"requests": 20, "window": 1.0},
         "getChat": {"requests": 20, "window": 1.0},
         "default": {"requests": 30, "window": 1.0},  # Default for unknown methods
-        "global": {"requests": 2000, "window": 60.0},  # 2000 requests/minute globally (scaled up)
+        "global": {
+            "requests": 2000,
+            "window": 60.0,
+        },  # 2000 requests/minute globally (scaled up)
     }
-    
+
     # Redis configuration
     REDIS_KEY_PREFIX = "bot:rate_limit:"
     REDIS_KEY_TTL = 120  # 2 minutes TTL for rate limit keys
@@ -82,7 +83,7 @@ class GlobalRateLimiter:
         self._total_requests = 0
         self._rate_limited_count = 0
         self._backoff_count = 0
-        
+
         # Redis client (lazy initialization)
         self._redis_client: Any = None
         self._redis_available: bool | None = None
@@ -91,16 +92,17 @@ class GlobalRateLimiter:
         """Get Redis client with lazy initialization"""
         if self._redis_available is False:
             return None
-            
+
         if self._redis_client is None:
             redis_url = os.getenv("REDIS_URL")
             if not redis_url:
                 self._redis_available = False
                 logger.warning("⚠️ REDIS_URL not set - using in-memory rate limiting (not scalable)")
                 return None
-            
+
             try:
                 import redis.asyncio as aioredis
+
                 self._redis_client = aioredis.from_url(
                     redis_url,
                     decode_responses=True,
@@ -115,7 +117,7 @@ class GlobalRateLimiter:
                 logger.warning(f"⚠️ Redis unavailable ({e}) - using in-memory rate limiting")
                 self._redis_available = False
                 return None
-        
+
         return self._redis_client
 
     @classmethod
@@ -154,21 +156,21 @@ class GlobalRateLimiter:
     async def _check_redis_limit(self, method: str, limit_config: dict) -> tuple[bool, float]:
         """
         Check rate limit using Redis sorted sets (sliding window).
-        
+
         Returns:
             Tuple of (is_allowed, wait_time_if_not_allowed)
         """
         redis = await self._get_redis()
         if not redis:
             return True, 0  # Fall back to in-memory
-        
+
         try:
             key = f"{self.REDIS_KEY_PREFIX}{method}"
             now = time.time()
             window = limit_config["window"]
             max_requests = int(limit_config["requests"])
             window_start = now - window
-            
+
             async with redis.pipeline(transaction=True) as pipe:
                 # Remove old entries
                 await pipe.zremrangebyscore(key, 0, window_start)
@@ -177,10 +179,10 @@ class GlobalRateLimiter:
                 # Get oldest entry score for wait time calculation
                 await pipe.zrange(key, 0, 0, withscores=True)
                 results = await pipe.execute()
-            
+
             current_count = results[1]
             oldest_entries = results[2]
-            
+
             if current_count >= max_requests:
                 # Calculate wait time
                 if oldest_entries:
@@ -189,13 +191,13 @@ class GlobalRateLimiter:
                 else:
                     wait_time = window
                 return False, max(0, wait_time)
-            
+
             # Add current request
             await redis.zadd(key, {str(now): now})
             await redis.expire(key, self.REDIS_KEY_TTL)
-            
+
             return True, 0
-            
+
         except Exception as e:
             logger.warning(f"Redis rate limit check failed: {e}")
             return True, 0  # Allow on error, fall back to in-memory
@@ -228,18 +230,18 @@ class GlobalRateLimiter:
         async with lock:
             # Try Redis first
             redis = await self._get_redis()
-            
+
             if redis:
                 # Check method-specific limit
                 limit_config = self._get_limit(method)
                 allowed, wait_time = await self._check_redis_limit(method, limit_config)
-                
+
                 if not allowed:
                     self._rate_limited_count += 1
                     if wait_time > 0.1:
                         logger.debug(f"⏳ Rate limit: {method}, waiting {wait_time:.2f}s")
                     await asyncio.sleep(wait_time)
-                
+
                 # Check global limit
                 allowed, wait_time = await self._check_redis_limit("global", self.LIMITS["global"])
                 if not allowed:
@@ -255,7 +257,7 @@ class GlobalRateLimiter:
                 now = time.time()
                 self._get_history(method).append(now)
                 self._get_history("global").append(now)
-            
+
             self._total_requests += 1
 
     async def _wait_for_method_limit(self, method: str) -> None:

@@ -9,24 +9,22 @@ API endpoints for marketplace services (subscriptions):
 - Usage tracking
 """
 
-from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 
 from apps.api.dependencies import CurrentUser
+from apps.api.marketplace.dependencies import (
+    FeatureGateServiceDep,
+    MarketplaceServiceDep,
+)
 from apps.api.marketplace.schemas import (
+    CancelSubscriptionRequest,
     MarketplaceServiceResponse,
     ServiceCatalogResponse,
     ServiceSubscriptionRequest,
     ServiceSubscriptionResponse,
-    UserSubscriptionsResponse,
-    CancelSubscriptionRequest,
-    ToggleAutoRenewRequest,
     SuccessResponse,
-)
-from apps.api.marketplace.dependencies import (
-    MarketplaceServiceRepoDep,
-    MarketplaceServiceDep,
-    FeatureGateServiceDep,
+    ToggleAutoRenewRequest,
+    UserSubscriptionsResponse,
 )
 
 router = APIRouter(tags=["marketplace-services"])
@@ -36,11 +34,15 @@ router = APIRouter(tags=["marketplace-services"])
 # SERVICE CATALOG
 # =============================================================================
 
+
 @router.get("/services", response_model=ServiceCatalogResponse)
 async def get_service_catalog(
     service: MarketplaceServiceDep,
     current_user: CurrentUser,
-    category: Optional[str] = Query(None, description="Filter by category (bot_service, mtproto_services, ai_services)"),
+    category: str | None = Query(
+        None,
+        description="Filter by category (bot_service, mtproto_services, ai_services)",
+    ),
 ):
     """Get marketplace service catalog."""
     services = await service.get_service_catalog(
@@ -73,16 +75,17 @@ async def get_service_details(
         service_key=service_key,
         user_id=current_user.id if current_user else None,
     )
-    
+
     if not details:
         raise HTTPException(status_code=404, detail="Service not found")
-    
+
     return details
 
 
 # =============================================================================
 # SUBSCRIPTIONS
 # =============================================================================
+
 
 @router.post("/services/subscribe", response_model=ServiceSubscriptionResponse)
 async def subscribe_to_service(
@@ -174,6 +177,7 @@ async def toggle_auto_renew(
 # FEATURE ACCESS
 # =============================================================================
 
+
 @router.get("/access/{service_key}")
 async def check_service_access(
     service_key: str,
@@ -217,6 +221,7 @@ async def get_user_features(
 # =============================================================================
 # USAGE TRACKING
 # =============================================================================
+
 
 @router.get("/subscriptions/{subscription_id}/usage")
 async def get_subscription_usage(

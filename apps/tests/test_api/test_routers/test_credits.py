@@ -74,7 +74,8 @@ async def test_user(test_db_pool):
     await test_db_pool.execute("DELETE FROM credit_transactions WHERE user_id = $1", user_id)
     await test_db_pool.execute("DELETE FROM user_achievements WHERE user_id = $1", user_id)
     await test_db_pool.execute(
-        "DELETE FROM user_referrals WHERE referrer_user_id = $1 OR referred_user_id = $1", user_id
+        "DELETE FROM user_referrals WHERE referrer_user_id = $1 OR referred_user_id = $1",
+        user_id,
     )
     await test_db_pool.execute("DELETE FROM user_purchases WHERE user_id = $1", user_id)
     await test_db_pool.execute("DELETE FROM users WHERE id = $1", user_id)
@@ -100,7 +101,8 @@ async def second_test_user(test_db_pool):
     await test_db_pool.execute("DELETE FROM user_credits WHERE user_id = $1", user_id)
     await test_db_pool.execute("DELETE FROM credit_transactions WHERE user_id = $1", user_id)
     await test_db_pool.execute(
-        "DELETE FROM user_referrals WHERE referrer_user_id = $1 OR referred_user_id = $1", user_id
+        "DELETE FROM user_referrals WHERE referrer_user_id = $1 OR referred_user_id = $1",
+        user_id,
     )
     await test_db_pool.execute("DELETE FROM users WHERE id = $1", user_id)
 

@@ -2,11 +2,9 @@
 
 from apps.ai.shared.models.action import Action, ActionResult, ActionStatus, ActionType
 from apps.ai.shared.models.decision import (
-    ApprovalLevel,
     Decision,
     DecisionContext,
     DecisionOutcome,
-    DecisionType,
 )
 from apps.ai.shared.models.metric import Metric, MetricType, WorkerMetrics
 from apps.ai.shared.models.worker import (

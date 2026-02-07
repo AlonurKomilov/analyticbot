@@ -23,4 +23,5 @@ __all__ = [
 def start_system_bot():
     """Lazy loader for system bot main function."""
     from apps.bot.system.bot import main
+
     return main

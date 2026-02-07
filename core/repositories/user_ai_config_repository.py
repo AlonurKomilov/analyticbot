@@ -12,8 +12,6 @@ from typing import Any
 
 import asyncpg
 
-from infra.db.models.ai.user_ai_orm import UserAIConfigORM
-
 logger = logging.getLogger(__name__)
 
 
@@ -140,7 +138,7 @@ class UserAIConfigRepository:
 
         query = f"""
             UPDATE user_ai_config
-            SET {', '.join(update_fields)}
+            SET {", ".join(update_fields)}
             WHERE user_id = ${param_count}
             RETURNING 
                 user_id, tier, enabled, settings, preferred_model,
@@ -188,7 +186,7 @@ class UserAIConfigRepository:
             return config
 
         logger.info(f"📝 Creating default AI config for new user {user_id}")
-        
+
         # Use INSERT ... ON CONFLICT to handle race conditions
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
@@ -214,12 +212,12 @@ class UserAIConfigRepository:
             if row:
                 logger.info(f"✅ Created AI config for user {user_id} with tier free")
                 return dict(row)
-            
+
             # Fallback - fetch if concurrent insert happened
             config = await self.get_by_user_id(user_id)
             if config:
                 return config
-                
+
             raise Exception(f"Failed to create or fetch AI config for user {user_id}")
 
     async def set_enabled(self, user_id: int, enabled: bool) -> dict[str, Any] | None:

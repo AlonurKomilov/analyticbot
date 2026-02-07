@@ -129,7 +129,10 @@ class LearningTaskManager:
             self.manager_stats["total_operations"] += 1
 
             # Delegate to TaskCreator
-            task_config = {"training_data": training_data, "validation_data": validation_data}
+            task_config = {
+                "training_data": training_data,
+                "validation_data": validation_data,
+            }
             if task_parameters:
                 task_config.update(task_parameters)
 
@@ -402,7 +405,7 @@ class LearningTaskManager:
                     "task_creator": creator_healthy,
                     "task_scheduler": scheduler_healthy,
                     "progress_tracker": {
-                        "status": "healthy" if "error" not in tracker_healthy else "unhealthy"
+                        "status": ("healthy" if "error" not in tracker_healthy else "unhealthy")
                     },
                 },
                 "manager_stats": self.manager_stats,

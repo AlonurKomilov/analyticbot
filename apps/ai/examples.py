@@ -8,13 +8,13 @@ Demonstrates how to use both System AI and User AI
 import asyncio
 import logging
 
+from apps.ai.shared.models import DecisionType, WorkerType
+
 # System AI imports
 from apps.ai.system import SystemAIController, get_system_ai_config
-from apps.ai.shared.models import DecisionType, WorkerStatus, WorkerType
 
 # User AI imports
 from apps.ai.user import UserAIAgent, UserAIConfig
-from apps.ai.user.services import AnalyticsAIService, ContentAIService
 from apps.ai.user.marketplace import MarketplaceServiceRegistry
 
 logging.basicConfig(level=logging.INFO)
@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 # SYSTEM AI EXAMPLES
 # ====================
 
+
 async def example_system_ai_basic():
     """Basic System AI usage example"""
     logger.info("=" * 60)
@@ -33,7 +34,7 @@ async def example_system_ai_basic():
 
     # Load config from environment
     config = get_system_ai_config()
-    
+
     # Initialize controller with config
     controller = SystemAIController(config)
 
@@ -45,7 +46,7 @@ async def example_system_ai_basic():
 
     # Check status
     status = await controller.get_status()
-    logger.info(f"\n📊 System AI Status:")
+    logger.info("\n📊 System AI Status:")
     logger.info(f"   Running: {status['is_running']}")
     logger.info(f"   Mode: {status['approval_mode']}")
     logger.info(f"   Workers: {status['registry_stats']['total_workers']}")
@@ -53,7 +54,7 @@ async def example_system_ai_basic():
 
     # List discovered workers
     workers = await controller.registry.list_workers()
-    logger.info(f"\n🔍 Discovered Workers:")
+    logger.info("\n🔍 Discovered Workers:")
     for worker in workers:
         logger.info(f"   - {worker.name} ({worker.worker_type.value})")
         logger.info(f"     AI Manageable: {worker.ai_manageable}")
@@ -87,7 +88,7 @@ async def example_system_ai_decision():
     )
 
     if decision:
-        logger.info(f"\n✅ Decision Created:")
+        logger.info("\n✅ Decision Created:")
         logger.info(f"   ID: {decision.decision_id}")
         logger.info(f"   Type: {decision.decision_type.value}")
         logger.info(f"   Action: {decision.action}")
@@ -96,7 +97,7 @@ async def example_system_ai_decision():
 
         # If auto-approved, execute it
         if decision.approved:
-            logger.info(f"\n⚙️  Executing decision (dry run)...")
+            logger.info("\n⚙️  Executing decision (dry run)...")
             result = await controller.execute_decision(decision)
             if result:
                 logger.info(f"   Result: {result.message}")
@@ -142,6 +143,7 @@ async def example_system_ai_workers():
 # USER AI EXAMPLES
 # ====================
 
+
 async def example_user_ai_basic():
     """Basic User AI usage example"""
     logger.info("\n" + "=" * 60)
@@ -151,17 +153,19 @@ async def example_user_ai_basic():
     # Load user config (from database in production)
     user_id = 12345
     config = await UserAIConfig.from_database(user_id)
-    
+
     # Create user agent
     agent = UserAIAgent(config)
-    
+
     # Get agent status
     status = await agent.get_status()
-    logger.info(f"\n👤 User AI Status:")
+    logger.info("\n👤 User AI Status:")
     logger.info(f"   User ID: {status['user_id']}")
     logger.info(f"   Tier: {status['tier']}")
     logger.info(f"   Features: {status['enabled_features']}")
-    logger.info(f"   Usage Today: {status['usage']['requests_today']}/{status['usage']['limits']['daily']}")
+    logger.info(
+        f"   Usage Today: {status['usage']['requests_today']}/{status['usage']['limits']['daily']}"
+    )
 
 
 async def example_user_ai_analytics():
@@ -173,7 +177,7 @@ async def example_user_ai_analytics():
     user_id = 12345
     config = await UserAIConfig.from_database(user_id)
     agent = UserAIAgent(config)
-    
+
     # Analyze a channel
     channel_id = 67890
     result = await agent.analyze_channel(
@@ -181,10 +185,10 @@ async def example_user_ai_analytics():
         analysis_type="overview",
         period_days=30,
     )
-    
-    logger.info(f"\n📊 Analytics Result:")
+
+    logger.info("\n📊 Analytics Result:")
     logger.info(f"   Success: {result['success']}")
-    if result['success']:
+    if result["success"]:
         logger.info(f"   Channel: {result['channel_id']}")
         logger.info(f"   Period: {result['period_days']} days")
         logger.info(f"   Generated: {result['generated_at']}")
@@ -199,7 +203,7 @@ async def example_user_ai_content():
     user_id = 12345
     config = await UserAIConfig.from_database(user_id)
     agent = UserAIAgent(config)
-    
+
     # Get content suggestions
     result = await agent.suggest_content(
         channel_id=67890,
@@ -207,11 +211,11 @@ async def example_user_ai_content():
         content_type="post",
         count=3,
     )
-    
-    logger.info(f"\n💡 Content Suggestions:")
+
+    logger.info("\n💡 Content Suggestions:")
     logger.info(f"   Success: {result['success']}")
-    if result['success']:
-        for suggestion in result['suggestions']:
+    if result["success"]:
+        for suggestion in result["suggestions"]:
             logger.info(f"   - {suggestion['title']}")
 
 
@@ -223,17 +227,17 @@ async def example_marketplace_services():
 
     # Get registry
     registry = MarketplaceServiceRegistry()
-    
+
     # List available services
     stats = registry.get_stats()
-    logger.info(f"\n🏪 Marketplace Stats:")
+    logger.info("\n🏪 Marketplace Stats:")
     logger.info(f"   Total Services: {stats['total_services']}")
     logger.info(f"   Free Services: {stats['free_services']}")
     logger.info(f"   Capabilities: {stats['capabilities_available']}")
-    
+
     # List all services
     services = registry.list_all()
-    logger.info(f"\n📦 Available Services:")
+    logger.info("\n📦 Available Services:")
     for service in services:
         logger.info(f"   - {service.name} (v{service.version})")
         logger.info(f"     {service.description}")
@@ -253,13 +257,13 @@ async def example_registry_stats():
 
     stats = await controller.registry.get_registry_stats()
 
-    logger.info(f"\n📊 Registry Statistics:")
+    logger.info("\n📊 Registry Statistics:")
     logger.info(f"   Total Workers: {stats['total_workers']}")
     logger.info(f"   AI Manageable: {stats['ai_manageable_workers']}")
     logger.info(f"   Auto-scaling Enabled: {stats['auto_scaling_enabled']}")
 
-    logger.info(f"\n   Worker Types:")
-    for worker_type, count in stats['type_counts'].items():
+    logger.info("\n   Worker Types:")
+    for worker_type, count in stats["type_counts"].items():
         logger.info(f"     {worker_type}: {count}")
 
     await controller.stop()

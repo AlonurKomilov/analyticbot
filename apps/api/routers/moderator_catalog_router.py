@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.api.middleware.auth import get_current_user, require_moderator_user
+from apps.api.middleware.auth import require_moderator_user
 from apps.di import get_db_session
 from config import settings
 from core.services.system.cache.public_catalog_service import PublicCatalogService
@@ -35,8 +35,10 @@ router = APIRouter(
 # Request/Response Models
 # ============================================================================
 
+
 class AddChannelRequest(BaseModel):
     """Request to add a channel to the catalog."""
+
     telegram_id: int | None = None
     username: str | None = None
     category_id: int
@@ -47,6 +49,7 @@ class AddChannelRequest(BaseModel):
 
 class UpdateChannelRequest(BaseModel):
     """Request to update a channel in the catalog."""
+
     category_id: int | None = None
     country_code: str | None = Field(default=None, max_length=2)
     language_code: str | None = Field(default=None, max_length=5)
@@ -57,6 +60,7 @@ class UpdateChannelRequest(BaseModel):
 
 class CatalogEntryResponse(BaseModel):
     """Catalog entry response."""
+
     id: int
     telegram_id: int
     username: str | None
@@ -78,6 +82,7 @@ class CatalogEntryResponse(BaseModel):
 
 class CatalogListResponse(BaseModel):
     """Paginated list of catalog entries."""
+
     entries: list[CatalogEntryResponse]
     total: int
     page: int
@@ -86,6 +91,7 @@ class CatalogListResponse(BaseModel):
 
 class CategoryRequest(BaseModel):
     """Request to create/update a category."""
+
     name: str = Field(..., max_length=100)
     slug: str = Field(..., max_length=50)
     icon: str | None = Field(default=None, max_length=50)
@@ -98,9 +104,12 @@ class CategoryRequest(BaseModel):
 # Helper Functions
 # ============================================================================
 
+
 def get_catalog_service(db: AsyncSession) -> PublicCatalogService:
     """Create a PublicCatalogService instance."""
-    bot_token = getattr(settings, "BOT_TOKEN", None) or getattr(settings, "TELEGRAM_BOT_TOKEN", None)
+    bot_token = getattr(settings, "BOT_TOKEN", None) or getattr(
+        settings, "TELEGRAM_BOT_TOKEN", None
+    )
     # Handle SecretStr by unwrapping it
     if bot_token is not None and hasattr(bot_token, "get_secret_value"):
         bot_token = bot_token.get_secret_value()
@@ -110,6 +119,7 @@ def get_catalog_service(db: AsyncSession) -> PublicCatalogService:
 # ============================================================================
 # Catalog Management Endpoints
 # ============================================================================
+
 
 @router.get("", response_model=CatalogListResponse)
 async def list_catalog_entries(
@@ -123,7 +133,7 @@ async def list_catalog_entries(
 ):
     """
     List all catalog entries with filters.
-    
+
     Requires moderator role.
     """
     try:
@@ -146,7 +156,7 @@ async def list_catalog_entries(
         # Get total count
         count_result = await db.execute(
             text(f"SELECT COUNT(*) FROM public_channel_catalog pcc WHERE {where_sql}"),
-            params
+            params,
         )
         total = count_result.scalar() or 0
 
@@ -171,7 +181,7 @@ async def list_catalog_entries(
                 ORDER BY pcc.added_at DESC
                 LIMIT :limit OFFSET :offset
             """),
-            params
+            params,
         )
         rows = result.fetchall()
 
@@ -216,7 +226,7 @@ async def get_catalog_stats(
 ):
     """
     Get catalog statistics for moderator dashboard.
-    
+
     Requires moderator role.
     """
     try:
@@ -232,10 +242,10 @@ async def get_catalog_stats(
             """)
         )
         row = result.fetchone()
-        
+
         cat_result = await db.execute(text("SELECT COUNT(*) FROM channel_categories"))
         total_categories = cat_result.scalar() or 0
-        
+
         return {
             "total_channels": row.total_channels if row else 0,
             "featured_channels": row.featured_channels if row else 0,
@@ -257,10 +267,10 @@ async def add_channel_to_catalog(
 ):
     """
     Add a channel to the public catalog.
-    
+
     Provide either telegram_id or username. If username is provided,
     it will be resolved via Telegram API.
-    
+
     Requires moderator role.
     """
     if not request.telegram_id and not request.username:
@@ -292,7 +302,7 @@ async def update_catalog_entry(
 ):
     """
     Update a channel in the catalog.
-    
+
     Requires moderator role.
     """
     service = get_catalog_service(db)
@@ -320,7 +330,7 @@ async def remove_catalog_entry(
 ):
     """
     Remove a channel from the catalog (soft delete).
-    
+
     Requires moderator role.
     """
     service = get_catalog_service(db)
@@ -341,7 +351,7 @@ async def toggle_featured(
 ):
     """
     Toggle featured status for a channel.
-    
+
     Requires moderator role.
     """
     service = get_catalog_service(db)
@@ -362,7 +372,7 @@ async def toggle_verified(
 ):
     """
     Toggle verified status for a channel.
-    
+
     Requires moderator role.
     """
     service = get_catalog_service(db)
@@ -382,13 +392,13 @@ async def sync_channel_stats(
 ):
     """
     Sync channel stats from Telegram API.
-    
+
     Requires moderator role.
     """
     # Get telegram_id from catalog
     result = await db.execute(
         text("SELECT telegram_id FROM public_channel_catalog WHERE id = :id"),
-        {"id": catalog_id}
+        {"id": catalog_id},
     )
     row = result.fetchone()
     if not row:
@@ -407,6 +417,7 @@ async def sync_channel_stats(
 # Category Management Endpoints
 # ============================================================================
 
+
 @router.get("/categories")
 async def list_categories(
     db: AsyncSession = Depends(get_db_session),
@@ -414,7 +425,7 @@ async def list_categories(
 ):
     """
     List all categories for management.
-    
+
     Requires moderator role.
     """
     try:
@@ -439,8 +450,8 @@ async def list_categories(
                     "parent_id": row.parent_id,
                     "sort_order": row.sort_order,
                     "channel_count": row.channel_count,
-                    "created_at": row.created_at.isoformat() if row.created_at else None,
-                    "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+                    "created_at": (row.created_at.isoformat() if row.created_at else None),
+                    "updated_at": (row.updated_at.isoformat() if row.updated_at else None),
                 }
                 for row in rows
             ]
@@ -458,7 +469,7 @@ async def create_category(
 ):
     """
     Create a new category.
-    
+
     Requires moderator role.
     """
     try:
@@ -475,7 +486,7 @@ async def create_category(
                 "color": request.color,
                 "parent_id": request.parent_id,
                 "sort_order": request.sort_order,
-            }
+            },
         )
         row = result.fetchone()
         await db.commit()
@@ -498,7 +509,7 @@ async def update_category(
 ):
     """
     Update a category.
-    
+
     Requires moderator role.
     """
     try:
@@ -517,7 +528,7 @@ async def update_category(
                 "color": request.color,
                 "parent_id": request.parent_id,
                 "sort_order": request.sort_order,
-            }
+            },
         )
         await db.commit()
 
@@ -532,6 +543,7 @@ async def update_category(
 # Lookup/Search Endpoints
 # ============================================================================
 
+
 @router.get("/lookup")
 async def lookup_channel(
     username: str = Query(..., min_length=1),
@@ -540,9 +552,9 @@ async def lookup_channel(
 ):
     """
     Look up a channel from Telegram API before adding to catalog.
-    
+
     This allows moderators to preview channel info before adding.
-    
+
     Requires moderator role.
     """
     service = get_catalog_service(db)
@@ -554,7 +566,7 @@ async def lookup_channel(
     # Check if already in catalog
     existing = await db.execute(
         text("SELECT id, is_active FROM public_channel_catalog WHERE telegram_id = :tid"),
-        {"tid": result["telegram_id"]}
+        {"tid": result["telegram_id"]},
     )
     row = existing.fetchone()
     result["in_catalog"] = row is not None

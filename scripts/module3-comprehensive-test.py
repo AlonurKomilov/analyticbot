@@ -78,7 +78,11 @@ class Module3TestSuite:
         print("\n📊 Testing Grafana dashboards...")
 
         try:
-            dashboards = ["business-metrics.json", "infrastructure.json", "sla-slo.json"]
+            dashboards = [
+                "business-metrics.json",
+                "infrastructure.json",
+                "sla-slo.json",
+            ]
 
             all_passed = True
 
@@ -144,12 +148,16 @@ class Module3TestSuite:
 
                 except json.JSONDecodeError as e:
                     self.log_test(
-                        f"Grafana Dashboard - {dashboard}", False, f"Invalid JSON: {str(e)}"
+                        f"Grafana Dashboard - {dashboard}",
+                        False,
+                        f"Invalid JSON: {str(e)}",
                     )
                     all_passed = False
                 except Exception as e:
                     self.log_test(
-                        f"Grafana Dashboard - {dashboard}", False, f"Validation error: {str(e)}"
+                        f"Grafana Dashboard - {dashboard}",
+                        False,
+                        f"Validation error: {str(e)}",
                     )
                     all_passed = False
 
@@ -211,7 +219,9 @@ class Module3TestSuite:
                 return True
             else:
                 self.log_test(
-                    "Prometheus Alerts", False, f"Low rule validity: {rule_validity:.1f}%"
+                    "Prometheus Alerts",
+                    False,
+                    f"Low rule validity: {rule_validity:.1f}%",
                 )
                 return False
 
@@ -273,7 +283,11 @@ class Module3TestSuite:
                 )
                 return True
             else:
-                self.log_test("CI/CD Workflows", False, f"Incomplete workflow: {job_validity:.1f}%")
+                self.log_test(
+                    "CI/CD Workflows",
+                    False,
+                    f"Incomplete workflow: {job_validity:.1f}%",
+                )
                 return False
 
         except Exception as e:
@@ -302,7 +316,9 @@ class Module3TestSuite:
 
                 if result.returncode != 0:
                     self.log_test(
-                        "Backup System", False, f"Syntax error in backup script: {result.stderr}"
+                        "Backup System",
+                        False,
+                        f"Syntax error in backup script: {result.stderr}",
                     )
                     return False
 
@@ -624,7 +640,9 @@ class Module3TestSuite:
                 test_method()
             except Exception as e:
                 self.log_test(
-                    f"Test Method {test_method.__name__}", False, f"Unexpected error: {str(e)}"
+                    f"Test Method {test_method.__name__}",
+                    False,
+                    f"Unexpected error: {str(e)}",
                 )
 
         # Calculate final results

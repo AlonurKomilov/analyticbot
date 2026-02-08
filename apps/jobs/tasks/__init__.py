@@ -6,7 +6,7 @@ These tasks are thin wrappers that call application services.
 
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from apps.jobs.worker import celery_app, jobs_container
 

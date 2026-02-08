@@ -35,7 +35,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             Dictionary with customer data including gateway customer ID
         """
-        pass
 
     @abstractmethod
     async def create_payment_method(
@@ -51,7 +50,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             Dictionary with payment method data
         """
-        pass
 
     @abstractmethod
     async def create_payment_intent(
@@ -75,7 +73,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             Dictionary with payment intent data
         """
-        pass
 
     @abstractmethod
     async def create_subscription(
@@ -99,7 +96,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             Dictionary with subscription data
         """
-        pass
 
     @abstractmethod
     async def cancel_subscription(
@@ -115,7 +111,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             Dictionary with cancellation result
         """
-        pass
 
     @abstractmethod
     async def update_subscription(
@@ -131,7 +126,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             Dictionary with updated subscription data
         """
-        pass
 
     @abstractmethod
     async def handle_webhook(
@@ -148,7 +142,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             Dictionary with processed webhook data
         """
-        pass
 
     @abstractmethod
     async def get_customer(self, customer_id: str) -> dict[str, Any] | None:
@@ -161,7 +154,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             Dictionary with customer data or None if not found
         """
-        pass
 
     @abstractmethod
     async def get_subscription(self, subscription_id: str) -> dict[str, Any] | None:
@@ -174,7 +166,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             Dictionary with subscription data or None if not found
         """
-        pass
 
     @abstractmethod
     async def list_payment_methods(self, customer_id: str) -> list[dict[str, Any]]:
@@ -187,7 +178,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             List of payment method dictionaries
         """
-        pass
 
     @abstractmethod
     def get_adapter_name(self) -> str:
@@ -197,7 +187,6 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             String identifier for the adapter
         """
-        pass
 
     @abstractmethod
     async def health_check(self) -> dict[str, Any]:
@@ -207,4 +196,3 @@ class PaymentGatewayAdapter(ABC):
         Returns:
             Dictionary with health status
         """
-        pass

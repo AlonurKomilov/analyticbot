@@ -12,8 +12,8 @@ Components:
 """
 
 from apps.mtproto.user.user_mtproto_service import (
-    UserMTProtoService,
     UserMTProtoClient,
+    UserMTProtoService,
 )
 
 __all__ = [

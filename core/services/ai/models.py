@@ -6,20 +6,22 @@ Data models for multi-provider AI system.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
 class AIMessage:
     """Unified message format across all providers."""
+
     role: str  # 'system', 'user', 'assistant'
     content: str
-    name: Optional[str] = None  # For multi-agent scenarios
+    name: str | None = None  # For multi-agent scenarios
 
 
 @dataclass
 class AIResponse:
     """Unified AI completion response."""
+
     content: str
     model: str
     provider: str
@@ -34,6 +36,7 @@ class AIResponse:
 @dataclass
 class AIProviderConfig:
     """Configuration for AI provider."""
+
     api_key: str
     model: str
     temperature: float = 0.7
@@ -45,6 +48,7 @@ class AIProviderConfig:
 @dataclass
 class ProviderInfo:
     """Information about an AI provider."""
+
     name: str
     display_name: str
     available_models: list[str]

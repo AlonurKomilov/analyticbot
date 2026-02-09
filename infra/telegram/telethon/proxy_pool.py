@@ -323,9 +323,11 @@ class ProxyPool:
                     "consecutive_failures": proxy.consecutive_failures,
                     "total_uses": proxy.total_uses,
                     "health_score": proxy.health_score,
-                    "ban_remaining": max(0, proxy.ban_until - time.time())
-                    if proxy.status == ProxyStatus.BANNED
-                    else 0,
+                    "ban_remaining": (
+                        max(0, proxy.ban_until - time.time())
+                        if proxy.status == ProxyStatus.BANNED
+                        else 0
+                    ),
                     "last_used": proxy.last_used,
                     "last_success": proxy.last_success,
                     "last_failure": proxy.last_failure,

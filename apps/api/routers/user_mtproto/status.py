@@ -103,5 +103,6 @@ async def get_mtproto_status(
     except Exception as e:
         logger.error(f"Error getting MTProto status for user {user_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get MTProto status"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get MTProto status",
         )

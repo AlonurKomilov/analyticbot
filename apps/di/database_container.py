@@ -27,8 +27,17 @@ from core.protocols import (
 )
 
 # Import other repositories (no protocols yet)
-from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
+from core.repositories.alert_repository import (
+    AlertSentRepository,
+    AlertSubscriptionRepository,
+)
 from core.repositories.shared_reports_repository import SharedReportsRepository
+
+# AI Repositories
+from core.repositories.user_ai_config_repository import UserAIConfigRepository
+from core.repositories.user_ai_providers_repository import UserAIProvidersRepository
+from core.repositories.user_ai_services_repository import UserAIServicesRepository
+from core.repositories.user_ai_usage_repository import UserAIUsageRepository
 
 # Still need concrete implementation for instantiation
 from infra.db.connection_manager import db_manager
@@ -38,7 +47,11 @@ from infra.db.repositories.admin_repository import AsyncpgAdminRepository
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.channel_daily_repository import ChannelDailyRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+from infra.db.repositories.credit_repository import CreditRepository
 from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
+from infra.db.repositories.marketplace_service_repository import (
+    MarketplaceServiceRepository,
+)
 from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
 from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
@@ -46,22 +59,20 @@ from infra.db.repositories.post_repository import AsyncpgPostRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
 from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
 from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
+from infra.db.repositories.user_bot_service_repository_factory import (
+    UserBotServiceRepositoryFactory,
+)
 from infra.db.repositories.user_repository import AsyncpgUserRepository
-from infra.db.repositories.user_bot_service_repository_factory import UserBotServiceRepositoryFactory
-from infra.db.repositories.credit_repository import CreditRepository
-from infra.db.repositories.marketplace_service_repository import MarketplaceServiceRepository
-
-# AI Repositories
-from core.repositories.user_ai_config_repository import UserAIConfigRepository
-from core.repositories.user_ai_usage_repository import UserAIUsageRepository
-from core.repositories.user_ai_services_repository import UserAIServicesRepository
-from core.repositories.user_ai_providers_repository import UserAIProvidersRepository
 
 # ✅ PHASE 3 SCALING (Dec 19, 2025): Import scaling infrastructure
 from infra.db.scaling import (
-    PgBouncerPool, PgBouncerConfig, SCALE_CONFIGS,
-    ReadReplicaRouter, ReadReplicaRouterConfig,
-    QueryCacheManager, CacheTier, CACHE_PATTERNS,
+    SCALE_CONFIGS,
+    CacheTier,
+    PgBouncerConfig,
+    PgBouncerPool,
+    QueryCacheManager,
+    ReadReplicaRouter,
+    ReadReplicaRouterConfig,
 )
 
 logger = logging.getLogger(__name__)
@@ -144,7 +155,9 @@ async def _create_sqlalchemy_engine(
     )
 
 
-async def _create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
+async def _create_session_factory(
+    engine: AsyncEngine,
+) -> async_sessionmaker[AsyncSession]:
     """Create SQLAlchemy session factory"""
     return async_sessionmaker(engine, expire_on_commit=False)
 
@@ -194,25 +207,25 @@ async def _create_repository(factory, repo_type: str) -> Any:
 async def _create_pgbouncer_pool() -> PgBouncerPool | None:
     """
     Create PgBouncer connection pool for 100K+ user scalability.
-    
+
     Enables connection multiplexing: 10,000+ client connections → 50-500 DB connections.
     Only activates if PGBOUNCER_ENABLED=true in environment.
     """
     pgbouncer_enabled = os.getenv("PGBOUNCER_ENABLED", "false").lower() == "true"
-    
+
     if not pgbouncer_enabled:
         logger.info("⚙️  PgBouncer disabled (PGBOUNCER_ENABLED != 'true')")
         return None
-    
+
     # Determine scale from environment or default to 'medium'
     scale = os.getenv("PGBOUNCER_SCALE", "medium")
     if scale not in SCALE_CONFIGS:
         logger.warning(f"⚠️  Unknown PGBOUNCER_SCALE '{scale}', using 'medium'")
         scale = "medium"
-    
+
     # Get base config for scale
     base_config = SCALE_CONFIGS[scale]
-    
+
     # Allow environment overrides
     config = PgBouncerConfig(
         primary_host=os.getenv("PGBOUNCER_HOST", base_config.primary_host),
@@ -226,29 +239,33 @@ async def _create_pgbouncer_pool() -> PgBouncerPool | None:
         password=os.getenv("POSTGRES_PASSWORD", ""),
         database=os.getenv("POSTGRES_DB", ""),
     )
-    
+
     pool = PgBouncerPool(config)
     await pool.initialize()
-    
-    logger.info(f"✅ PgBouncer pool initialized (scale={scale}, min={config.min_connections}, max={config.max_connections})")
+
+    logger.info(
+        f"✅ PgBouncer pool initialized (scale={scale}, min={config.min_connections}, max={config.max_connections})"
+    )
     return pool
 
 
-async def _create_read_replica_router(primary_pool: asyncpg.Pool) -> ReadReplicaRouter | None:
+async def _create_read_replica_router(
+    primary_pool: asyncpg.Pool,
+) -> ReadReplicaRouter | None:
     """
     Create read replica router for read/write splitting.
-    
+
     Routes read queries to replicas (load distribution), writes to primary.
     Only activates if READ_REPLICA_HOSTS is set in environment.
     """
     from infra.db.scaling.read_replica_router import ReplicaConfig
-    
+
     replica_hosts = os.getenv("READ_REPLICA_HOSTS", "")
-    
+
     if not replica_hosts:
         logger.info("⚙️  Read replicas disabled (READ_REPLICA_HOSTS not set)")
         return None
-    
+
     # Parse replica hosts (comma-separated: "replica1:5432,replica2:5432")
     replicas = []
     for host_port in replica_hosts.split(","):
@@ -258,11 +275,11 @@ async def _create_read_replica_router(primary_pool: asyncpg.Pool) -> ReadReplica
             replicas.append(ReplicaConfig(host=host, port=int(port)))
         elif host_port:
             replicas.append(ReplicaConfig(host=host_port, port=5432))
-    
+
     if not replicas:
         logger.warning("⚠️  READ_REPLICA_HOSTS set but no valid hosts found")
         return None
-    
+
     # Build config using correct structure
     config = ReadReplicaRouterConfig(
         primary_host=os.getenv("POSTGRES_HOST", "localhost"),
@@ -274,10 +291,10 @@ async def _create_read_replica_router(primary_pool: asyncpg.Pool) -> ReadReplica
         pool_size_per_replica=int(os.getenv("REPLICA_POOL_SIZE", "20")),
         health_check_interval=int(os.getenv("REPLICA_HEALTH_CHECK_INTERVAL", "30")),
     )
-    
+
     router = ReadReplicaRouter(config, primary_pool)
     await router.initialize()
-    
+
     logger.info(f"✅ Read replica router initialized ({len(replicas)} replicas)")
     return router
 
@@ -285,34 +302,34 @@ async def _create_read_replica_router(primary_pool: asyncpg.Pool) -> ReadReplica
 async def _create_query_cache_manager(redis_client) -> QueryCacheManager | None:
     """
     Create multi-tier query cache manager for 70-90% cache hit rates.
-    
+
     Uses tiered TTLs: HOT (30s), WARM (2min), STANDARD (5min), COLD (15min), STATIC (1hr).
     Requires Redis client injection.
     """
     cache_enabled = os.getenv("QUERY_CACHE_ENABLED", "true").lower() == "true"
-    
+
     if not cache_enabled:
         logger.info("⚙️  Query cache disabled (QUERY_CACHE_ENABLED != 'true')")
         return None
-    
+
     if redis_client is None:
         logger.warning("⚠️  Query cache disabled - no Redis client available")
         return None
-    
+
     # Parse tier TTL overrides from environment
     tier_ttls = {}
     for tier in CacheTier:
         env_key = f"CACHE_TTL_{tier.name}"
         if env_value := os.getenv(env_key):
             tier_ttls[tier] = int(env_value)
-    
+
     cache_manager = QueryCacheManager(
         redis_client=redis_client,
         default_tier=CacheTier.STANDARD,
         tier_ttls=tier_ttls if tier_ttls else None,
         key_prefix=os.getenv("CACHE_KEY_PREFIX", "qcache"),
     )
-    
+
     logger.info(f"✅ Query cache manager initialized (prefix={cache_manager.key_prefix})")
     return cache_manager
 
@@ -336,7 +353,8 @@ class DatabaseContainer(containers.DeclarativeContainer):
     # Database URL from environment or configuration
     database_url = providers.Callable(
         lambda: os.getenv(
-            "DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot"
+            "DATABASE_URL",
+            "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot",
         )
     )
 
@@ -349,7 +367,10 @@ class DatabaseContainer(containers.DeclarativeContainer):
     asyncpg_pool = providers.Resource(_create_asyncpg_pool, database_url=database_url, pool_size=10)
 
     sqlalchemy_engine = providers.Resource(
-        _create_sqlalchemy_engine, database_url=database_url, pool_size=10, max_overflow=20
+        _create_sqlalchemy_engine,
+        database_url=database_url,
+        pool_size=10,
+        max_overflow=20,
     )
 
     session_factory = providers.Resource(_create_session_factory, engine=sqlalchemy_engine)

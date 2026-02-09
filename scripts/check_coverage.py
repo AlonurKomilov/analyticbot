@@ -16,8 +16,9 @@ THRESHOLDS = {
         "apps/api/middleware/auth.py": 30.0,
         "apps/api/auth_utils.py": 50.0,
         "core/security_engine/": 40.0,
-    }
+    },
 }
+
 
 def check_coverage():
     """Check coverage against thresholds."""
@@ -73,6 +74,7 @@ def check_coverage():
     else:
         print("❌ Some coverage checks failed!")
         return False
+
 
 if __name__ == "__main__":
     success = check_coverage()

@@ -46,9 +46,19 @@ MOCK_POSTING_DATA = {
         {"hour": 19, "day": 0, "confidence": 78.5, "avg_engagement": 10.5},
     ],
     "daily_performance": [
-        {"date": 14, "dayOfWeek": 4, "avgEngagement": 13.8, "postCount": 5},  # Today (Friday)
+        {
+            "date": 14,
+            "dayOfWeek": 4,
+            "avgEngagement": 13.8,
+            "postCount": 5,
+        },  # Today (Friday)
         {"date": 13, "dayOfWeek": 3, "avgEngagement": 15.1, "postCount": 7},  # Thursday
-        {"date": 12, "dayOfWeek": 2, "avgEngagement": 14.2, "postCount": 4},  # Wednesday
+        {
+            "date": 12,
+            "dayOfWeek": 2,
+            "avgEngagement": 14.2,
+            "postCount": 4,
+        },  # Wednesday
     ],
     "analysis_period": "last_30_days",
     "total_posts_analyzed": 156,
@@ -61,7 +71,11 @@ async def test_database_connection():
     """Test if we can connect to the database"""
     try:
         conn = await asyncpg.connect(
-            host="localhost", port=10100, user="admin", password="password", database="analyticbot"
+            host="localhost",
+            port=10100,
+            user="admin",
+            password="password",
+            database="analyticbot",
         )
         await conn.close()
         print("✅ Database connection successful")
@@ -75,7 +89,11 @@ async def test_posting_data():
     """Test what posting data is available"""
     try:
         conn = await asyncpg.connect(
-            host="localhost", port=10100, user="admin", password="password", database="analyticbot"
+            host="localhost",
+            port=10100,
+            user="admin",
+            password="password",
+            database="analyticbot",
         )
 
         # Check posts table
@@ -128,7 +146,15 @@ def test_frontend_processing():
         times_by_day[day].append(f"{hour:02d}:00")
 
     print("📅 Times by day (before fallbacks):")
-    day_names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    day_names = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+    ]
     for day in range(7):
         day_name = day_names[day]
         times = times_by_day.get(day, [])

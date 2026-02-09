@@ -48,7 +48,10 @@ def upgrade() -> None:
         sa.Column("rule_name", sa.String(100), nullable=True),
         sa.Column("severity", sa.String(20), nullable=False),
         sa.Column(
-            "sent_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")
+            "sent_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
         ),
         sa.Column("status", sa.String(20), nullable=False, server_default="sent"),
         sa.Column("message_id", sa.BigInteger(), nullable=True),

@@ -8,7 +8,12 @@ suspending/activating bots, and updating rate limits.
 import logging
 from datetime import datetime
 
-from core.models.user_bot_domain import AdminBotAction, BotStatus, BotRole, UserBotCredentials
+from core.models.user_bot_domain import (
+    AdminBotAction,
+    BotRole,
+    BotStatus,
+    UserBotCredentials,
+)
 from core.ports.bot_manager_port import IBotManager
 from core.ports.user_bot_repository import IUserBotRepository
 
@@ -122,7 +127,7 @@ class AdminBotService:
 
         # Save to database
         created = await self.repository.create(credentials)
-        
+
         logger.info(f"Created bot @{bot_username} for user {user_id}")
         return created
 
@@ -397,37 +402,51 @@ class AdminBotService:
             Tuple of (success, message, bot_info)
         """
         logger.info(f"[VERIFY BOT SERVICE] Starting verification for user {user_id}")
-        
+
         # Get user's bot
         credentials = await self.repository.get_by_user_id(user_id)
         if not credentials:
             logger.warning(f"[VERIFY BOT SERVICE] No bot found for user {user_id}")
             return False, "No bot found for this user", None
-        
-        logger.info(f"[VERIFY BOT SERVICE] Found bot for user {user_id}, token starts with: {credentials.bot_token[:20]}...")
+
+        logger.info(
+            f"[VERIFY BOT SERVICE] Found bot for user {user_id}, token starts with: {credentials.bot_token[:20]}..."
+        )
 
         # Verify with Telegram
         try:
             import aiohttp
-            
+
             async with aiohttp.ClientSession() as session:
                 # Get bot info from Telegram
                 url = f"https://api.telegram.org/bot{credentials.bot_token}/getMe"
                 logger.info(f"[VERIFY BOT SERVICE] Calling Telegram API for user {user_id}")
                 async with session.get(url) as response:
                     if response.status != 200:
-                        logger.error(f"[VERIFY BOT SERVICE] Telegram API returned status {response.status}")
-                        return False, "Invalid bot token - could not connect to Telegram", None
-                    
+                        logger.error(
+                            f"[VERIFY BOT SERVICE] Telegram API returned status {response.status}"
+                        )
+                        return (
+                            False,
+                            "Invalid bot token - could not connect to Telegram",
+                            None,
+                        )
+
                     data = await response.json()
                     logger.info(f"[VERIFY BOT SERVICE] Telegram API response: {data}")
                     if not data.get("ok"):
-                        return False, f"Bot verification failed: {data.get('description', 'Unknown error')}", None
-                    
+                        return (
+                            False,
+                            f"Bot verification failed: {data.get('description', 'Unknown error')}",
+                            None,
+                        )
+
                     bot_info = data.get("result", {})
                     bot_username = bot_info.get("username")
                     bot_id = bot_info.get("id")
-                    logger.info(f"[VERIFY BOT SERVICE] Bot verified: @{bot_username} (ID: {bot_id})")
+                    logger.info(
+                        f"[VERIFY BOT SERVICE] Bot verified: @{bot_username} (ID: {bot_id})"
+                    )
 
             # Update bot credentials with verified info
             credentials.bot_username = bot_username
@@ -435,7 +454,7 @@ class AdminBotService:
             credentials.status = BotStatus.ACTIVE
             credentials.is_verified = True
             credentials.updated_at = datetime.utcnow()
-            
+
             await self.repository.update(credentials)
 
             # Send test message if requested
@@ -443,42 +462,66 @@ class AdminBotService:
                 logger.info(f"[VERIFY BOT SERVICE] Sending test message to chat_id {test_chat_id}")
                 try:
                     async with aiohttp.ClientSession() as session:
-                        msg = test_message or "🤖 Hello! Your bot is now configured and working correctly.\n\nThis is a test message from @{bot_username}.\n\n✅ Connection verified successfully!"
+                        msg = (
+                            test_message
+                            or "🤖 Hello! Your bot is now configured and working correctly.\n\nThis is a test message from @{bot_username}.\n\n✅ Connection verified successfully!"
+                        )
                         msg = msg.replace("{bot_username}", bot_username or "your bot")
                         url = f"https://api.telegram.org/bot{credentials.bot_token}/sendMessage"
-                        logger.info(f"[VERIFY BOT SERVICE] Sending to {url} with chat_id={test_chat_id}")
-                        async with session.post(url, json={
-                            "chat_id": test_chat_id,
-                            "text": msg
-                        }) as response:
+                        logger.info(
+                            f"[VERIFY BOT SERVICE] Sending to {url} with chat_id={test_chat_id}"
+                        )
+                        async with session.post(
+                            url, json={"chat_id": test_chat_id, "text": msg}
+                        ) as response:
                             response_text = await response.text()
                             if response.status != 200:
-                                logger.error(f"[VERIFY BOT SERVICE] Failed to send test message (status {response.status}): {response_text}")
-                                
+                                logger.error(
+                                    f"[VERIFY BOT SERVICE] Failed to send test message (status {response.status}): {response_text}"
+                                )
+
                                 # Check for specific error
                                 if "chat not found" in response_text.lower():
-                                    return False, f"Please start a conversation with your bot @{bot_username} first. Open Telegram, search for @{bot_username}, and click START. Then try again.", None
-                                
-                                return False, f"Test message failed: {response_text}", None
+                                    return (
+                                        False,
+                                        f"Please start a conversation with your bot @{bot_username} first. Open Telegram, search for @{bot_username}, and click START. Then try again.",
+                                        None,
+                                    )
+
+                                return (
+                                    False,
+                                    f"Test message failed: {response_text}",
+                                    None,
+                                )
                             else:
-                                logger.info(f"[VERIFY BOT SERVICE] Test message sent successfully: {response_text}")
-                                
+                                logger.info(
+                                    f"[VERIFY BOT SERVICE] Test message sent successfully: {response_text}"
+                                )
+
                                 # Increment request counter for test message
                                 try:
                                     await self.repository.increment_request_count(user_id)
-                                    logger.info(f"[VERIFY BOT SERVICE] Incremented request count for user {user_id}")
+                                    logger.info(
+                                        f"[VERIFY BOT SERVICE] Incremented request count for user {user_id}"
+                                    )
                                 except Exception as count_err:
-                                    logger.warning(f"[VERIFY BOT SERVICE] Failed to increment request count: {count_err}")
+                                    logger.warning(
+                                        f"[VERIFY BOT SERVICE] Failed to increment request count: {count_err}"
+                                    )
                 except Exception as e:
                     logger.error(f"[VERIFY BOT SERVICE] Exception while sending test message: {e}")
                     return False, f"Failed to send test message: {str(e)}", None
 
             logger.info(f"Bot verified for user {user_id}: @{bot_username}")
-            return True, "Bot verified successfully", {
-                "bot_id": bot_id,
-                "bot_username": bot_username,
-                "is_verified": True,
-            }
+            return (
+                True,
+                "Bot verified successfully",
+                {
+                    "bot_id": bot_id,
+                    "bot_username": bot_username,
+                    "is_verified": True,
+                },
+            )
 
         except Exception as e:
             logger.error(f"Error verifying bot for user {user_id}: {e}")
@@ -510,7 +553,7 @@ class AdminBotService:
         if not deleted:
             logger.warning(f"Failed to delete bot credentials for user {user_id}")
             return False
-        
+
         logger.info(f"Removed bot for user {user_id}")
         return True
 
@@ -539,12 +582,14 @@ class AdminBotService:
             credentials.rate_limit_rps = max_requests_per_second
         if max_concurrent_requests is not None:
             credentials.max_concurrent_requests = max_concurrent_requests
-        
+
         credentials.updated_at = datetime.utcnow()
-        
+
         await self.repository.update(credentials)
-        
-        logger.info(f"Updated rate limits for user {user_id}: rps={credentials.rate_limit_rps}, concurrent={credentials.max_concurrent_requests}")
+
+        logger.info(
+            f"Updated rate limits for user {user_id}: rps={credentials.rate_limit_rps}, concurrent={credentials.max_concurrent_requests}"
+        )
         return credentials
 
 

@@ -8,8 +8,8 @@ Includes materialized view refresh, vacuum operations, and cleanup jobs.
 import logging
 from typing import Any
 
-from apps.workers.celery_app import celery_app, enhanced_retry_task
 from apps.di import get_db_session
+from apps.workers.celery_app import celery_app, enhanced_retry_task
 from core.services.system.cache.materialized_view_service import MaterializedViewService
 
 logger = logging.getLogger(__name__)

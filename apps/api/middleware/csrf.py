@@ -143,7 +143,7 @@ def is_path_exempt(path: str) -> bool:
     normalized_path = path
     if path.startswith("/api/v1"):
         normalized_path = path[7:]  # Remove "/api/v1" prefix
-    
+
     # Exact match
     if normalized_path in CSRF_EXEMPT_PATHS:
         return True
@@ -215,7 +215,8 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         if not is_valid:
             logger.warning(f"CSRF: Cookie token invalid - {error_msg}")
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail=f"CSRF validation failed: {error_msg}"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"CSRF validation failed: {error_msg}",
             )
 
         # Verify header token matches cookie token (double-submit pattern)

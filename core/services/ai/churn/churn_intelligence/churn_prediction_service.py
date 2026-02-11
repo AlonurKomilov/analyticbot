@@ -367,7 +367,11 @@ class ChurnPredictionService(ChurnPredictionProtocol):
 
         if days_since_active > 30:
             return ChurnStage.CHURNED
-        elif risk_level in [ChurnRiskLevel.HIGH, ChurnRiskLevel.VERY_HIGH, ChurnRiskLevel.CRITICAL]:
+        elif risk_level in [
+            ChurnRiskLevel.HIGH,
+            ChurnRiskLevel.VERY_HIGH,
+            ChurnRiskLevel.CRITICAL,
+        ]:
             return ChurnStage.AT_RISK
         elif trend == "declining" or risk_level == ChurnRiskLevel.MEDIUM:
             return ChurnStage.DECLINING

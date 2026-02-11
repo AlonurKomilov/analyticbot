@@ -38,9 +38,7 @@ class UserBotServiceRepositoryFactory:
     # Chat Settings
     # ===========================================
 
-    async def get_chat_settings(
-        self, user_id: int, chat_id: int
-    ) -> ChatSettings | None:
+    async def get_chat_settings(self, user_id: int, chat_id: int) -> ChatSettings | None:
         """Get settings for a specific chat."""
         async with self.session_factory() as session:
             repo = UserBotServiceRepository(session)
@@ -122,17 +120,13 @@ class UserBotServiceRepositoryFactory:
             await session.commit()
             return result
 
-    async def get_warning_count(
-        self, user_id: int, chat_id: int, warned_user_id: int
-    ) -> int:
+    async def get_warning_count(self, user_id: int, chat_id: int, warned_user_id: int) -> int:
         """Get warning count for a user."""
         async with self.session_factory() as session:
             repo = UserBotServiceRepository(session)
             return await repo.get_warning_count(user_id, chat_id, warned_user_id)
 
-    async def clear_warnings(
-        self, user_id: int, chat_id: int, warned_user_id: int
-    ) -> bool:
+    async def clear_warnings(self, user_id: int, chat_id: int, warned_user_id: int) -> bool:
         """Clear warnings for a user."""
         async with self.session_factory() as session:
             repo = UserBotServiceRepository(session)
@@ -145,16 +139,17 @@ class UserBotServiceRepositoryFactory:
     # ===========================================
 
     async def get_welcome_message(
-        self, user_id: int, chat_id: int, message_type: MessageType = MessageType.WELCOME
+        self,
+        user_id: int,
+        chat_id: int,
+        message_type: MessageType = MessageType.WELCOME,
     ) -> WelcomeMessage | None:
         """Get welcome message for a chat."""
         async with self.session_factory() as session:
             repo = UserBotServiceRepository(session)
             return await repo.get_welcome_message(user_id, chat_id, message_type)
 
-    async def set_welcome_message(
-        self, welcome_message: WelcomeMessage
-    ) -> WelcomeMessage:
+    async def set_welcome_message(self, welcome_message: WelcomeMessage) -> WelcomeMessage:
         """Set welcome message for a chat."""
         async with self.session_factory() as session:
             repo = UserBotServiceRepository(session)
@@ -182,9 +177,7 @@ class UserBotServiceRepositoryFactory:
             await session.commit()
             return result
 
-    async def get_invite_stats(
-        self, user_id: int, chat_id: int
-    ) -> list[InviteStats]:
+    async def get_invite_stats(self, user_id: int, chat_id: int) -> list[InviteStats]:
         """Get invite statistics."""
         async with self.session_factory() as session:
             repo = UserBotServiceRepository(session)

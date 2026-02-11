@@ -61,37 +61,30 @@ class CachePort(ABC):
     @abstractmethod
     def get(self, key: str) -> str | None:
         """Get value by key"""
-        pass
 
     @abstractmethod
     def set(self, key: str, value: str, expire_seconds: int | None = None) -> bool:
         """Set key-value with optional expiration"""
-        pass
 
     @abstractmethod
     def delete(self, key: str) -> bool:
         """Delete key"""
-        pass
 
     @abstractmethod
     def exists(self, key: str) -> bool:
         """Check if key exists"""
-        pass
 
     @abstractmethod
     def add_to_set(self, key: str, value: str) -> bool:
         """Add value to set"""
-        pass
 
     @abstractmethod
     def remove_from_set(self, key: str, value: str) -> bool:
         """Remove value from set"""
-        pass
 
     @abstractmethod
     def get_set_members(self, key: str) -> builtins.set[str]:
         """Get all members of a set"""
-        pass
 
 
 class TokenGeneratorPort(ABC):
@@ -102,17 +95,14 @@ class TokenGeneratorPort(ABC):
         self, claims: TokenClaims, expires_delta: timedelta | None = None
     ) -> str:
         """Generate JWT token with claims"""
-        pass
 
     @abstractmethod
     def verify_jwt_token(self, token: str) -> TokenClaims:
         """Verify and decode JWT token"""
-        pass
 
     @abstractmethod
     def generate_secure_token(self, length: int = 32) -> str:
         """Generate cryptographically secure random token"""
-        pass
 
 
 class SecurityConfigPort(ABC):
@@ -121,32 +111,26 @@ class SecurityConfigPort(ABC):
     @abstractmethod
     def get_secret_key(self) -> str:
         """Get JWT secret key"""
-        pass
 
     @abstractmethod
     def get_algorithm(self) -> str:
         """Get JWT algorithm"""
-        pass
 
     @abstractmethod
     def get_access_token_expire_minutes(self) -> int:
         """Get access token expiration in minutes"""
-        pass
 
     @abstractmethod
     def get_refresh_token_expire_days(self) -> int:
         """Get refresh token expiration in days"""
-        pass
 
     @abstractmethod
     def get_session_expire_hours(self) -> int:
         """Get session expiration in hours"""
-        pass
 
     @abstractmethod
     def get_password_reset_expire_minutes(self) -> int:
         """Get password reset token expiration"""
-        pass
 
 
 class UserRepositoryPort(ABC):
@@ -155,17 +139,14 @@ class UserRepositoryPort(ABC):
     @abstractmethod
     def get_user_by_id(self, user_id: str) -> Any | None:
         """Get user by ID"""
-        pass
 
     @abstractmethod
     def get_user_by_email(self, email: str) -> Any | None:
         """Get user by email"""
-        pass
 
     @abstractmethod
     def get_user_by_username(self, username: str) -> Any | None:
         """Get user by username"""
-        pass
 
 
 class HttpClientPort(ABC):
@@ -180,7 +161,6 @@ class HttpClientPort(ABC):
         timeout: int | None = None,
     ) -> dict[str, Any]:
         """Make HTTP GET request"""
-        pass
 
     @abstractmethod
     async def post(
@@ -192,7 +172,6 @@ class HttpClientPort(ABC):
         timeout: int | None = None,
     ) -> dict[str, Any]:
         """Make HTTP POST request"""
-        pass
 
 
 class SecurityEventsPort(ABC):
@@ -201,34 +180,28 @@ class SecurityEventsPort(ABC):
     @abstractmethod
     def log_login_attempt(self, user_id: str, success: bool, request: AuthRequest) -> None:
         """Log login attempt"""
-        pass
 
     @abstractmethod
     def log_session_created(self, user_id: str, session_id: str, request: AuthRequest) -> None:
         """Log session creation"""
-        pass
 
     @abstractmethod
     def log_session_terminated(self, user_id: str, session_id: str, reason: str) -> None:
         """Log session termination"""
-        pass
 
     @abstractmethod
     def log_token_revoked(self, user_id: str, token_id: str, reason: str) -> None:
         """Log token revocation"""
-        pass
 
     @abstractmethod
     def log_password_reset_requested(self, email: str, request: AuthRequest) -> None:
         """Log password reset request"""
-        pass
 
     @abstractmethod
     def log_security_event(
         self, user_id: str | None, event_type: str, details: dict[str, Any]
     ) -> None:
         """Log generic security event"""
-        pass
 
 
 class SecurityService(ABC):
@@ -236,60 +209,52 @@ class SecurityService(ABC):
 
     @abstractmethod
     def create_access_token(
-        self, user: Any, expires_delta: timedelta | None = None, session_id: str | None = None
+        self,
+        user: Any,
+        expires_delta: timedelta | None = None,
+        session_id: str | None = None,
     ) -> str:
         """Create JWT access token"""
-        pass
 
     @abstractmethod
     def create_refresh_token(self, user_id: str, session_id: str) -> str:
         """Create refresh token"""
-        pass
 
     @abstractmethod
     def verify_token(self, token: str) -> TokenClaims:
         """Verify and decode token"""
-        pass
 
     @abstractmethod
     def create_session(self, user: Any, auth_request: AuthRequest) -> SessionInfo:
         """Create user session"""
-        pass
 
     @abstractmethod
     def get_session(self, session_id: str) -> SessionInfo | None:
         """Get session by ID"""
-        pass
 
     @abstractmethod
     def terminate_session(self, session_id: str) -> bool:
         """Terminate session"""
-        pass
 
     @abstractmethod
     def terminate_all_user_sessions(self, user_id: str) -> int:
         """Terminate all user sessions"""
-        pass
 
     @abstractmethod
     def revoke_token(self, token: str) -> bool:
         """Revoke JWT token"""
-        pass
 
     @abstractmethod
     def generate_password_reset_token(self, user_email: str) -> str:
         """Generate password reset token"""
-        pass
 
     @abstractmethod
     def verify_password_reset_token(self, token: str) -> dict[str, Any] | None:
         """Verify password reset token"""
-        pass
 
     @abstractmethod
     def refresh_access_token(self, refresh_token: str) -> str:
         """Refresh access token"""
-        pass
 
 
 __all__ = [

@@ -6,11 +6,11 @@ Unified caching layer for the application.
 
 USE THIS for all caching needs:
     from infra.cache import CacheService
-    
+
     # Production with Redis
     cache = CacheService(redis_url="redis://localhost:6379")
     await cache.set("key", "value", ttl=3600)
-    
+
     # Testing with in-memory
     from infra.cache import InMemoryCacheAdapter
     cache = InMemoryCacheAdapter()

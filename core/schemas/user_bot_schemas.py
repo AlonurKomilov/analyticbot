@@ -9,7 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
-from core.models.user_bot_domain import BotStatus, BotRole
+from core.models.user_bot_domain import BotRole, BotStatus
 
 # ==================== Request Models ====================
 

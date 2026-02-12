@@ -67,9 +67,19 @@ class ContentAnalyzerService:
         self.task_mappings = {
             "sentiment": {0: "positive", 1: "neutral", 2: "negative"},
             "toxicity": {0: "non_toxic", 1: "toxic"},
-            "quality": {0: "very_low", 1: "low", 2: "medium", 3: "high", 4: "very_high"},
+            "quality": {
+                0: "very_low",
+                1: "low",
+                2: "medium",
+                3: "high",
+                4: "very_high",
+            },
             "engagement": {0: "low", 1: "medium", 2: "high", 3: "viral"},
-            "relevance": {0: "irrelevant", 1: "somewhat_relevant", 2: "highly_relevant"},
+            "relevance": {
+                0: "irrelevant",
+                1: "somewhat_relevant",
+                2: "highly_relevant",
+            },
         }
 
         # Initialize components
@@ -219,7 +229,10 @@ class ContentAnalyzerService:
             raise
 
     async def analyze_content_batch(
-        self, content_batch: list[str], include_confidence: bool = True, batch_size: int = 32
+        self,
+        content_batch: list[str],
+        include_confidence: bool = True,
+        batch_size: int = 32,
     ) -> list[dict[str, Any]]:
         """Analyze content in batches for better performance
 
@@ -304,11 +317,9 @@ class ContentAnalyzerService:
                     toxic_prob = 0.0
                 risk_scores["toxicity"] = {
                     "score": float(toxic_prob),
-                    "level": "high"
-                    if toxic_prob > 0.7
-                    else "medium"
-                    if toxic_prob > 0.3
-                    else "low",
+                    "level": (
+                        "high" if toxic_prob > 0.7 else "medium" if toxic_prob > 0.3 else "low"
+                    ),
                     "confidence": float(
                         confidence_metrics.get("toxicity", {}).get("confidence", 0.5)
                     ),
@@ -323,11 +334,9 @@ class ContentAnalyzerService:
                 quality_risk = (4 - int(quality_class)) / 4  # Invert scale
                 risk_scores["quality"] = {
                     "score": float(quality_risk),
-                    "level": "high"
-                    if quality_risk > 0.6
-                    else "medium"
-                    if quality_risk > 0.4
-                    else "low",
+                    "level": (
+                        "high" if quality_risk > 0.6 else "medium" if quality_risk > 0.4 else "low"
+                    ),
                     "quality_rating": self.task_mappings["quality"].get(
                         int(quality_class), "unknown"
                     ),
@@ -346,7 +355,7 @@ class ContentAnalyzerService:
                     sentiment_class = sentiment_class[0] if sentiment_class else 1
                 risk_scores["sentiment"] = {
                     "score": float(neg_prob),
-                    "level": "high" if neg_prob > 0.7 else "medium" if neg_prob > 0.4 else "low",
+                    "level": ("high" if neg_prob > 0.7 else "medium" if neg_prob > 0.4 else "low"),
                     "sentiment": self.task_mappings["sentiment"].get(
                         int(sentiment_class), "unknown"
                     ),
@@ -371,17 +380,15 @@ class ContentAnalyzerService:
             risk_report = {
                 "overall_risk": {
                     "score": float(overall_risk),
-                    "level": "high"
-                    if overall_risk > 0.6
-                    else "medium"
-                    if overall_risk > 0.3
-                    else "low",
+                    "level": (
+                        "high" if overall_risk > 0.6 else "medium" if overall_risk > 0.3 else "low"
+                    ),
                     "safe_for_publication": overall_risk < 0.5,
                 },
                 "individual_risks": risk_scores,
                 "recommendations": recommendations,
                 "assessment_timestamp": datetime.now().isoformat(),
-                "content_preview": content[:100] + "..." if len(content) > 100 else content,
+                "content_preview": (content[:100] + "..." if len(content) > 100 else content),
             }
 
             self.health_stats["risk_assessments"] += 1
@@ -415,9 +422,11 @@ class ContentAnalyzerService:
                 "timestamp": datetime.now().isoformat(),
                 "content_scores": {},
                 "confidence_metrics": {},
-                "text_preview": processed_batch["original_texts"][i][:100] + "..."
-                if len(processed_batch["original_texts"][i]) > 100
-                else processed_batch["original_texts"][i],
+                "text_preview": (
+                    processed_batch["original_texts"][i][:100] + "..."
+                    if len(processed_batch["original_texts"][i]) > 100
+                    else processed_batch["original_texts"][i]
+                ),
             }
 
             # Process each task prediction
@@ -443,9 +452,9 @@ class ContentAnalyzerService:
                 }
 
                 text_result["confidence_metrics"][task_name] = {
-                    "confidence": confidence.item()
-                    if hasattr(confidence, "item")
-                    else float(confidence),
+                    "confidence": (
+                        confidence.item() if hasattr(confidence, "item") else float(confidence)
+                    ),
                     "uncertainty": 1.0
                     - (confidence.item() if hasattr(confidence, "item") else float(confidence)),
                 }
@@ -543,11 +552,13 @@ class ContentAnalyzerService:
 
         return {
             "service_name": "ContentAnalyzerService",
-            "status": "healthy"
-            if self.health_stats["model_loaded"] and self.model is not None
-            else "unhealthy",
+            "status": (
+                "healthy"
+                if self.health_stats["model_loaded"] and self.model is not None
+                else "unhealthy"
+            ),
             "device": str(self.device),
-            "model_info": self.model.get_model_info() if self.model is not None else None,
+            "model_info": (self.model.get_model_info() if self.model is not None else None),
             "health_stats": self.health_stats.copy(),
             "cache_stats": {
                 "enabled": self.cache_analyses,
@@ -557,9 +568,11 @@ class ContentAnalyzerService:
                 "misses": self.cache_misses,
                 "efficiency": cache_efficiency,
             },
-            "processor_stats": self.data_processor.get_processor_stats()
-            if self.data_processor is not None
-            else None,
+            "processor_stats": (
+                self.data_processor.get_processor_stats()
+                if self.data_processor is not None
+                else None
+            ),
             "timestamp": datetime.now().isoformat(),
         }
 

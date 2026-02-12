@@ -159,11 +159,13 @@ class PredictiveAnalysisService(PredictiveAnalysisProtocol):
             return {
                 "predicted_avg_views": round(predicted_views, 2),
                 "trend_factor": round(trend_factor, 3),
-                "trend_direction": "increasing"
-                if trend_factor > 1.1
-                else "decreasing"
-                if trend_factor < 0.9
-                else "stable",
+                "trend_direction": (
+                    "increasing"
+                    if trend_factor > 1.1
+                    else "decreasing"
+                    if trend_factor < 0.9
+                    else "stable"
+                ),
                 "confidence": "medium" if len(views) > 10 else "low",
                 "status": "predicted",
             }
@@ -198,11 +200,13 @@ class PredictiveAnalysisService(PredictiveAnalysisProtocol):
 
             return {
                 "predicted_engagement_trend": round(engagement_trend, 3),
-                "trend_direction": "improving"
-                if engagement_trend > 1.1
-                else "declining"
-                if engagement_trend < 0.9
-                else "stable",
+                "trend_direction": (
+                    "improving"
+                    if engagement_trend > 1.1
+                    else "declining"
+                    if engagement_trend < 0.9
+                    else "stable"
+                ),
                 "current_avg_engagement": round(overall_engagement, 3),
                 "status": "predicted",
             }
@@ -232,11 +236,13 @@ class PredictiveAnalysisService(PredictiveAnalysisProtocol):
             return {
                 "predicted_growth_rate": round(growth_rate * 100, 2),  # Percentage
                 "predicted_follower_change": round(predicted_growth * followers[-1], 0),
-                "growth_trend": "positive"
-                if growth_rate > 0.01
-                else "negative"
-                if growth_rate < -0.01
-                else "stable",
+                "growth_trend": (
+                    "positive"
+                    if growth_rate > 0.01
+                    else "negative"
+                    if growth_rate < -0.01
+                    else "stable"
+                ),
                 "status": "predicted",
             }
 

@@ -233,7 +233,10 @@ class ChurnOrchestratorProtocol(Protocol):
 
     @abstractmethod
     async def comprehensive_churn_analysis(
-        self, channel_id: int, include_predictions: bool = True, include_strategies: bool = True
+        self,
+        channel_id: int,
+        include_predictions: bool = True,
+        include_strategies: bool = True,
     ) -> dict[str, Any]:
         """Perform comprehensive churn analysis and strategy generation"""
         ...

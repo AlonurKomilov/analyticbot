@@ -7,7 +7,10 @@ from the DI container into bot management services.
 
 from apps.di import get_container
 from core.ports.user_bot_repository import IUserBotRepository
-from core.services.system.admin_bot_service import AdminBotService, get_admin_bot_service
+from core.services.system.admin_bot_service import (
+    AdminBotService,
+    get_admin_bot_service,
+)
 from core.services.system.user_bot_service import UserBotService, get_user_bot_service
 
 

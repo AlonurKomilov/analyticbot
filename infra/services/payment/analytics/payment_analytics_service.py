@@ -384,7 +384,9 @@ class PaymentAnalyticsService(PaymentAnalyticsProtocol):
 
             # Determine best performing provider
             best_provider = max(
-                provider_performance.items(), key=lambda x: x[1]["success_rate"], default=(None, {})
+                provider_performance.items(),
+                key=lambda x: x[1]["success_rate"],
+                default=(None, {}),
             )[0]
 
             return {
@@ -474,11 +476,9 @@ class PaymentAnalyticsService(PaymentAnalyticsProtocol):
 
         return {
             "growth_rate": float(growth_rate),
-            "trend": "increasing"
-            if growth_rate > 0
-            else "decreasing"
-            if growth_rate < 0
-            else "stable",
+            "trend": (
+                "increasing" if growth_rate > 0 else "decreasing" if growth_rate < 0 else "stable"
+            ),
         }
 
     async def _get_top_revenue_plans(
@@ -489,7 +489,11 @@ class PaymentAnalyticsService(PaymentAnalyticsProtocol):
         return [
             {"plan_name": "Premium", "revenue": Decimal("8000.00"), "subscribers": 80},
             {"plan_name": "Basic", "revenue": Decimal("3000.00"), "subscribers": 150},
-            {"plan_name": "Enterprise", "revenue": Decimal("5000.00"), "subscribers": 10},
+            {
+                "plan_name": "Enterprise",
+                "revenue": Decimal("5000.00"),
+                "subscribers": 10,
+            },
         ]
 
     async def _get_monthly_churn_rates(
@@ -534,7 +538,13 @@ class PaymentAnalyticsService(PaymentAnalyticsProtocol):
     async def _calculate_cohort_retention(self) -> dict[str, Any]:
         """Calculate cohort retention analysis."""
         # Simplified implementation
-        return {"month_0": 100, "month_1": 85, "month_3": 75, "month_6": 65, "month_12": 55}
+        return {
+            "month_0": 100,
+            "month_1": 85,
+            "month_3": 75,
+            "month_6": 65,
+            "month_12": 55,
+        }
 
     async def _identify_at_risk_customers(self) -> list[str]:
         """Identify customers at risk of churning."""
@@ -693,4 +703,8 @@ class PaymentAnalyticsService(PaymentAnalyticsProtocol):
                 "data_available": len(test_stats) > 0,
             }
         except Exception as e:
-            return {"service": "PaymentAnalyticsService", "status": "unhealthy", "error": str(e)}
+            return {
+                "service": "PaymentAnalyticsService",
+                "status": "unhealthy",
+                "error": str(e),
+            }

@@ -77,18 +77,19 @@ async def lookup_channel(
     - Channel info including name, subscribers, description, etc.
     """
     import os
+
     import aiohttp
-    
+
     # Clean username
     clean_username = username.strip()
     if clean_username.startswith("@"):
         clean_username = clean_username[1:]
-    
+
     try:
         # If Telegram validation service is available, use it (MTProto - best results)
         if telegram_service is not None:
             validation_result = await telegram_service.validate_channel_by_username(username)
-            
+
             if validation_result.is_valid:
                 # Check admin access using USER'S OWN BOT credentials
                 is_admin = None
@@ -122,13 +123,14 @@ async def lookup_channel(
                     is_verified=validation_result.is_verified,
                     is_scam=validation_result.is_scam,
                     is_admin=is_admin,
-                    error_message=validation_result.error_message or (admin_error if not is_admin else None),
+                    error_message=validation_result.error_message
+                    or (admin_error if not is_admin else None),
                 )
 
         # Fallback: Use Bot API directly for public channel lookup
         logger.info(f"Using Bot API fallback for channel lookup: @{clean_username}")
         bot_token = os.getenv("TELEGRAM_BOT_TOKEN") or os.getenv("BOT_TOKEN")
-        
+
         if not bot_token:
             return ChannelLookupResponse(
                 is_valid=False,
@@ -140,7 +142,7 @@ async def lookup_channel(
             url = f"https://api.telegram.org/bot{bot_token}/getChat"
             async with session.post(url, json={"chat_id": f"@{clean_username}"}) as response:
                 data = await response.json()
-                
+
                 if not data.get("ok"):
                     error_desc = data.get("description", "Unknown error")
                     logger.warning(f"Bot API lookup failed for @{clean_username}: {error_desc}")
@@ -158,7 +160,7 @@ async def lookup_channel(
 
                 chat = data.get("result", {})
                 chat_type = chat.get("type")
-                
+
                 # Accept channels and supergroups
                 if chat_type not in ["channel", "supergroup"]:
                     return ChannelLookupResponse(
@@ -176,7 +178,7 @@ async def lookup_channel(
                         telegram_id = int(f"100{raw_id}")
 
                 logger.info(f"Bot API lookup successful for @{clean_username}: id={telegram_id}")
-                
+
                 # Check admin access for current user
                 is_admin = None
                 admin_error = None
@@ -240,14 +242,19 @@ async def _check_user_admin_access(
             )
 
         if not creds:
-            return False, "No verified bot credentials found. Please set up your bot in Settings."
+            return (
+                False,
+                "No verified bot credentials found. Please set up your bot in Settings.",
+            )
 
         # Try checking with user's bot first
         bot_token = creds["bot_token"]
         if bot_token:
             try:
                 # Decrypt bot token if encrypted
-                from core.services.system.encryption_service import get_encryption_service
+                from core.services.system.encryption_service import (
+                    get_encryption_service,
+                )
 
                 encryption = get_encryption_service()
                 try:
@@ -266,7 +273,9 @@ async def _check_user_admin_access(
         if creds["mtproto_enabled"] and creds["session_string"]:
             try:
                 # Decrypt MTProto credentials
-                from core.services.system.encryption_service import get_encryption_service
+                from core.services.system.encryption_service import (
+                    get_encryption_service,
+                )
 
                 encryption = get_encryption_service()
                 try:
@@ -393,7 +402,10 @@ async def _check_mtproto_admin(
             participant = await client(GetParticipantRequest(channel=entity, participant=me))
             participant_type = type(participant.participant).__name__
 
-            is_admin = participant_type in ["ChannelParticipantAdmin", "ChannelParticipantCreator"]
+            is_admin = participant_type in [
+                "ChannelParticipantAdmin",
+                "ChannelParticipantCreator",
+            ]
 
             await client.disconnect()
             return is_admin

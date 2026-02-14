@@ -434,11 +434,11 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         Domain model: SCHEDULED, PUBLISHED, FAILED, DRAFT, CANCELLED
         """
         mapping = {
-            PostStatus.SCHEDULED: "pending",      # scheduled → pending
-            PostStatus.DRAFT: "pending",          # draft → pending
-            PostStatus.PUBLISHED: "sent",         # published → sent
-            PostStatus.FAILED: "error",           # failed → error
-            PostStatus.CANCELLED: "error",        # cancelled → error
+            PostStatus.SCHEDULED: "pending",  # scheduled → pending
+            PostStatus.DRAFT: "pending",  # draft → pending
+            PostStatus.PUBLISHED: "sent",  # published → sent
+            PostStatus.FAILED: "error",  # failed → error
+            PostStatus.CANCELLED: "error",  # cancelled → error
         }
         return mapping.get(status, "pending")
 

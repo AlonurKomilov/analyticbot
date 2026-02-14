@@ -7,8 +7,7 @@ This enables dependency injection and easy testing with mocks.
 """
 
 from abc import abstractmethod
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Protocol
 
 
 class PredictorProtocol(Protocol):

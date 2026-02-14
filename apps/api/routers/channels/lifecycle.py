@@ -41,7 +41,9 @@ async def activate_channel(
 
         with performance_timer("channel_activation"):
             await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data={"is_active": True}
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data={"is_active": True},
             )
 
         logger.info(f"Channel activated successfully: {channel_id} by user {current_user['id']}")
@@ -81,7 +83,9 @@ async def deactivate_channel(
 
         with performance_timer("channel_deactivation"):
             await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data={"is_active": False}
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data={"is_active": False},
             )
 
         logger.info(f"Channel deactivated successfully: {channel_id} by user {current_user['id']}")

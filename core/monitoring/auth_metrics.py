@@ -48,7 +48,10 @@ class AuthMetrics:
         self.login_attempts_total = Counter(
             "auth_login_attempts_total",
             "Total number of login attempts",
-            ["method", "status"],  # method: password/telegram/oauth, status: success/failure
+            [
+                "method",
+                "status",
+            ],  # method: password/telegram/oauth, status: success/failure
         )
 
         self.login_duration_seconds = Histogram(
@@ -138,7 +141,9 @@ class AuthMetrics:
     # ===== Login Metrics Methods =====
 
     def record_login_attempt(
-        self, method: Literal["password", "telegram", "oauth"] = "password", success: bool = True
+        self,
+        method: Literal["password", "telegram", "oauth"] = "password",
+        success: bool = True,
     ):
         """Record a login attempt"""
 
@@ -147,14 +152,18 @@ class AuthMetrics:
         logger.debug(f"📊 Login attempt: method={method}, status={status}")
 
     def record_login_duration(
-        self, duration_seconds: float, method: Literal["password", "telegram", "oauth"] = "password"
+        self,
+        duration_seconds: float,
+        method: Literal["password", "telegram", "oauth"] = "password",
     ):
         """Record login operation duration"""
 
         self.login_duration_seconds.labels(method=method).observe(duration_seconds)
 
     def record_login_success(
-        self, user_id: str, method: Literal["password", "telegram", "oauth"] = "password"
+        self,
+        user_id: str,
+        method: Literal["password", "telegram", "oauth"] = "password",
     ):
         """Convenience method to record successful login"""
         self.record_login_attempt(method=method, success=True)
@@ -173,7 +182,9 @@ class AuthMetrics:
     # ===== Token Metrics Methods =====
 
     def record_token_operation(
-        self, operation: Literal["create", "validate", "refresh", "revoke"], success: bool = True
+        self,
+        operation: Literal["create", "validate", "refresh", "revoke"],
+        success: bool = True,
     ):
         """Record a token operation"""
 
@@ -247,7 +258,11 @@ class AuthMetrics:
     def record_security_event(
         self,
         event_type: Literal[
-            "account_locked", "password_reset", "suspicious_activity", "mfa_enabled", "mfa_disabled"
+            "account_locked",
+            "password_reset",
+            "suspicious_activity",
+            "mfa_enabled",
+            "mfa_disabled",
         ],
     ):
         """Record security event"""

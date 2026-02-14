@@ -29,9 +29,27 @@ class MockAIService(AIServiceProtocol):
         ]
 
         self.hashtag_pools = {
-            "technology": ["#tech", "#innovation", "#AI", "#digitaltransformation", "#startup"],
-            "business": ["#business", "#entrepreneur", "#success", "#growth", "#marketing"],
-            "social": ["#socialmedia", "#content", "#engagement", "#community", "#viral"],
+            "technology": [
+                "#tech",
+                "#innovation",
+                "#AI",
+                "#digitaltransformation",
+                "#startup",
+            ],
+            "business": [
+                "#business",
+                "#entrepreneur",
+                "#success",
+                "#growth",
+                "#marketing",
+            ],
+            "social": [
+                "#socialmedia",
+                "#content",
+                "#engagement",
+                "#community",
+                "#viral",
+            ],
             "general": ["#trending", "#amazing", "#awesome", "#must_see", "#daily"],
         }
 
@@ -44,7 +62,11 @@ class MockAIService(AIServiceProtocol):
             "service": "ai",
             "status": "healthy",
             "demo_mode": True,
-            "ai_models_loaded": ["content_generator", "engagement_predictor", "hashtag_optimizer"],
+            "ai_models_loaded": [
+                "content_generator",
+                "engagement_predictor",
+                "hashtag_optimizer",
+            ],
         }
 
     async def generate_content_suggestions(self, channel_id: str, topic: str) -> list[str]:

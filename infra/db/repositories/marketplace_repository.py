@@ -198,7 +198,11 @@ class MarketplaceRepository:
                     item_id,
                 )
 
-                return {"success": True, "purchase_id": purchase_id, "credits_spent": price}
+                return {
+                    "success": True,
+                    "purchase_id": purchase_id,
+                    "credits_spent": price,
+                }
 
     async def get_user_purchases(self, user_id: int) -> list[dict[str, Any]]:
         """Get all purchases for a user."""
@@ -303,7 +307,11 @@ class MarketplaceRepository:
     # ==================== CREDIT GIFTING ====================
 
     async def send_gift(
-        self, sender_id: int, recipient_username: str, amount: int, message: str | None = None
+        self,
+        sender_id: int,
+        recipient_username: str,
+        amount: int,
+        message: str | None = None,
     ) -> dict[str, Any]:
         """Send credits as a gift to another user."""
 
@@ -321,7 +329,10 @@ class MarketplaceRepository:
                     return {"success": False, "error": "User not found"}
 
                 if recipient["id"] == sender_id:
-                    return {"success": False, "error": "Cannot send credits to yourself"}
+                    return {
+                        "success": False,
+                        "error": "Cannot send credits to yourself",
+                    }
 
                 # Check sender balance
                 balance = await conn.fetchval(

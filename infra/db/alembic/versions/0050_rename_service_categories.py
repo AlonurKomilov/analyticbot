@@ -11,8 +11,6 @@ Create Date: 2025-12-14
 """
 
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic
 revision = "0050_rename_categories"
@@ -23,14 +21,14 @@ depends_on = None
 
 def upgrade() -> None:
     """Rename service categories for clarity"""
-    
+
     # Update bot_moderation to bot_service
     op.execute("""
         UPDATE marketplace_services 
         SET category = 'bot_service' 
         WHERE category = 'bot_moderation'
     """)
-    
+
     # Update mtproto_access to mtproto_services
     op.execute("""
         UPDATE marketplace_services 
@@ -41,14 +39,14 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Revert category name changes"""
-    
+
     # Revert bot_service to bot_moderation
     op.execute("""
         UPDATE marketplace_services 
         SET category = 'bot_moderation' 
         WHERE category = 'bot_service'
     """)
-    
+
     # Revert mtproto_services to mtproto_access
     op.execute("""
         UPDATE marketplace_services 

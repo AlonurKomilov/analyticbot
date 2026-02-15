@@ -60,7 +60,12 @@ def validate_helm_structure():
 
     # Test 3: Non-templated YAML validation
     print("\n📝 Test 3: Non-Templated YAML Files")
-    yaml_files = ["Chart.yaml", "values.yaml", "values-production.yaml", "values-staging.yaml"]
+    yaml_files = [
+        "Chart.yaml",
+        "values.yaml",
+        "values-production.yaml",
+        "values-staging.yaml",
+    ]
 
     for yaml_file in yaml_files:
         file_path = Path(yaml_file)
@@ -165,7 +170,12 @@ def check_helm_readiness():
     checks = []
 
     # Check 1: All required files present
-    required_files = ["Chart.yaml", "values.yaml", "values-production.yaml", "values-staging.yaml"]
+    required_files = [
+        "Chart.yaml",
+        "values.yaml",
+        "values-production.yaml",
+        "values-staging.yaml",
+    ]
     all_files_present = all(Path(f).exists() for f in required_files)
     checks.append(("Required files present", all_files_present))
 

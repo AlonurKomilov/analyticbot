@@ -49,7 +49,7 @@ def main() -> None:
 
     # Configure DI container
     configure_container()
-    
+
     # Configure container with settings
     container.config.from_dict(settings.model_dump())
 

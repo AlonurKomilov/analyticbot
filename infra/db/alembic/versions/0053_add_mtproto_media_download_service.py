@@ -11,7 +11,6 @@ Create Date: 2025-12-17
 
 from alembic import op
 
-
 # revision identifiers, used by Alembic
 revision = "0053_add_media_download"
 down_revision = "0052_seed_categories"
@@ -21,9 +20,8 @@ depends_on = None
 
 def upgrade() -> None:
     """Add mtproto_media_download service to marketplace_services"""
-    
-    op.execute(
-        """
+
+    op.execute("""
         INSERT INTO marketplace_services (
             service_key, name, description, short_description,
             price_credits_monthly, price_credits_yearly,
@@ -56,14 +54,11 @@ def upgrade() -> None:
             true
         )
         ON CONFLICT (service_key) DO NOTHING;
-    """
-    )
+    """)
 
 
 def downgrade() -> None:
     """Remove mtproto_media_download service"""
-    op.execute(
-        """
+    op.execute("""
         DELETE FROM marketplace_services WHERE service_key = 'mtproto_media_download'
-    """
-    )
+    """)

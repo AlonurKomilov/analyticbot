@@ -6,7 +6,6 @@ Manages user's AI provider API keys (encrypted storage).
 """
 
 import logging
-from typing import Optional
 from datetime import datetime
 from decimal import Decimal
 
@@ -19,17 +18,17 @@ logger = logging.getLogger(__name__)
 
 class UserAIProvidersRepository:
     """Repository for user AI provider management."""
-    
+
     def __init__(self, pool: asyncpg.Pool):
         """
         Initialize repository.
-        
+
         Args:
             pool: AsyncPG connection pool
         """
         self.pool = pool
         self.encryption = get_encryption()
-    
+
     async def add_provider(
         self,
         user_id: int,
@@ -37,12 +36,12 @@ class UserAIProvidersRepository:
         api_key: str,
         model_preference: str,
         is_default: bool = False,
-        monthly_budget_usd: Optional[Decimal] = None,
-        config: Optional[dict] = None,
+        monthly_budget_usd: Decimal | None = None,
+        config: dict | None = None,
     ) -> dict:
         """
         Add or update user's AI provider.
-        
+
         Args:
             user_id: User ID
             provider_name: Provider name (openai, claude, etc.)
@@ -51,13 +50,13 @@ class UserAIProvidersRepository:
             is_default: Set as default provider
             monthly_budget_usd: Optional monthly budget
             config: Provider-specific config
-            
+
         Returns:
             Created/updated provider record
         """
         # Encrypt API key
         api_key_encrypted = self.encryption.encrypt(api_key)
-        
+
         async with self.pool.acquire() as conn:
             # If setting as default, unset other defaults
             if is_default:
@@ -70,7 +69,7 @@ class UserAIProvidersRepository:
                     user_id,
                     provider_name,
                 )
-            
+
             # Insert or update
             row = await conn.fetchrow(
                 """
@@ -101,28 +100,27 @@ class UserAIProvidersRepository:
                 monthly_budget_usd,
                 config or {},
             )
-            
+
             logger.info(
-                f"Added AI provider {provider_name} for user {user_id} "
-                f"(default={is_default})"
+                f"Added AI provider {provider_name} for user {user_id} (default={is_default})"
             )
-            
+
             return dict(row)
-    
+
     async def get_provider(
         self,
         user_id: int,
         provider_name: str,
         decrypt_key: bool = False,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Get user's AI provider configuration.
-        
+
         Args:
             user_id: User ID
             provider_name: Provider name
             decrypt_key: If True, decrypt the API key
-            
+
         Returns:
             Provider record or None
         """
@@ -140,36 +138,34 @@ class UserAIProvidersRepository:
                 user_id,
                 provider_name,
             )
-            
+
             if not row:
                 return None
-            
+
             result = dict(row)
-            
+
             # Decrypt API key if requested
             if decrypt_key:
-                result["api_key"] = self.encryption.decrypt(
-                    result["api_key_encrypted"]
-                )
-            
+                result["api_key"] = self.encryption.decrypt(result["api_key_encrypted"])
+
             # Remove encrypted key from response
             if not decrypt_key:
                 result.pop("api_key_encrypted", None)
-            
+
             return result
-    
+
     async def get_default_provider(
         self,
         user_id: int,
         decrypt_key: bool = False,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Get user's default AI provider.
-        
+
         Args:
             user_id: User ID
             decrypt_key: If True, decrypt the API key
-            
+
         Returns:
             Default provider record or None
         """
@@ -189,22 +185,20 @@ class UserAIProvidersRepository:
                 """,
                 user_id,
             )
-            
+
             if not row:
                 return None
-            
+
             result = dict(row)
-            
+
             if decrypt_key:
-                result["api_key"] = self.encryption.decrypt(
-                    result["api_key_encrypted"]
-                )
-            
+                result["api_key"] = self.encryption.decrypt(result["api_key_encrypted"])
+
             if not decrypt_key:
                 result.pop("api_key_encrypted", None)
-            
+
             return result
-    
+
     async def list_user_providers(
         self,
         user_id: int,
@@ -212,11 +206,11 @@ class UserAIProvidersRepository:
     ) -> list[dict]:
         """
         List all providers for a user.
-        
+
         Args:
             user_id: User ID
             active_only: Only return active providers
-            
+
         Returns:
             List of provider records (without decrypted keys)
         """
@@ -229,23 +223,23 @@ class UserAIProvidersRepository:
                 FROM user_ai_providers
                 WHERE user_id = $1
             """
-            
+
             if active_only:
                 query += " AND is_active = TRUE"
-            
+
             query += " ORDER BY is_default DESC, created_at DESC"
-            
+
             rows = await conn.fetch(query, user_id)
             return [dict(row) for row in rows]
-    
+
     async def remove_provider(self, user_id: int, provider_name: str) -> bool:
         """
         Remove (deactivate) a provider.
-        
+
         Args:
             user_id: User ID
             provider_name: Provider name
-            
+
         Returns:
             True if provider was removed
         """
@@ -258,14 +252,14 @@ class UserAIProvidersRepository:
                 user_id,
                 provider_name,
             )
-            
+
             removed = result.split()[-1] == "1"
-            
+
             if removed:
                 logger.info(f"Removed AI provider {provider_name} for user {user_id}")
-            
+
             return removed
-    
+
     async def update_spending(
         self,
         user_id: int,
@@ -275,7 +269,7 @@ class UserAIProvidersRepository:
     ) -> None:
         """
         Update spending for current month.
-        
+
         Args:
             user_id: User ID
             provider_name: Provider name
@@ -296,10 +290,10 @@ class UserAIProvidersRepository:
                 provider_name,
                 cost_usd,
             )
-            
+
             # Update monthly spending tracking
             month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            
+
             await conn.execute(
                 """
                 INSERT INTO user_ai_spending (
@@ -320,19 +314,19 @@ class UserAIProvidersRepository:
                 cost_usd,
                 tokens_used,
             )
-    
+
     async def check_budget(
         self,
         user_id: int,
         provider_name: str,
-    ) -> tuple[bool, Optional[Decimal], Optional[Decimal]]:
+    ) -> tuple[bool, Decimal | None, Decimal | None]:
         """
         Check if user is within budget.
-        
+
         Args:
             user_id: User ID
             provider_name: Provider name
-            
+
         Returns:
             Tuple of (within_budget, budget_limit, current_spent)
         """
@@ -346,18 +340,18 @@ class UserAIProvidersRepository:
                 user_id,
                 provider_name,
             )
-            
+
             if not row:
                 return True, None, None
-            
+
             budget = row["monthly_budget_usd"]
             spent = row["current_month_spent_usd"]
-            
+
             # No budget limit set
             if budget is None:
                 return True, None, spent
-            
+
             # Check if within budget
             within_budget = spent < budget
-            
+
             return within_budget, budget, spent

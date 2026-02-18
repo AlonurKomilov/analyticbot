@@ -220,14 +220,15 @@ async def get_top_posts(
             post_data = TopPostMetrics(
                 msg_id=record["msg_id"],
                 date=record["date"].isoformat() if record["date"] else "",
-                text=record["text"][:200] if record["text"] else "",  # Truncate for API response
+                text=(record["text"][:200] if record["text"] else ""),  # Truncate for API response
                 views=record["views"] or 0,
                 forwards=record["forwards"] or 0,
                 comments_count=record["comments_count"] or 0,
                 replies_count=record["replies_count"] or 0,
                 reactions_count=record["reactions_count"] or 0,
                 engagement_rate=round(
-                    float(record["engagement_rate"]) if record["engagement_rate"] else 0, 2
+                    (float(record["engagement_rate"]) if record["engagement_rate"] else 0),
+                    2,
                 ),
             )
             top_posts.append(post_data)

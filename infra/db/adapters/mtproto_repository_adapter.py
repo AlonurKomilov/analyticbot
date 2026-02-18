@@ -12,7 +12,10 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.ports.mtproto_repository import IMTProtoAuditRepository, IMTProtoChannelRepository
+from core.ports.mtproto_repository import (
+    IMTProtoAuditRepository,
+    IMTProtoChannelRepository,
+)
 from infra.db.models.user_bot_orm import MTProtoAuditLog
 
 logger = logging.getLogger(__name__)

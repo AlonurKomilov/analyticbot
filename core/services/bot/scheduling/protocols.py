@@ -97,9 +97,7 @@ class ScheduleRepository(Protocol):
         """
         ...
 
-    async def count_posts(
-        self, user_id: int | None = None, channel_id: int | None = None
-    ) -> int:
+    async def count_posts(self, user_id: int | None = None, channel_id: int | None = None) -> int:
         """
         Count total posts with optional filters
 

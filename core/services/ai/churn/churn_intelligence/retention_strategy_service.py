@@ -57,7 +57,10 @@ class RetentionStrategyService(RetentionStrategyProtocol):
         # Strategy resource requirements
         self.resource_requirements = {
             RetentionStrategy.ENGAGEMENT_BOOST: {"effort": "medium", "cost": "low"},
-            RetentionStrategy.CONTENT_PERSONALIZATION: {"effort": "high", "cost": "medium"},
+            RetentionStrategy.CONTENT_PERSONALIZATION: {
+                "effort": "high",
+                "cost": "medium",
+            },
             RetentionStrategy.INCENTIVE_OFFER: {"effort": "low", "cost": "high"},
             RetentionStrategy.SUPPORT_OUTREACH: {"effort": "high", "cost": "low"},
             RetentionStrategy.FEATURE_EDUCATION: {"effort": "medium", "cost": "low"},
@@ -169,7 +172,8 @@ class RetentionStrategyService(RetentionStrategyProtocol):
 
             # Prioritize recommendations by ROI
             recommendations.sort(
-                key=lambda r: r.success_probability * self._calculate_segment_size(r), reverse=True
+                key=lambda r: r.success_probability * self._calculate_segment_size(r),
+                reverse=True,
             )
 
             logger.info(
@@ -383,7 +387,10 @@ class RetentionStrategyService(RetentionStrategyProtocol):
     def _calculate_priority(self, risk_profile: ChurnRiskProfile) -> str:
         """Calculate intervention priority"""
 
-        if risk_profile.risk_level in [ChurnRiskLevel.CRITICAL, ChurnRiskLevel.VERY_HIGH]:
+        if risk_profile.risk_level in [
+            ChurnRiskLevel.CRITICAL,
+            ChurnRiskLevel.VERY_HIGH,
+        ]:
             return "critical"
         elif risk_profile.risk_level == ChurnRiskLevel.HIGH:
             return "high"

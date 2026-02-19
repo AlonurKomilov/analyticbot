@@ -1,7 +1,7 @@
 """
 Media Download Service - Bulk media downloads from channels
 
-Marketplace service: mtproto_media_download  
+Marketplace service: mtproto_media_download
 Price: 75 credits/month
 
 Features:
@@ -18,14 +18,13 @@ from typing import Any
 
 from core.services.mtproto.features.base_mtproto_service import BaseMTProtoService
 
-
 logger = logging.getLogger(__name__)
 
 
 class MediaDownloadService(BaseMTProtoService):
     """
     Bulk media download service for MTProto users.
-    
+
     Allows users to download media files from channels
     in bulk with progress tracking.
     """
@@ -40,7 +39,7 @@ class MediaDownloadService(BaseMTProtoService):
     ):
         """
         Initialize media download service.
-        
+
         Args:
             user_id: User's ID
             feature_gate_service: Service for access control
@@ -60,7 +59,7 @@ class MediaDownloadService(BaseMTProtoService):
     async def execute(self, **kwargs) -> dict[str, Any]:
         """
         Download media files from messages.
-        
+
         Args:
             channel_id: Channel/chat ID to download from
             message_ids: List of message IDs with media (optional)
@@ -68,7 +67,7 @@ class MediaDownloadService(BaseMTProtoService):
             media_types: List of media types to download (photo, video, document)
             start_date: Download media from this date onwards (optional)
             end_date: Download media until this date (optional)
-            
+
         Returns:
             dict with download results
         """
@@ -78,29 +77,29 @@ class MediaDownloadService(BaseMTProtoService):
         media_types = kwargs.get("media_types", ["photo", "video", "document"])
         start_date = kwargs.get("start_date")
         end_date = kwargs.get("end_date")
-        
+
         if not channel_id:
             return {
                 "error": "Missing required parameter: channel_id",
                 "downloaded_files": [],
             }
-        
+
         if not self.mtproto_client:
             return {
                 "error": "MTProto client not available",
                 "downloaded_files": [],
             }
-        
+
         try:
             downloaded_files = []
             failed_downloads = []
             skipped_count = 0
-            
+
             logger.info(
                 f"[MediaDownload] User {self.user_id} - Starting download from channel {channel_id}: "
                 f"limit={limit}, types={media_types}"
             )
-            
+
             # If specific message IDs provided, download those
             if message_ids:
                 for msg_id in message_ids[:limit]:
@@ -109,17 +108,17 @@ class MediaDownloadService(BaseMTProtoService):
                         message_id=msg_id,
                         media_types=media_types,
                     )
-                    
+
                     if result["success"]:
                         downloaded_files.append(result)
                     elif result.get("skipped"):
                         skipped_count += 1
                     else:
                         failed_downloads.append(result)
-                    
+
                     if len(downloaded_files) >= limit:
                         break
-            
+
             # Otherwise, iterate through messages and download media
             else:
                 downloaded_count = 0
@@ -132,18 +131,18 @@ class MediaDownloadService(BaseMTProtoService):
                         continue
                     if end_date and message.date > end_date:
                         continue
-                    
+
                     # Skip if no media
                     if not message.media:
                         continue
-                    
+
                     result = await self._download_message_media(
                         channel_id=channel_id,
                         message_id=message.id,
                         message=message,
                         media_types=media_types,
                     )
-                    
+
                     if result["success"]:
                         downloaded_files.append(result)
                         downloaded_count += 1
@@ -151,15 +150,15 @@ class MediaDownloadService(BaseMTProtoService):
                         skipped_count += 1
                     else:
                         failed_downloads.append(result)
-                    
+
                     if downloaded_count >= limit:
                         break
-            
+
             logger.info(
                 f"[MediaDownload] User {self.user_id} - Downloaded {len(downloaded_files)} files, "
                 f"failed {len(failed_downloads)}, skipped {skipped_count}"
             )
-            
+
             return {
                 "downloaded_files": downloaded_files,
                 "failed_downloads": failed_downloads,
@@ -168,7 +167,7 @@ class MediaDownloadService(BaseMTProtoService):
                 "skipped_count": skipped_count,
                 "channel_id": channel_id,
             }
-            
+
         except Exception as e:
             logger.error(
                 f"[MediaDownload] Failed to download media for user {self.user_id}: {e}",
@@ -189,18 +188,18 @@ class MediaDownloadService(BaseMTProtoService):
     ) -> dict:
         """
         Download media from a specific message.
-        
+
         Args:
             channel_id: Channel ID
             message_id: Message ID
             message: Message object (if already fetched)
             media_types: Allowed media types
-            
+
         Returns:
             dict with download result
         """
         media_types = media_types or ["photo", "video", "document"]
-        
+
         try:
             # Fetch message if not provided
             if not message:
@@ -211,36 +210,38 @@ class MediaDownloadService(BaseMTProtoService):
                     "skipped": True,
                     "reason": "Message object required",
                 }
-            
+
             # Determine media type
             media_type = self._get_media_type(message)
-            
+
             if media_type not in media_types:
                 return {
                     "success": False,
                     "skipped": True,
                     "reason": f"Media type {media_type} not in allowed types",
                 }
-            
+
             # Create filename
             timestamp = message.date.strftime("%Y%m%d_%H%M%S") if message.date else "unknown"
             filename = f"{channel_id}_{message_id}_{timestamp}_{media_type}"
-            
+
             # In production, would actually download the file:
             # file_path = await self.mtproto_client.download_media(message, file=self.download_path / filename)
-            
+
             # For now, return placeholder success
             file_path = str(self.download_path / filename)
-            
+
             return {
                 "success": True,
                 "message_id": message_id,
                 "media_type": media_type,
                 "file_path": file_path,
-                "file_size": getattr(message.media, "size", 0) if hasattr(message, "media") else 0,
+                "file_size": (
+                    getattr(message.media, "size", 0) if hasattr(message, "media") else 0
+                ),
                 "date": message.date.isoformat() if message.date else None,
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to download media from message {message_id}: {e}")
             return {
@@ -253,9 +254,9 @@ class MediaDownloadService(BaseMTProtoService):
         """Determine the type of media in a message."""
         if not message.media:
             return "none"
-        
+
         media_class_name = message.media.__class__.__name__
-        
+
         if "Photo" in media_class_name:
             return "photo"
         elif "Video" in media_class_name or "Document" in media_class_name:

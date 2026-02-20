@@ -40,7 +40,9 @@ class BotHealthMetricOrm(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
 
     # Health status
-    status: Mapped[str] = mapped_column(String(20), nullable=False)  # healthy, degraded, unhealthy, suspended
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # healthy, degraded, unhealthy, suspended
 
     # Success/failure metrics
     total_requests: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

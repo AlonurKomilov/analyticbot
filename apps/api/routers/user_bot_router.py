@@ -60,7 +60,10 @@ async def get_user_bot_repository() -> IUserBotRepository:
     response_model=BotCreatedResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid bot token or user already has a bot"},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid bot token or user already has a bot",
+        },
         429: {"description": "Too many bot creation attempts"},
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
@@ -99,19 +102,23 @@ async def create_user_bot(
             # Return specific error based on validation status
             if validation_result.status == TokenValidationStatus.INVALID_FORMAT:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail=validation_result.message
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=validation_result.message,
                 )
             elif validation_result.status == TokenValidationStatus.UNAUTHORIZED:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail=validation_result.message
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=validation_result.message,
                 )
             elif validation_result.status == TokenValidationStatus.REVOKED:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail=validation_result.message
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=validation_result.message,
                 )
             elif validation_result.status == TokenValidationStatus.TIMEOUT:
                 raise HTTPException(
-                    status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=validation_result.message
+                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                    detail=validation_result.message,
                 )
             elif validation_result.status == TokenValidationStatus.NETWORK_ERROR:
                 raise HTTPException(
@@ -120,7 +127,8 @@ async def create_user_bot(
                 )
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail=validation_result.message
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=validation_result.message,
                 )
 
         logger.info(
@@ -238,7 +246,7 @@ async def get_bot_status(
     """
     try:
         logger.info(f"🔍 Getting bot status for user_id={user_id}")
-        service = await create_admin_bot_service(repository)
+        await create_admin_bot_service(repository)
         credentials = await repository.get_by_user_id(user_id)
         logger.info(f"📊 Credentials result: {credentials}")
 
@@ -307,7 +315,9 @@ async def verify_bot(
     - **test_chat_id**: Chat ID to send test message to (required if send_test_message=true)
     """
     logger.info(f"[VERIFY BOT] Received verify request for user {user_id}")
-    logger.info(f"[VERIFY BOT] Request data: send_test_message={verify_request.send_test_message}, test_chat_id={verify_request.test_chat_id}")
+    logger.info(
+        f"[VERIFY BOT] Request data: send_test_message={verify_request.send_test_message}, test_chat_id={verify_request.test_chat_id}"
+    )
     try:
         service = await create_admin_bot_service(repository)
 
@@ -316,13 +326,15 @@ async def verify_bot(
         if verify_request.send_test_message and not test_chat_id:
             # Get user's telegram_id from database
             from apps.di import get_container
+
             container = get_container()
             session_factory = await container.database.async_session_maker()
             async with session_factory() as session:
                 from sqlalchemy import text
+
                 result = await session.execute(
                     text("SELECT telegram_id, username FROM users WHERE id = :user_id"),
-                    {"user_id": user_id}
+                    {"user_id": user_id},
                 )
                 row = result.fetchone()
                 if row and row[0]:
@@ -331,7 +343,9 @@ async def verify_bot(
                 else:
                     # User logged in via email, not Telegram
                     username = row[1] if row else "Unknown"
-                    logger.warning(f"[VERIFY BOT] User {user_id} ({username}) has no telegram_id - logged in via email")
+                    logger.warning(
+                        f"[VERIFY BOT] User {user_id} ({username}) has no telegram_id - logged in via email"
+                    )
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=(
@@ -350,8 +364,10 @@ async def verify_bot(
             test_chat_id=test_chat_id,
             test_message=verify_request.test_message,
         )
-        
-        logger.info(f"[VERIFY BOT] Verification result for user {user_id}: success={success}, message={message}")
+
+        logger.info(
+            f"[VERIFY BOT] Verification result for user {user_id}: success={success}, message={message}"
+        )
 
         if not success and "No bot found" in message:
             raise HTTPException(

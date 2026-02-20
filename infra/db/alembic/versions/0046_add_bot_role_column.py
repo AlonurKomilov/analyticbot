@@ -21,7 +21,7 @@ depends_on = None
 
 def upgrade() -> None:
     """Add role column to user_bot_credentials table."""
-    
+
     # Add role column with default 'user' for existing records
     op.add_column(
         "user_bot_credentials",
@@ -30,31 +30,23 @@ def upgrade() -> None:
             sa.String(20),
             nullable=False,
             server_default="user",
-            comment="Bot role: 'system' for system-owned, 'user' for user-owned bots"
-        )
+            comment="Bot role: 'system' for system-owned, 'user' for user-owned bots",
+        ),
     )
-    
+
     # Add index for efficient role-based filtering
-    op.create_index(
-        "idx_bot_credentials_role",
-        "user_bot_credentials",
-        ["role"]
-    )
-    
+    op.create_index("idx_bot_credentials_role", "user_bot_credentials", ["role"])
+
     # Add composite index for common query pattern (role + status)
-    op.create_index(
-        "idx_bot_credentials_role_status",
-        "user_bot_credentials",
-        ["role", "status"]
-    )
+    op.create_index("idx_bot_credentials_role_status", "user_bot_credentials", ["role", "status"])
 
 
 def downgrade() -> None:
     """Remove role column from user_bot_credentials table."""
-    
+
     # Drop indexes first
     op.drop_index("idx_bot_credentials_role_status", table_name="user_bot_credentials")
     op.drop_index("idx_bot_credentials_role", table_name="user_bot_credentials")
-    
+
     # Drop column
     op.drop_column("user_bot_credentials", "role")

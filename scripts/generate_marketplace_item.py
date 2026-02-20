@@ -10,10 +10,9 @@ Usage:
 """
 
 import argparse
-import os
 import re
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Base paths
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -24,25 +23,25 @@ CORE_SRC = PROJECT_ROOT / "core"
 
 def to_snake_case(name: str) -> str:
     """Convert name to snake_case"""
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower().replace(' ', '_').replace('-', '_')
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower().replace(" ", "_").replace("-", "_")
 
 
 def to_pascal_case(name: str) -> str:
     """Convert name to PascalCase"""
-    return ''.join(word.capitalize() for word in name.replace('-', ' ').replace('_', ' ').split())
+    return "".join(word.capitalize() for word in name.replace("-", " ").replace("_", " ").split())
 
 
 def to_kebab_case(name: str) -> str:
     """Convert name to kebab-case"""
-    return to_snake_case(name).replace('_', '-')
+    return to_snake_case(name).replace("_", "-")
 
 
 def generate_service_config_component(name: str, service_key: str, category: str) -> str:
     """Generate React config component for a service"""
     pascal_name = to_pascal_case(name)
-    
-    return f'''/**
+
+    return f"""/**
  * {name} Configuration
  * Service Key: {service_key}
  * Category: {category}
@@ -194,14 +193,14 @@ export const {pascal_name}Config: React.FC<Props> = ({{ chatId }}) => {{
     </Box>
   );
 }};
-'''
+"""
 
 
 def generate_service_handler(name: str, service_key: str, category: str) -> str:
     """Generate Python handler for a service"""
     pascal_name = to_pascal_case(name)
     snake_name = to_snake_case(name)
-    
+
     return f'''"""
 {name} Service Handler
 Service Key: {service_key}
@@ -342,7 +341,7 @@ class {pascal_name}Handler:
 
 def generate_service_seed(name: str, service_key: str, category: str, price: int) -> str:
     """Generate SQL seed for a service"""
-    return f'''-- {name} Service Seed
+    return f"""-- {name} Service Seed
 -- Generated: {datetime.now().strftime("%Y-%m-%d")}
 
 INSERT INTO marketplace_services (
@@ -380,15 +379,15 @@ INSERT INTO marketplace_services (
     NOW(),
     NOW()
 ) ON CONFLICT (service_key) DO NOTHING;
-'''
+"""
 
 
 def generate_theme_files(name: str) -> tuple[str, str]:
     """Generate theme definition files"""
-    pascal_name = to_pascal_case(name)
+    to_pascal_case(name)
     kebab_name = to_kebab_case(name)
-    
-    theme_ts = f'''/**
+
+    theme_ts = f"""/**
  * {name} Theme
  * Generated: {datetime.now().strftime("%Y-%m-%d")}
  */
@@ -468,9 +467,9 @@ export const themeMetadata = {{
 }};
 
 export default {to_snake_case(name)}Theme;
-'''
-    
-    seed_sql = f'''-- {name} Theme Seed
+"""
+
+    seed_sql = f"""-- {name} Theme Seed
 -- Generated: {datetime.now().strftime("%Y-%m-%d")}
 
 INSERT INTO marketplace_items (
@@ -504,8 +503,8 @@ INSERT INTO marketplace_items (
     NOW(),
     NOW()
 ) ON CONFLICT (unique_key) DO NOTHING;
-'''
-    
+"""
+
     return theme_ts, seed_sql
 
 
@@ -513,8 +512,8 @@ def generate_widget_files(name: str) -> tuple[str, str]:
     """Generate widget component and seed"""
     pascal_name = to_pascal_case(name)
     snake_name = to_snake_case(name)
-    
-    widget_tsx = f'''/**
+
+    widget_tsx = f"""/**
  * {name} Widget
  * Generated: {datetime.now().strftime("%Y-%m-%d")}
  */
@@ -640,9 +639,9 @@ export const widgetMetadata = {{
 }};
 
 export default {pascal_name}Widget;
-'''
-    
-    seed_sql = f'''-- {name} Widget Seed
+"""
+
+    seed_sql = f"""-- {name} Widget Seed
 -- Generated: {datetime.now().strftime("%Y-%m-%d")}
 
 INSERT INTO marketplace_items (
@@ -676,92 +675,120 @@ INSERT INTO marketplace_items (
     NOW(),
     NOW()
 ) ON CONFLICT (unique_key) DO NOTHING;
-'''
-    
+"""
+
     return widget_tsx, seed_sql
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Generate marketplace item boilerplate',
+        description="Generate marketplace item boilerplate",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='''
+        epilog="""
 Examples:
   %(prog)s --type service --name "Anti Raid Protection" --key bot_anti_raid --category bot_service
   %(prog)s --type theme --name "Midnight Blue"
   %(prog)s --type widget --name "Engagement Tracker"
-        '''
+        """,
     )
-    
-    parser.add_argument('--type', '-t', required=True, choices=['service', 'theme', 'widget'],
-                        help='Type of marketplace item to generate')
-    parser.add_argument('--name', '-n', required=True,
-                        help='Display name for the item')
-    parser.add_argument('--key', '-k',
-                        help='Service key (required for services, auto-generated otherwise)')
-    parser.add_argument('--category', '-c', default='bot_service',
-                        choices=['bot_service', 'mtproto_services', 'ai_services'],
-                        help='Category for services (default: bot_service)')
-    parser.add_argument('--price', '-p', type=int, default=100,
-                        help='Price in credits (default: 100)')
-    parser.add_argument('--output', '-o', default='./generated',
-                        help='Output directory (default: ./generated)')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Print what would be generated without writing files')
-    
+
+    parser.add_argument(
+        "--type",
+        "-t",
+        required=True,
+        choices=["service", "theme", "widget"],
+        help="Type of marketplace item to generate",
+    )
+    parser.add_argument("--name", "-n", required=True, help="Display name for the item")
+    parser.add_argument(
+        "--key",
+        "-k",
+        help="Service key (required for services, auto-generated otherwise)",
+    )
+    parser.add_argument(
+        "--category",
+        "-c",
+        default="bot_service",
+        choices=["bot_service", "mtproto_services", "ai_services"],
+        help="Category for services (default: bot_service)",
+    )
+    parser.add_argument(
+        "--price", "-p", type=int, default=100, help="Price in credits (default: 100)"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        default="./generated",
+        help="Output directory (default: ./generated)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print what would be generated without writing files",
+    )
+
     args = parser.parse_args()
-    
+
     # Auto-generate key if not provided
     if not args.key:
-        prefix = args.type if args.type != 'service' else args.category.split('_')[0]
+        prefix = args.type if args.type != "service" else args.category.split("_")[0]
         args.key = f"{prefix}_{to_snake_case(args.name)}"
-    
+
     output_dir = Path(args.output)
     files_to_create = []
-    
-    if args.type == 'service':
+
+    if args.type == "service":
         # Generate service files
         config_component = generate_service_config_component(args.name, args.key, args.category)
         handler = generate_service_handler(args.name, args.key, args.category)
         seed = generate_service_seed(args.name, args.key, args.category, args.price)
-        
+
         pascal_name = to_pascal_case(args.name)
         files_to_create = [
-            (output_dir / f"frontend/configs/{pascal_name}Config.tsx", config_component),
-            (output_dir / f"backend/handlers/{to_snake_case(args.name)}_handler.py", handler),
+            (
+                output_dir / f"frontend/configs/{pascal_name}Config.tsx",
+                config_component,
+            ),
+            (
+                output_dir / f"backend/handlers/{to_snake_case(args.name)}_handler.py",
+                handler,
+            ),
             (output_dir / f"seeds/{args.key}_seed.sql", seed),
         ]
-        
-    elif args.type == 'theme':
+
+    elif args.type == "theme":
         theme_ts, seed_sql = generate_theme_files(args.name)
         kebab_name = to_kebab_case(args.name)
-        
+
         files_to_create = [
             (output_dir / f"themes/{kebab_name}/index.ts", theme_ts),
             (output_dir / f"seeds/theme_{to_snake_case(args.name)}_seed.sql", seed_sql),
         ]
-        
-    elif args.type == 'widget':
+
+    elif args.type == "widget":
         widget_tsx, seed_sql = generate_widget_files(args.name)
         pascal_name = to_pascal_case(args.name)
-        
+
         files_to_create = [
             (output_dir / f"widgets/{pascal_name}Widget.tsx", widget_tsx),
-            (output_dir / f"seeds/widget_{to_snake_case(args.name)}_seed.sql", seed_sql),
+            (
+                output_dir / f"seeds/widget_{to_snake_case(args.name)}_seed.sql",
+                seed_sql,
+            ),
         ]
-    
+
     # Output results
     print(f"\n{'=' * 60}")
-    print(f"  Marketplace Item Generator")
+    print("  Marketplace Item Generator")
     print(f"{'=' * 60}")
     print(f"  Type: {args.type}")
     print(f"  Name: {args.name}")
     print(f"  Key:  {args.key}")
-    if args.type == 'service':
+    if args.type == "service":
         print(f"  Category: {args.category}")
     print(f"  Price: {args.price} credits")
     print(f"{'=' * 60}\n")
-    
+
     if args.dry_run:
         print("DRY RUN - Files that would be created:\n")
         for path, content in files_to_create:
@@ -773,7 +800,7 @@ Examples:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content)
             print(f"✅ Created: {path}")
-        
+
         print(f"\n{'=' * 60}")
         print("  Next Steps:")
         print(f"{'=' * 60}")
@@ -798,5 +825,5 @@ See docs/MARKETPLACE_DEVELOPER_GUIDE.md for full details.
 """)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

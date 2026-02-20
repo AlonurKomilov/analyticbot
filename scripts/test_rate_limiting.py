@@ -26,7 +26,7 @@ async def test_rate_limiting():
 
     for i in range(messages_to_process):
         # Simulate message processing
-        print(f"   📨 Processing message {i+1}")
+        print(f"   📨 Processing message {i + 1}")
         processed_count += 1
 
         # RATE LIMITING PROTECTION - Same as real implementation

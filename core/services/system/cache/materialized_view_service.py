@@ -61,9 +61,7 @@ class MaterializedViewService:
 
                 if not view_result["success"]:
                     results["success"] = False
-                    logger.error(
-                        f"Failed to refresh view {view_name}: {view_result.get('error')}"
-                    )
+                    logger.error(f"Failed to refresh view {view_name}: {view_result.get('error')}")
 
             # Commit transaction
             await session.commit()
@@ -146,9 +144,7 @@ class MaterializedViewService:
 
         try:
             for view_name in MaterializedViewService.VIEWS:
-                view_stat = await MaterializedViewService._get_single_view_stat(
-                    session, view_name
-                )
+                view_stat = await MaterializedViewService._get_single_view_stat(session, view_name)
                 stats["views"].append(view_stat)
                 stats["total_size_bytes"] += view_stat.get("size_bytes", 0)
 

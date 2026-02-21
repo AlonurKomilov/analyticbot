@@ -13,27 +13,22 @@ class IUserBotRepository(ABC):
     @abstractmethod
     async def create(self, credentials: UserBotCredentials) -> UserBotCredentials:
         """Create new user bot credentials"""
-        pass
 
     @abstractmethod
     async def get_by_user_id(self, user_id: int) -> UserBotCredentials | None:
         """Get credentials by user ID"""
-        pass
 
     @abstractmethod
     async def get_by_id(self, credentials_id: int) -> UserBotCredentials | None:
         """Get credentials by ID"""
-        pass
 
     @abstractmethod
     async def update(self, credentials: UserBotCredentials) -> UserBotCredentials:
         """Update credentials"""
-        pass
 
     @abstractmethod
     async def delete(self, user_id: int) -> bool:
         """Delete user's bot credentials"""
-        pass
 
     @abstractmethod
     async def list_all(
@@ -44,29 +39,23 @@ class IUserBotRepository(ABC):
         role: str | None = None,
     ) -> list[UserBotCredentials]:
         """List all user bot credentials (admin function)"""
-        pass
 
     @abstractmethod
     async def count(self, status: str | None = None, role: str | None = None) -> int:
         """Count total user bots"""
-        pass
 
     @abstractmethod
     async def log_admin_action(self, action: AdminBotAction) -> None:
         """Log admin action"""
-        pass
 
     @abstractmethod
     async def increment_request_count(self, user_id: int) -> None:
         """Increment total_requests and update last_used_at for a user's bot"""
-        pass
 
     @abstractmethod
     async def get_by_mtproto_phone(self, phone: str) -> UserBotCredentials | None:
         """Get credentials by MTProto phone number (to check for duplicates)"""
-        pass
 
     @abstractmethod
     async def get_by_bot_id(self, bot_id: int) -> UserBotCredentials | None:
         """Get credentials by bot ID (to check for duplicates)"""
-        pass

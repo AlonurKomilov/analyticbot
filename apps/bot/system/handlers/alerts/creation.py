@@ -7,10 +7,13 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 from aiogram_i18n import I18nContext
 
-from apps.bot.system.handlers.alerts.base import get_chat_id, logger, validate_callback
 from apps.bot.shared.keyboards.analytics import kb_alert_types
+from apps.bot.system.handlers.alerts.base import get_chat_id, logger, validate_callback
 from apps.bot.system.middlewares.throttle import throttle
-from core.repositories.alert_repository import AlertSubscription, AlertSubscriptionRepository
+from core.repositories.alert_repository import (
+    AlertSubscription,
+    AlertSubscriptionRepository,
+)
 
 router = Router()
 
@@ -107,7 +110,7 @@ async def configure_alert_type(
             enabled=True,
         )
 
-        created_sub = await alert_repo.create_subscription(subscription)
+        await alert_repo.create_subscription(subscription)
 
         await callback.message.edit_text(
             f"✅ **Alert Created Successfully!**\n\n"

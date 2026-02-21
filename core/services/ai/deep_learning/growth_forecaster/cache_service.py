@@ -164,9 +164,9 @@ class CacheService(CacheServiceProtocol):
                 "cache_hits": self.cache_hits,
                 "cache_misses": self.cache_misses,
                 "hit_rate": hit_rate,
-                "utilization": len(self.cache) / self.max_cache_size
-                if self.max_cache_size > 0
-                else 0.0,
+                "utilization": (
+                    len(self.cache) / self.max_cache_size if self.max_cache_size > 0 else 0.0
+                ),
             }
 
         except Exception as e:

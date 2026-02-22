@@ -36,10 +36,15 @@ class RedisJSONCache:
         return None
 
     async def set_json(
-        self, key: str, value: dict, ttl_s: int = 60, *, expire_seconds: int | None = None
+        self,
+        key: str,
+        value: dict,
+        ttl_s: int = 60,
+        *,
+        expire_seconds: int | None = None,
     ) -> None:
         """Set JSON data in cache with TTL
-        
+
         Args:
             key: Cache key
             value: JSON-serializable dictionary
@@ -110,7 +115,12 @@ class NoOpCache:
         return None
 
     async def set_json(
-        self, key: str, value: dict, ttl_s: int = 60, *, expire_seconds: int | None = None
+        self,
+        key: str,
+        value: dict,
+        ttl_s: int = 60,
+        *,
+        expire_seconds: int | None = None,
     ) -> None:
         pass
 

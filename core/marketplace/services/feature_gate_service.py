@@ -9,7 +9,6 @@ specific marketplace features based on their subscription status.
 """
 
 import logging
-from typing import Any, Optional, List, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class FeatureGateService:
     def __init__(self, marketplace_repo):
         """
         Initialize with marketplace repository.
-        
+
         Args:
             marketplace_repo: MarketplaceServiceRepository instance
         """
@@ -31,21 +30,19 @@ class FeatureGateService:
     ) -> bool:
         """
         Check if user has access to a service.
-        
+
         Args:
             user_id: User ID
             service_key: Service key to check
             raise_on_deny: If True, raises ValueError instead of returning False
-            
+
         Returns:
             True if user has active subscription, False otherwise
-            
+
         Raises:
             ValueError: If raise_on_deny=True and access denied
         """
-        subscription = await self.marketplace_repo.check_user_has_service(
-            user_id, service_key
-        )
+        subscription = await self.marketplace_repo.check_user_has_service(user_id, service_key)
 
         has_access = subscription is not None
 
@@ -56,11 +53,11 @@ class FeatureGateService:
 
         return has_access
 
-    async def get_user_features(self, user_id: int) -> List[str]:
+    async def get_user_features(self, user_id: int) -> list[str]:
         """
         Get list of all service keys user has access to.
         Useful for bulk feature checks.
-        
+
         Returns:
             List of service_key strings
         """
@@ -71,15 +68,15 @@ class FeatureGateService:
         user_id: int,
         service_key: str,
         check_type: str = "daily",
-    ) -> Dict:
+    ) -> dict:
         """
         Check if user is within usage quota for a service.
-        
+
         Args:
             user_id: User ID
             service_key: Service key
             check_type: 'daily' or 'monthly'
-            
+
         Returns:
             Dict with:
                 - has_access: bool (has subscription)
@@ -89,9 +86,7 @@ class FeatureGateService:
                 - remaining: int | None (remaining quota, None = unlimited)
         """
         # Check subscription
-        subscription = await self.marketplace_repo.check_user_has_service(
-            user_id, service_key
-        )
+        subscription = await self.marketplace_repo.check_user_has_service(user_id, service_key)
 
         if not subscription:
             return {
@@ -104,9 +99,7 @@ class FeatureGateService:
             }
 
         # Get service details
-        service = await self.marketplace_repo.get_service_by_id(
-            subscription["service_id"]
-        )
+        service = await self.marketplace_repo.get_service_by_id(subscription["service_id"])
 
         # Determine quota and usage based on check type
         if check_type == "daily":
@@ -146,31 +139,29 @@ class FeatureGateService:
         service_key: str,
         check_quota: bool = True,
         quota_type: str = "daily",
-    ) -> Dict:
+    ) -> dict:
         """
         Combined check: requires both subscription and quota (if applicable).
         Use this as a single gate before executing service actions.
-        
+
         Args:
             user_id: User ID
             service_key: Service key required
             check_quota: Also check usage quota
             quota_type: 'daily' or 'monthly'
-            
+
         Returns:
             Dict with:
                 - allowed: bool (access granted)
                 - subscription: dict | None
                 - quota_info: dict | None (if check_quota=True)
                 - deny_reason: str | None (if denied)
-                
+
         Raises:
             ValueError: If access denied
         """
         # Check subscription
-        subscription = await self.marketplace_repo.check_user_has_service(
-            user_id, service_key
-        )
+        subscription = await self.marketplace_repo.check_user_has_service(user_id, service_key)
 
         if not subscription:
             raise ValueError(

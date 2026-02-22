@@ -24,8 +24,12 @@ from typing import Any, Protocol
 
 # Core service imports (the real implementations)
 from core.services.ai.insights.ai_insights_fusion import create_ai_insights_orchestrator
-from core.services.system.optimization.optimization_fusion import create_optimization_orchestrator
-from core.services.ai.predictive.predictive_intelligence import create_predictive_orchestrator
+from core.services.ai.predictive.predictive_intelligence import (
+    create_predictive_orchestrator,
+)
+from core.services.system.optimization.optimization_fusion import (
+    create_optimization_orchestrator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +110,11 @@ class MLCoordinatorService:
     # PUBLIC API METHODS (Bot Interface)
 
     async def get_ai_insights(
-        self, channel_id: int, narrative_style: str = "executive", days_analyzed: int = 30, **kwargs
+        self,
+        channel_id: int,
+        narrative_style: str = "executive",
+        days_analyzed: int = 30,
+        **kwargs,
     ) -> dict[str, Any]:
         """
         Get AI insights for a channel
@@ -118,7 +126,9 @@ class MLCoordinatorService:
             orchestrator = await self.get_ai_insights_orchestrator()
 
             insights = await orchestrator.orchestrate_comprehensive_insights(
-                channel_id=channel_id, narrative_style=narrative_style, days_analyzed=days_analyzed
+                channel_id=channel_id,
+                narrative_style=narrative_style,
+                days_analyzed=days_analyzed,
             )
 
             logger.info(f"🔮 AI insights generated for channel {channel_id}")
@@ -161,7 +171,10 @@ class MLCoordinatorService:
 
         except Exception as e:
             logger.error(f"❌ Failed to predict engagement: {e}")
-            return {"error": f"Engagement prediction failed: {str(e)}", "fallback": True}
+            return {
+                "error": f"Engagement prediction failed: {str(e)}",
+                "fallback": True,
+            }
 
     async def analyze_content(
         self, content: str, analysis_type: str = "comprehensive", **kwargs
@@ -264,7 +277,10 @@ class MLCoordinatorService:
 
         except Exception as e:
             logger.error(f"❌ Failed to optimize performance: {e}")
-            return {"error": f"Performance optimization failed: {str(e)}", "fallback": True}
+            return {
+                "error": f"Performance optimization failed: {str(e)}",
+                "fallback": True,
+            }
 
     # CHURN PREDICTION (Still needs implementation in core)
     async def predict_churn_risk(self, user_data: dict[str, Any], **kwargs) -> dict[str, Any]:
@@ -312,7 +328,10 @@ class MLCoordinatorService:
 
 # Factory function for easy instantiation
 def create_ml_coordinator(
-    data_access_service=None, analytics_service=None, config_manager=None, cache_service=None
+    data_access_service=None,
+    analytics_service=None,
+    config_manager=None,
+    cache_service=None,
 ) -> MLCoordinatorService:
     """
     Factory function to create ML coordinator with proper dependencies

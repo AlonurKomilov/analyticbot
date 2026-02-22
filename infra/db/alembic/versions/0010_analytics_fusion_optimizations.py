@@ -37,7 +37,9 @@ def upgrade():
     # Add indexes for post_metrics table for analytics queries (skip if table doesn't exist)
     if "post_metrics" in existing_tables:
         op.create_index(
-            "idx_post_metrics_channel_time", "post_metrics", ["channel_id", "snapshot_time"]
+            "idx_post_metrics_channel_time",
+            "post_metrics",
+            ["channel_id", "snapshot_time"],
         )
         op.create_index(
             "idx_post_metrics_channel_msg_time",
@@ -55,7 +57,9 @@ def upgrade():
     # Add indexes for channel_daily table for time series queries (skip if table doesn't exist)
     if "channel_daily" in existing_tables:
         op.create_index(
-            "idx_channel_daily_channel_metric", "channel_daily", ["channel_id", "metric"]
+            "idx_channel_daily_channel_metric",
+            "channel_daily",
+            ["channel_id", "metric"],
         )
         op.create_index("idx_channel_daily_day", "channel_daily", ["day"])
         op.create_index("idx_channel_daily_metric_day", "channel_daily", ["metric", "day"])
@@ -103,7 +107,9 @@ def upgrade():
 
         # Index the post metrics materialized view
         op.create_index(
-            "idx_mv_post_metrics_recent", "mv_post_metrics_recent", ["channel_id", "views"]
+            "idx_mv_post_metrics_recent",
+            "mv_post_metrics_recent",
+            ["channel_id", "views"],
         )
         op.create_index(
             "idx_mv_post_metrics_recent_views",

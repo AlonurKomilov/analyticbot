@@ -20,7 +20,11 @@ from apps.bot.shared.keyboards.analytics import (
     get_export_format_keyboard,
     get_export_type_keyboard,
 )
-from apps.bot.system.middlewares.throttle import rate_limit, with_timeout, HEAVY_HANDLER_TIMEOUT
+from apps.bot.system.middlewares.throttle import (
+    HEAVY_HANDLER_TIMEOUT,
+    rate_limit,
+    with_timeout,
+)
 
 # ✅ PHASE 3 FIX (Oct 19, 2025): Use DI container instead of factory
 from apps.shared.clients.analytics_client import (
@@ -82,7 +86,7 @@ async def handle_export_menu(callback: CallbackQuery, state: FSMContext):
 
     keyboard = get_export_type_keyboard()
     await callback.message.edit_text(
-        "📋 <b>Export Analytics Data</b>\n\n" "Choose the type of data you want to export:",
+        "📋 <b>Export Analytics Data</b>\n\nChoose the type of data you want to export:",
         reply_markup=keyboard,
         parse_mode="HTML",
     )
@@ -121,7 +125,7 @@ async def handle_export_type_selection(callback: CallbackQuery, state: FSMContex
     type_label = type_labels.get(export_type, export_type.title())
 
     await callback.message.edit_text(
-        f"📋 <b>Export {type_label}</b>\n\n" "Choose export format:",
+        f"📋 <b>Export {type_label}</b>\n\nChoose export format:",
         reply_markup=keyboard,
         parse_mode="HTML",
     )
@@ -156,7 +160,7 @@ async def handle_export_format_selection(callback: CallbackQuery, state: FSMCont
 
     # Start export process
     await callback.message.edit_text(
-        f"⏳ Preparing {format_type.upper()} export...\n" "This may take a few moments."
+        f"⏳ Preparing {format_type.upper()} export...\nThis may take a few moments."
     )
     await callback.answer()
 
@@ -245,7 +249,7 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
 
         # Update status message
         await message.edit_text(
-            "✅ <b>Export Complete</b>\n\n" f"Your {export_type} data has been exported as CSV."
+            f"✅ <b>Export Complete</b>\n\nYour {export_type} data has been exported as CSV."
         )
 
         logger.info(f"CSV export completed for user {message.chat.id}, type {export_type}")
@@ -260,7 +264,7 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
     except Exception as e:
         logger.error(f"CSV export error: {e}")
         await message.edit_text(
-            "❌ <b>Export Failed</b>\n\n" "An error occurred during export. Please try again.",
+            "❌ <b>Export Failed</b>\n\nAn error occurred during export. Please try again.",
             parse_mode="HTML",
         )
 
@@ -333,7 +337,7 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
 
         # Update status message
         await message.edit_text(
-            "✅ <b>Export Complete</b>\n\n" f"Your {export_type} chart has been generated."
+            f"✅ <b>Export Complete</b>\n\nYour {export_type} chart has been generated."
         )
 
         logger.info(f"PNG export completed for user {message.chat.id}, type {export_type}")

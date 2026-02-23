@@ -180,15 +180,13 @@ class UserAIServicesRepository:
     async def cleanup_expired_services(self) -> int:
         """Disable services that have expired."""
         async with self.pool.acquire() as conn:
-            result = await conn.execute(
-                """
+            result = await conn.execute("""
                 UPDATE user_ai_services
                 SET enabled = false, updated_at = NOW()
                 WHERE enabled = true
                 AND expires_at IS NOT NULL
                 AND expires_at <= NOW()
-                """
-            )
+                """)
             disabled_count = int(result.split()[-1])
             if disabled_count > 0:
                 logger.info(f"🧹 Disabled {disabled_count} expired AI services")

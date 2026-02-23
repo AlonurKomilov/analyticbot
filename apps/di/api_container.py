@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 async def _create_auth_dependency():
     """Create authentication dependency for FastAPI"""
     try:
-        from core.security_engine.auth_service import verify_token  # type: ignore[import]
+        from core.security_engine.auth_service import (
+            verify_token,  # type: ignore[import]
+        )
     except ImportError:
         # Fallback if auth service not available
         async def verify_token(token: str):
@@ -33,14 +35,16 @@ async def _create_auth_dependency():
                 from config.settings import settings
 
                 secret_key = getattr(
-                    settings, "SECRET_KEY", getattr(settings, "JWT_SECRET", "default_secret")
+                    settings,
+                    "SECRET_KEY",
+                    getattr(settings, "JWT_SECRET", "default_secret"),
                 )
                 payload = jwt.decode(token, secret_key, algorithms=["HS256"])
                 return payload
             except Exception:
                 return None
 
-    security = HTTPBearer()
+    HTTPBearer()
 
     async def get_current_user(credentials: HTTPAuthorizationCredentials):
         """Verify JWT token and return user payload"""

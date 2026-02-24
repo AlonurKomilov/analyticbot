@@ -11,7 +11,9 @@ import logging
 from typing import TYPE_CHECKING
 
 from core.ports.telegram_port import TelegramBotPort
-from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+from core.services.bot.analytics.analytics_batch_processor import (
+    AnalyticsBatchProcessor,
+)
 
 if TYPE_CHECKING:
     pass

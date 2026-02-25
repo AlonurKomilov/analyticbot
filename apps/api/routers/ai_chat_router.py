@@ -35,7 +35,8 @@ class ChatQuestionRequest(BaseModel):
     channel_id: int = Field(..., description="Channel ID for context")
     question: str = Field(..., min_length=3, max_length=500, description="User's question")
     context: dict[str, Any] | None = Field(
-        default=None, description="Additional context (previous questions, filters, etc.)"
+        default=None,
+        description="Additional context (previous questions, filters, etc.)",
     )
     include_follow_ups: bool = Field(
         default=True, description="Include follow-up question suggestions"
@@ -186,7 +187,9 @@ async def ask_question(
         )
 
         response = await chat_service.process_user_question(
-            channel_id=request.channel_id, user_question=request.question, context=request.context
+            channel_id=request.channel_id,
+            user_question=request.question,
+            context=request.context,
         )
 
         if not response:
@@ -444,7 +447,8 @@ async def get_service_health():
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service health check failed"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service health check failed",
         )
 
 

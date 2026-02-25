@@ -57,7 +57,7 @@ class IdempotencyStatus:
         return {
             "status": self.status,
             "created_at": self.created_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (self.completed_at.isoformat() if self.completed_at else None),
             "result": self.result,
             "error": self.error,
         }
@@ -68,9 +68,9 @@ class IdempotencyStatus:
         return cls(
             status=data["status"],
             created_at=datetime.fromisoformat(data["created_at"]),
-            completed_at=datetime.fromisoformat(data["completed_at"])
-            if data.get("completed_at")
-            else None,
+            completed_at=(
+                datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None
+            ),
             result=data.get("result"),
             error=data.get("error"),
         )

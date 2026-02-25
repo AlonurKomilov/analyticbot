@@ -156,7 +156,11 @@ class AnalyticsEngine(AnalyticsEngineProtocol):
         """Execute analytics analysis"""
         return {
             "analysis_type": "comprehensive",
-            "algorithms_used": ["trend_analysis", "pattern_detection", "anomaly_detection"],
+            "algorithms_used": [
+                "trend_analysis",
+                "pattern_detection",
+                "anomaly_detection",
+            ],
             "analysis_successful": True,
         }
 

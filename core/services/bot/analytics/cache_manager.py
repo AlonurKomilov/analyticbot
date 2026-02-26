@@ -19,7 +19,6 @@ class MockCache:
 
     async def set(self, key: str, value: Any, ttl: int | None = None) -> None:
         """Set value in cache (no-op in mock)"""
-        pass
 
 
 class AnalyticsCacheManager:

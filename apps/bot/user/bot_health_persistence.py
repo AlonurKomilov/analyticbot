@@ -156,9 +156,7 @@ class BotHealthPersistenceService:
 
             async with self.db_session_factory() as session:
                 # Delete old metrics
-                stmt = delete(BotHealthMetricOrm).where(
-                    BotHealthMetricOrm.timestamp < cutoff_date
-                )
+                stmt = delete(BotHealthMetricOrm).where(BotHealthMetricOrm.timestamp < cutoff_date)
                 result = await session.execute(stmt)
                 await session.commit()
 
@@ -177,9 +175,11 @@ class BotHealthPersistenceService:
         try:
             async with self.db_session_factory() as session:
                 # Get the most recent timestamp
-                max_timestamp_stmt = select(BotHealthMetricOrm.timestamp).order_by(
-                    BotHealthMetricOrm.timestamp.desc()
-                ).limit(1)
+                max_timestamp_stmt = (
+                    select(BotHealthMetricOrm.timestamp)
+                    .order_by(BotHealthMetricOrm.timestamp.desc())
+                    .limit(1)
+                )
                 result = await session.execute(max_timestamp_stmt)
                 max_timestamp = result.scalar_one_or_none()
 
@@ -220,9 +220,7 @@ class BotHealthPersistenceService:
                     # Restore to monitor
                     health_monitor.metrics[metric_orm.user_id] = restored_metrics
 
-                logger.info(
-                    f"Loaded {len(metrics)} bot health metrics from {max_timestamp}"
-                )
+                logger.info(f"Loaded {len(metrics)} bot health metrics from {max_timestamp}")
 
         except Exception as e:
             logger.error(f"Failed to load metrics: {e}", exc_info=True)

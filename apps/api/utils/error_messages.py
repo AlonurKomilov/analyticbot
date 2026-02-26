@@ -5,7 +5,6 @@ Converts technical error messages into user-friendly, actionable messages.
 """
 
 
-
 class BotErrorMessages:
     """
     User-friendly error messages for common bot management issues
@@ -24,9 +23,7 @@ class BotErrorMessages:
         "and update your bot settings."
     )
 
-    TOKEN_ALREADY_EXISTS = (
-        "You already have a bot configured. Please remove your existing bot before creating a new one."
-    )
+    TOKEN_ALREADY_EXISTS = "You already have a bot configured. Please remove your existing bot before creating a new one."
 
     # === Verification Errors ===
     BOT_NOT_STARTED = (
@@ -62,13 +59,10 @@ class BotErrorMessages:
 
     # === Database Errors ===
     DATABASE_ERROR = (
-        "A database error occurred. Our team has been notified. "
-        "Please try again in a moment."
+        "A database error occurred. Our team has been notified. Please try again in a moment."
     )
 
-    BOT_NOT_FOUND = (
-        "You don't have a bot configured yet. Please create a bot first using the 'Create Bot' option."
-    )
+    BOT_NOT_FOUND = "You don't have a bot configured yet. Please create a bot first using the 'Create Bot' option."
 
     # === MTProto Errors ===
     MTPROTO_NOT_CONFIGURED = (
@@ -94,13 +88,11 @@ class BotErrorMessages:
 
     # === Generic Errors ===
     INTERNAL_ERROR = (
-        "An unexpected error occurred. Our team has been notified. "
-        "Please try again in a moment."
+        "An unexpected error occurred. Our team has been notified. Please try again in a moment."
     )
 
     UNAUTHORIZED = (
-        "You don't have permission to perform this action. "
-        "Please make sure you're logged in."
+        "You don't have permission to perform this action. Please make sure you're logged in."
     )
 
 
@@ -121,7 +113,10 @@ def get_user_friendly_error(error: Exception) -> tuple[int, str]:
     error_str = str(error).lower()
 
     # Bot Token Errors (400)
-    if any(x in error_str for x in ["invalid token", "token is invalid"]) and "revoked" not in error_str:
+    if (
+        any(x in error_str for x in ["invalid token", "token is invalid"])
+        and "revoked" not in error_str
+    ):
         return 400, BotErrorMessages.INVALID_TOKEN
 
     if "token revoked" in error_str or "token was revoked" in error_str:
@@ -149,7 +144,10 @@ def get_user_friendly_error(error: Exception) -> tuple[int, str]:
         return 400, BotErrorMessages.INVALID_RATE_LIMIT
 
     # Connection Errors (503) - check after rate limits
-    if any(x in error_str for x in ["network", "timeout", "timed out"]) and "connection" in error_str:
+    if (
+        any(x in error_str for x in ["network", "timeout", "timed out"])
+        and "connection" in error_str
+    ):
         return 503, BotErrorMessages.NETWORK_ERROR
 
     if "telegram api" in error_str or "bad gateway" in error_str:
@@ -173,7 +171,11 @@ def get_user_friendly_error(error: Exception) -> tuple[int, str]:
             return 401, BotErrorMessages.SESSION_EXPIRED
 
     # Authorization - check specifically for "unauthorized"
-    if error_str.startswith("unauthorized") or "not authorized" in error_str or error_str == "unauthorized":
+    if (
+        error_str.startswith("unauthorized")
+        or "not authorized" in error_str
+        or error_str == "unauthorized"
+    ):
         return 401, BotErrorMessages.UNAUTHORIZED
 
     # Default to internal error

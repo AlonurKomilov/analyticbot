@@ -7,15 +7,19 @@ Adapter for OpenAI GPT models (GPT-4, GPT-3.5, etc.)
 
 import tiktoken
 from openai import AsyncOpenAI
-from typing import Optional
 
 from core.services.ai.base_provider import BaseAIProvider
-from core.services.ai.models import AIMessage, AIResponse, AIProviderConfig, ProviderInfo
+from core.services.ai.models import (
+    AIMessage,
+    AIProviderConfig,
+    AIResponse,
+    ProviderInfo,
+)
 
 
 class OpenAIProvider(BaseAIProvider):
     """OpenAI GPT provider implementation."""
-    
+
     # Pricing per 1M tokens (USD) - Updated Dec 2024
     PRICING = {
         "gpt-4-turbo": {"input": 10.00, "output": 30.00},
@@ -27,7 +31,7 @@ class OpenAIProvider(BaseAIProvider):
         "gpt-3.5-turbo": {"input": 0.50, "output": 1.50},
         "gpt-3.5-turbo-16k": {"input": 3.00, "output": 4.00},
     }
-    
+
     AVAILABLE_MODELS = [
         "gpt-4-turbo",
         "gpt-4o",
@@ -35,7 +39,7 @@ class OpenAIProvider(BaseAIProvider):
         "gpt-4",
         "gpt-3.5-turbo",
     ]
-    
+
     def __init__(self, config: AIProviderConfig):
         """Initialize OpenAI provider."""
         super().__init__(config)
@@ -43,39 +47,36 @@ class OpenAIProvider(BaseAIProvider):
             api_key=config.api_key,
             timeout=config.timeout,
         )
-        
+
         # Initialize tokenizer
         try:
             self.encoding = tiktoken.encoding_for_model(config.model)
         except KeyError:
             # Fallback to cl100k_base for newer models
             self.encoding = tiktoken.get_encoding("cl100k_base")
-    
+
     async def complete(
         self,
         messages: list[AIMessage],
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
     ) -> AIResponse:
         """Generate completion using OpenAI API."""
         # Convert to OpenAI format
-        openai_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
-        
+        openai_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
+
         try:
             response = await self.client.chat.completions.create(
                 model=self.config.model,
                 messages=openai_messages,
                 temperature=temperature or self.config.temperature,
                 max_tokens=max_tokens or self.config.max_tokens,
-                **self.config.extra_params
+                **self.config.extra_params,
             )
-            
+
             usage = response.usage
             cost = self.calculate_cost(usage.prompt_tokens, usage.completion_tokens)
-            
+
             return AIResponse(
                 content=response.choices[0].message.content,
                 model=response.model,
@@ -90,7 +91,7 @@ class OpenAIProvider(BaseAIProvider):
         except Exception as e:
             self.logger.error(f"OpenAI API error: {e}")
             raise
-    
+
     def count_tokens(self, text: str) -> int:
         """Count tokens using tiktoken."""
         try:
@@ -98,7 +99,7 @@ class OpenAIProvider(BaseAIProvider):
         except Exception:
             # Rough estimate: ~4 chars per token
             return len(text) // 4
-    
+
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         """Calculate cost based on OpenAI pricing."""
         # Get pricing for model (with fallback)
@@ -112,15 +113,15 @@ class OpenAIProvider(BaseAIProvider):
             else:
                 # Default to gpt-4-turbo pricing
                 model_key = "gpt-4-turbo"
-        
+
         pricing = self.PRICING[model_key]
-        
+
         # Calculate cost per million tokens
         input_cost = (input_tokens / 1_000_000) * pricing["input"]
         output_cost = (output_tokens / 1_000_000) * pricing["output"]
-        
+
         return input_cost + output_cost
-    
+
     @property
     def provider_info(self) -> ProviderInfo:
         """Get OpenAI provider information."""

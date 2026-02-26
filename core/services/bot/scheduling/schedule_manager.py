@@ -66,9 +66,7 @@ class ScheduleManager:
 
             # Validate schedule time
             if not self._validate_schedule_time(schedule_time):
-                logger.warning(
-                    f"Invalid schedule time: {schedule_time} (must be in future)"
-                )
+                logger.warning(f"Invalid schedule time: {schedule_time} (must be in future)")
                 return None
 
             # Validate inline buttons if provided

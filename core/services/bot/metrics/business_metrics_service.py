@@ -7,7 +7,11 @@ user statistics, post metrics, etc.
 
 import logging
 
-from core.services.bot.metrics.models import BusinessMetrics, MetricDefinition, MetricType
+from core.services.bot.metrics.models import (
+    BusinessMetrics,
+    MetricDefinition,
+    MetricType,
+)
 from core.services.bot.metrics.protocols import MetricsBackendPort
 
 logger = logging.getLogger(__name__)

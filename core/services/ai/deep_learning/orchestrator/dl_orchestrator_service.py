@@ -317,7 +317,13 @@ class DLOrchestratorService(DeepLearningServiceProtocol):
             if service_name == "content_analyzer":
                 result = await service_instance.analyze_content(
                     content=request.content,
-                    analysis_types=["sentiment", "toxicity", "quality", "engagement", "relevance"],
+                    analysis_types=[
+                        "sentiment",
+                        "toxicity",
+                        "quality",
+                        "engagement",
+                        "relevance",
+                    ],
                 )
             elif service_name == "growth_forecaster":
                 # Convert content to growth metrics (simplified)
@@ -469,9 +475,9 @@ class DLOrchestratorService(DeepLearningServiceProtocol):
 
         return {
             "service": "dl_orchestrator",
-            "status": "healthy"
-            if self.is_running and healthy_services == total_services
-            else "degraded",
+            "status": (
+                "healthy" if self.is_running and healthy_services == total_services else "degraded"
+            ),
             "is_running": self.is_running,
             "registered_services": total_services,
             "healthy_services": healthy_services,
@@ -615,7 +621,13 @@ class DLOrchestratorService(DeepLearningServiceProtocol):
 
             # Default analysis types
             if not analysis_types:
-                analysis_types = ["sentiment", "toxicity", "quality", "engagement", "relevance"]
+                analysis_types = [
+                    "sentiment",
+                    "toxicity",
+                    "quality",
+                    "engagement",
+                    "relevance",
+                ]
 
             # Call the content analyzer
             result = await content_service.analyze_content(
@@ -650,11 +662,11 @@ class DLOrchestratorService(DeepLearningServiceProtocol):
             if model_type == "growth":
                 if "growth_forecaster" not in self.service_instances:
                     await self.start_services()
-                service = self.service_instances["growth_forecaster"]
+                self.service_instances["growth_forecaster"]
             elif model_type == "engagement":
                 if "engagement_predictor" not in self.service_instances:
                     await self.start_services()
-                service = self.service_instances["engagement_predictor"]
+                self.service_instances["engagement_predictor"]
             else:
                 raise ValueError(f"Unknown model type: {model_type}")
 

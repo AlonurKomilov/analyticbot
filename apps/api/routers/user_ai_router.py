@@ -56,6 +56,7 @@ async def get_user_ai_services_repo():
 
 class UserAISettingsResponse(BaseModel):
     """User AI settings response"""
+
     user_id: int
     tier: str
     enabled: bool
@@ -67,6 +68,7 @@ class UserAISettingsResponse(BaseModel):
 
 class UpdateUserAISettingsRequest(BaseModel):
     """Request to update user AI settings"""
+
     enabled_features: list[str] | None = None
     preferred_model: str | None = None
     temperature: float | None = Field(None, ge=0.0, le=2.0)
@@ -80,16 +82,17 @@ class UpdateUserAISettingsRequest(BaseModel):
 
 class AIAnalysisRequest(BaseModel):
     """Request for AI analysis"""
+
     channel_id: int = Field(..., description="Channel ID to analyze")
     analysis_type: str = Field(
-        default="overview",
-        description="Type: overview, engagement, growth, content"
+        default="overview", description="Type: overview, engagement, growth, content"
     )
     period_days: int = Field(default=30, ge=1, le=365)
 
 
 class AIAnalysisResponse(BaseModel):
     """Response from AI analysis"""
+
     success: bool
     channel_id: int
     analysis_type: str
@@ -100,6 +103,7 @@ class AIAnalysisResponse(BaseModel):
 
 class ContentSuggestionRequest(BaseModel):
     """Request for content suggestions"""
+
     channel_id: int = Field(..., description="Channel ID for context")
     topic: str | None = Field(None, description="Specific topic (optional)")
     content_type: str = Field(default="text_post", description="Type of content")
@@ -109,6 +113,7 @@ class ContentSuggestionRequest(BaseModel):
 
 class ContentSuggestionResponse(BaseModel):
     """Response with content suggestions"""
+
     success: bool
     channel_id: int
     suggestions: list[dict[str, Any]]
@@ -117,11 +122,13 @@ class ContentSuggestionResponse(BaseModel):
 
 class PostingRecommendationRequest(BaseModel):
     """Request for posting recommendations"""
+
     channel_id: int = Field(..., description="Channel ID to analyze")
 
 
 class PostingRecommendationResponse(BaseModel):
     """Response with posting recommendations"""
+
     success: bool
     channel_id: int
     optimal_times: list[str]
@@ -132,12 +139,14 @@ class PostingRecommendationResponse(BaseModel):
 
 class CustomQueryRequest(BaseModel):
     """Request for custom AI query (Pro/Enterprise)"""
+
     query: str = Field(..., min_length=10, max_length=1000)
     context: dict[str, Any] | None = None
 
 
 class CustomQueryResponse(BaseModel):
     """Response from custom AI query"""
+
     success: bool
     query: str
     response: str
@@ -147,6 +156,7 @@ class CustomQueryResponse(BaseModel):
 
 class AIStatusResponse(BaseModel):
     """User AI status response"""
+
     user_id: int
     tier: str
     enabled: bool
@@ -167,12 +177,12 @@ async def get_user_ai_agent(user_id: int):
     from apps.ai.user import UserAIAgent, UserAIConfig
     from apps.ai.user.config import AITier, UserAILimits, UserAISettings
     from apps.di import get_container
-    
+
     # Get repositories from DI container
     container = get_container()
     providers_repo = await container.database.user_ai_providers_repo()
     usage_repo = await container.database.user_ai_usage_repo()
-    
+
     # TODO: Load from database in production
     # For now, create default config
     config = UserAIConfig(
@@ -181,7 +191,7 @@ async def get_user_ai_agent(user_id: int):
         limits=UserAILimits.from_tier(AITier.BASIC),
         settings=UserAISettings(),
     )
-    
+
     # Create agent with repository injection
     return UserAIAgent(
         config=config,
@@ -198,38 +208,40 @@ async def get_user_ai_agent(user_id: int):
 @router.get("/settings", response_model=UserAISettingsResponse)
 async def get_ai_settings(
     user_id: int = Depends(get_current_user_id),
-    config_repo = Depends(get_user_ai_config_repo),
-    usage_repo = Depends(get_user_ai_usage_repo),
-    services_repo = Depends(get_user_ai_services_repo),
+    config_repo=Depends(get_user_ai_config_repo),
+    usage_repo=Depends(get_user_ai_usage_repo),
+    services_repo=Depends(get_user_ai_services_repo),
 ) -> UserAISettingsResponse:
     """
     Get user's AI settings and current status.
-    
+
     Returns tier, enabled features, usage limits, and preferences.
     """
     try:
         # Get or create user AI configuration
         config_data = await config_repo.get_or_create_default(user_id)
-        
+
         # Get today's usage
         usage_data = await usage_repo.get_today(user_id)
         usage_today = usage_data["requests_count"] if usage_data else 0
-        
+
         # Get active services
         services = await services_repo.get_active_services(user_id)
-        service_names = [s["service_type"] for s in services]
-        
+        [s["service_type"] for s in services]
+
         # Calculate limits based on tier
         from apps.ai.user.config import AITier, UserAILimits
+
         tier = AITier(config_data["tier"])
         limits = UserAILimits.from_tier(tier)
-        
+
         # Parse settings if it's a JSON string
         import json as json_lib
+
         settings = config_data["settings"]
         if isinstance(settings, str):
             settings = json_lib.loads(settings) if settings else {}
-        
+
         return UserAISettingsResponse(
             user_id=user_id,
             tier=config_data["tier"],
@@ -247,7 +259,7 @@ async def get_ai_settings(
             },
             settings=settings,
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to get AI settings for user {user_id}: {e}")
         raise HTTPException(
@@ -260,22 +272,22 @@ async def get_ai_settings(
 async def update_ai_settings(
     request: UpdateUserAISettingsRequest,
     user_id: int = Depends(get_current_user_id),
-    config_repo = Depends(get_user_ai_config_repo),
-    usage_repo = Depends(get_user_ai_usage_repo),
-    services_repo = Depends(get_user_ai_services_repo),
+    config_repo=Depends(get_user_ai_config_repo),
+    usage_repo=Depends(get_user_ai_usage_repo),
+    services_repo=Depends(get_user_ai_services_repo),
 ) -> UserAISettingsResponse:
     """
     Update user's AI settings.
-    
+
     Allows configuring enabled features, model preferences, and behavior.
     """
     try:
         # Get current config
         config_data = await config_repo.get_or_create_default(user_id)
-        
+
         # Build settings update
         settings = config_data["settings"].copy()
-        
+
         if request.temperature is not None:
             settings["temperature"] = request.temperature
         if request.language is not None:
@@ -290,14 +302,14 @@ async def update_ai_settings(
             settings["auto_insights_enabled"] = request.auto_insights_enabled
         if request.auto_insights_frequency is not None:
             settings["auto_insights_frequency"] = request.auto_insights_frequency
-        
+
         # Save to database
         await config_repo.update_settings(user_id, settings)
         logger.info(f"Updated AI settings for user {user_id}")
-        
+
         # Return updated settings
         return await get_ai_settings(user_id, config_repo, usage_repo, services_repo)
-        
+
     except Exception as e:
         logger.error(f"Failed to update AI settings for user {user_id}: {e}")
         raise HTTPException(
@@ -318,24 +330,24 @@ async def analyze_channel(
 ) -> AIAnalysisResponse:
     """
     Get AI-powered analysis of a channel.
-    
+
     Provides insights, patterns, and recommendations based on channel data.
     """
     try:
         agent = await get_user_ai_agent(user_id)
-        
+
         result = await agent.analyze_channel(
             channel_id=request.channel_id,
             analysis_type=request.analysis_type,
             period_days=request.period_days,
         )
-        
+
         if not result.get("success", False):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=result.get("error", "Analysis failed"),
             )
-        
+
         return AIAnalysisResponse(
             success=True,
             channel_id=request.channel_id,
@@ -344,7 +356,7 @@ async def analyze_channel(
             recommendations=result.get("recommendations", []),
             generated_at=datetime.utcnow().isoformat(),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -362,24 +374,24 @@ async def get_channel_insights(
 ) -> dict[str, Any]:
     """
     Get AI insights for a specific channel.
-    
+
     Quick endpoint for getting pre-generated or cached insights.
     """
     try:
         agent = await get_user_ai_agent(user_id)
-        
+
         result = await agent.analyze_channel(
             channel_id=channel_id,
             analysis_type="overview",
             period_days=30,
         )
-        
+
         return {
             "channel_id": channel_id,
             "insights": result.get("insights", []),
             "generated_at": datetime.utcnow().isoformat(),
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get insights for channel {channel_id}: {e}")
         raise HTTPException(
@@ -400,31 +412,31 @@ async def get_content_suggestions(
 ) -> ContentSuggestionResponse:
     """
     Get AI-generated content suggestions.
-    
+
     Provides ideas and drafts based on channel context and preferences.
     """
     try:
         agent = await get_user_ai_agent(user_id)
-        
+
         result = await agent.suggest_content(
             channel_id=request.channel_id,
             topic=request.topic,
             content_type=request.content_type,
         )
-        
+
         if not result.get("success", False):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=result.get("error", "Content generation failed"),
             )
-        
+
         return ContentSuggestionResponse(
             success=True,
             channel_id=request.channel_id,
             suggestions=result.get("suggestions", []),
             generated_at=datetime.utcnow().isoformat(),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -442,24 +454,24 @@ async def get_posting_recommendations(
 ) -> PostingRecommendationResponse:
     """
     Get AI recommendations for optimal posting times and frequency.
-    
+
     Analyzes channel data to suggest the best posting strategy.
     """
     try:
         agent = await get_user_ai_agent(user_id)
-        
+
         result = await agent.get_posting_recommendations(
             channel_id=request.channel_id,
         )
-        
+
         if not result.get("success", False):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=result.get("error", "Recommendations failed"),
             )
-        
+
         recommendations = result.get("recommendations", {})
-        
+
         return PostingRecommendationResponse(
             success=True,
             channel_id=request.channel_id,
@@ -468,7 +480,7 @@ async def get_posting_recommendations(
             content_mix=recommendations.get("content_mix", {}),
             generated_at=datetime.utcnow().isoformat(),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -491,24 +503,24 @@ async def custom_ai_query(
 ) -> CustomQueryResponse:
     """
     Execute a custom AI query.
-    
+
     **Pro/Enterprise tier only.**
     Allows asking natural language questions about channel data.
     """
     try:
         agent = await get_user_ai_agent(user_id)
-        
+
         result = await agent.custom_query(
             query=request.query,
             context=request.context,
         )
-        
+
         if not result.get("success", False):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=result.get("error", "Query failed"),
             )
-        
+
         return CustomQueryResponse(
             success=True,
             query=request.query,
@@ -516,7 +528,7 @@ async def custom_ai_query(
             tokens_used=result.get("tokens_used", 0),
             generated_at=datetime.utcnow().isoformat(),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -535,40 +547,42 @@ async def custom_ai_query(
 @router.get("/status", response_model=AIStatusResponse)
 async def get_ai_status(
     user_id: int = Depends(get_current_user_id),
-    config_repo = Depends(get_user_ai_config_repo),
-    usage_repo = Depends(get_user_ai_usage_repo),
-    services_repo = Depends(get_user_ai_services_repo),
+    config_repo=Depends(get_user_ai_config_repo),
+    usage_repo=Depends(get_user_ai_usage_repo),
+    services_repo=Depends(get_user_ai_services_repo),
 ) -> AIStatusResponse:
     """
     Get current AI usage status.
-    
+
     Returns usage counts, limits, and remaining quota.
     """
     try:
         # Get user config
         config_data = await config_repo.get_or_create_default(user_id)
-        
+
         # Get today's usage
         usage_data = await usage_repo.get_today(user_id)
         usage_today = usage_data["requests_count"] if usage_data else 0
-        
+
         # Get active services
         services = await services_repo.get_active_services(user_id)
         service_names = [s["service_type"] for s in services]
-        
+
         # Calculate limits based on tier
         from apps.ai.user.config import AITier, UserAILimits
+
         tier = AITier(config_data["tier"])
         limits = UserAILimits.from_tier(tier)
-        
+
         # Parse settings if it's a JSON string
         import json as json_lib
+
         settings = config_data["settings"]
         if isinstance(settings, str):
             settings = json_lib.loads(settings) if settings else {}
-        
+
         remaining = max(0, limits.requests_per_day - usage_today)
-        
+
         return AIStatusResponse(
             user_id=user_id,
             tier=config_data["tier"],
@@ -576,10 +590,12 @@ async def get_ai_status(
             usage_today=usage_today,
             usage_limit=limits.requests_per_day,
             remaining_requests=remaining,
-            features_enabled=settings.get("enabled_features", ["content_analysis", "recommendations"]),
+            features_enabled=settings.get(
+                "enabled_features", ["content_analysis", "recommendations"]
+            ),
             services_enabled=service_names,
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to get AI status for user {user_id}: {e}")
         raise HTTPException(
@@ -596,22 +612,22 @@ async def get_ai_status(
 @router.get("/services")
 async def list_ai_services(
     user_id: int = Depends(get_current_user_id),
-    config_repo = Depends(get_user_ai_config_repo),
-    services_repo = Depends(get_user_ai_services_repo),
+    config_repo=Depends(get_user_ai_config_repo),
+    services_repo=Depends(get_user_ai_services_repo),
 ) -> dict[str, Any]:
     """
     List available AI-enhanced marketplace services.
-    
+
     Returns services that can be AI-powered for this user.
     """
     try:
         # Get user config for tier info
         config_data = await config_repo.get_or_create_default(user_id)
-        
+
         # Get active services
         active_services = await services_repo.get_active_services(user_id)
         active_service_ids = {s["service_key"] for s in active_services}
-        
+
         # TODO: Get from marketplace registry
         available_services = [
             {
@@ -636,13 +652,13 @@ async def list_ai_services(
                 "tier_required": "pro",
             },
         ]
-        
+
         return {
             "user_id": user_id,
             "tier": config_data["tier"],
             "services": available_services,
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to list AI services for user {user_id}: {e}")
         raise HTTPException(
@@ -655,7 +671,7 @@ async def list_ai_services(
 async def enable_ai_service(
     service_id: str,
     user_id: int = Depends(get_current_user_id),
-    services_repo = Depends(get_user_ai_services_repo),
+    services_repo=Depends(get_user_ai_services_repo),
 ) -> dict[str, Any]:
     """
     Enable an AI-enhanced marketplace service.
@@ -666,14 +682,14 @@ async def enable_ai_service(
             user_id=user_id,
             service_key=service_id,
         )
-        
+
         return {
             "success": True,
             "service_id": service_id,
             "enabled": True,
             "message": f"Service {service_id} enabled",
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to enable service {service_id} for user {user_id}: {e}")
         raise HTTPException(
@@ -686,7 +702,7 @@ async def enable_ai_service(
 async def disable_ai_service(
     service_id: str,
     user_id: int = Depends(get_current_user_id),
-    services_repo = Depends(get_user_ai_services_repo),
+    services_repo=Depends(get_user_ai_services_repo),
 ) -> dict[str, Any]:
     """
     Disable an AI-enhanced marketplace service.
@@ -694,14 +710,14 @@ async def disable_ai_service(
     try:
         # Deactivate service in database
         await services_repo.deactivate_service(user_id, service_id)
-        
+
         return {
             "success": True,
             "service_id": service_id,
             "enabled": False,
             "message": f"Service {service_id} disabled",
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to disable service {service_id} for user {user_id}: {e}")
         raise HTTPException(

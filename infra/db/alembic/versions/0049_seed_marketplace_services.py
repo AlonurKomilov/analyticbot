@@ -10,7 +10,6 @@ Create Date: 2025-12-14
 
 from alembic import op
 
-
 # revision identifiers, used by Alembic
 revision = "0049_seed_services"
 down_revision = "0048_marketplace_services"
@@ -24,8 +23,7 @@ def upgrade() -> None:
     # ============================================
     # Bot Moderation Services
     # ============================================
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO marketplace_services (
             service_key, name, description, short_description,
             price_credits_monthly, price_credits_yearly,
@@ -190,14 +188,12 @@ def upgrade() -> None:
             6,
             true
         );
-    """
-    )
+    """)
 
     # ============================================
     # MTProto Premium Services
     # ============================================
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO marketplace_services (
             service_key, name, description, short_description,
             price_credits_monthly, price_credits_yearly,
@@ -284,14 +280,12 @@ def upgrade() -> None:
             12,
             true
         );
-    """
-    )
+    """)
 
     # ============================================
     # Bot Analytics Services
     # ============================================
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO marketplace_services (
             service_key, name, description, short_description,
             price_credits_monthly, price_credits_yearly,
@@ -326,8 +320,7 @@ def upgrade() -> None:
             20,
             true
         );
-    """
-    )
+    """)
 
 
 def downgrade() -> None:

@@ -1,0 +1,30 @@
+# Old v1 project archive — do NOT track in git
+analyticbot_v1/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Environment & secrets
+.env
+*.session
+
+# Generated files
+data/reports/
+htmlcov/
+.coverage
+.mypy_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+
+# Runtime
+logs/
+.pids/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,5 +1,6 @@
 # Old v1 project archive — do NOT track in git
 analyticbot_v1/
+backups/
 
 # Python
 __pycache__/

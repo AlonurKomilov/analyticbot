@@ -29,6 +29,8 @@ db-logs: ## Show DB and Redis logs
 
 # ── Application ────────────────────────────────────────────────────────────
 
+PYTHON = .venv/bin/python
+UVICORN = .venv/bin/uvicorn
 PID_DIR = .pids
 BOT_PID = $(PID_DIR)/bot.pid
 API_PID = $(PID_DIR)/api.pid
@@ -37,16 +39,16 @@ $(PID_DIR):
 	@mkdir -p $(PID_DIR)
 
 bot: $(PID_DIR) ## Start bot (foreground)
-	python -m src.bot.main
+	$(PYTHON) -m src.bot.main
 
 api: $(PID_DIR) ## Start API (foreground)
-	uvicorn src.api.main:app --host 0.0.0.0 --port $${API_PORT:-11400} --reload
+	$(UVICORN) src.api.main:app --host 0.0.0.0 --port $${API_PORT:-11400} --reload
 
 start: $(PID_DIR) ## Start bot + API in background
 	@echo "Starting bot..."
-	@nohup python -m src.bot.main > logs/bot.log 2>&1 & echo $$! > $(BOT_PID)
+	@nohup $(PYTHON) -m src.bot.main > logs/bot.log 2>&1 & echo $$! > $(BOT_PID)
 	@echo "Starting API on port $${API_PORT:-11400}..."
-	@nohup uvicorn src.api.main:app --host 0.0.0.0 --port $${API_PORT:-11400} > logs/api.log 2>&1 & echo $$! > $(API_PID)
+	@nohup $(UVICORN) src.api.main:app --host 0.0.0.0 --port $${API_PORT:-11400} > logs/api.log 2>&1 & echo $$! > $(API_PID)
 	@echo "✅ Bot (PID $$(cat $(BOT_PID))) and API (PID $$(cat $(API_PID))) started"
 	@echo "   Logs: logs/bot.log, logs/api.log"
 
@@ -82,10 +84,10 @@ logs: ## Tail bot and API logs
 # ── Setup ──────────────────────────────────────────────────────────────────
 
 install: ## Install dependencies
-	pip install -e ".[dev]"
+	$(PYTHON) -m pip install -e ".[dev]"
 
 init-db: ## Create database tables
-	python -c "import asyncio; from src.db.session import init_db; asyncio.run(init_db())"
+	$(PYTHON) -c "import asyncio; from src.db.session import init_db; asyncio.run(init_db())"
 	@echo "✅ Database tables created"
 
 clean: ## Remove PID files and logs

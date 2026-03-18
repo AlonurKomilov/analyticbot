@@ -1,4 +1,4 @@
-"""Chart generation for reports — Plotly-based, saved as PNG"""
+"""Chart generation for reports — matplotlib-based, saved as PNG"""
 
 from __future__ import annotations
 
@@ -6,7 +6,9 @@ import io
 import os
 from pathlib import Path
 
-import plotly.graph_objects as go
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 from src.analyzer.metrics import AnalysisMetrics
 
@@ -18,6 +20,14 @@ def _ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
+def _fig_to_bytes(fig) -> bytes:
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    buf.seek(0)
+    return buf.read()
+
+
 def create_views_chart(metrics: AnalysisMetrics) -> bytes:
     """Bar chart of top posts by views."""
     top = metrics.top_posts_by_views[:10]
@@ -27,17 +37,14 @@ def create_views_chart(metrics: AnalysisMetrics) -> bytes:
     labels = [f"#{p.message_id}" for p in top]
     values = [p.views for p in top]
 
-    fig = go.Figure(go.Bar(x=labels, y=values, marker_color="#229ED9"))
-    fig.update_layout(
-        title="Top Posts by Views",
-        xaxis_title="Post",
-        yaxis_title="Views",
-        template="plotly_white",
-        width=700,
-        height=400,
-        margin=dict(l=50, r=30, t=60, b=50),
-    )
-    return fig.to_image(format="png", engine="kaleido")
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.bar(labels, values, color="#229ED9")
+    ax.set_title("Top Posts by Views", fontsize=14)
+    ax.set_xlabel("Post")
+    ax.set_ylabel("Views")
+    ax.tick_params(axis="x", rotation=45)
+    fig.tight_layout()
+    return _fig_to_bytes(fig)
 
 
 def create_hourly_chart(metrics: AnalysisMetrics) -> bytes:
@@ -49,17 +56,14 @@ def create_hourly_chart(metrics: AnalysisMetrics) -> bytes:
     hours = list(range(24))
     counts = [dist.get(h, 0) for h in hours]
 
-    fig = go.Figure(go.Bar(x=hours, y=counts, marker_color="#34A853"))
-    fig.update_layout(
-        title="Posting Activity by Hour (UTC)",
-        xaxis_title="Hour",
-        yaxis_title="Posts",
-        template="plotly_white",
-        width=700,
-        height=350,
-        margin=dict(l=50, r=30, t=60, b=50),
-    )
-    return fig.to_image(format="png", engine="kaleido")
+    fig, ax = plt.subplots(figsize=(7, 3.5))
+    ax.bar(hours, counts, color="#34A853")
+    ax.set_title("Posting Activity by Hour (UTC)", fontsize=14)
+    ax.set_xlabel("Hour")
+    ax.set_ylabel("Posts")
+    ax.set_xticks(range(0, 24, 2))
+    fig.tight_layout()
+    return _fig_to_bytes(fig)
 
 
 def create_weekday_chart(metrics: AnalysisMetrics) -> bytes:
@@ -68,20 +72,15 @@ def create_weekday_chart(metrics: AnalysisMetrics) -> bytes:
     if not dist:
         return b""
 
-    labels = WEEKDAY_NAMES
     counts = [dist.get(i, 0) for i in range(7)]
 
-    fig = go.Figure(go.Bar(x=labels, y=counts, marker_color="#FBBC04"))
-    fig.update_layout(
-        title="Posting Activity by Weekday",
-        xaxis_title="Day",
-        yaxis_title="Posts",
-        template="plotly_white",
-        width=700,
-        height=350,
-        margin=dict(l=50, r=30, t=60, b=50),
-    )
-    return fig.to_image(format="png", engine="kaleido")
+    fig, ax = plt.subplots(figsize=(7, 3.5))
+    ax.bar(WEEKDAY_NAMES, counts, color="#FBBC04")
+    ax.set_title("Posting Activity by Weekday", fontsize=14)
+    ax.set_xlabel("Day")
+    ax.set_ylabel("Posts")
+    fig.tight_layout()
+    return _fig_to_bytes(fig)
 
 
 def create_content_mix_chart(metrics: AnalysisMetrics) -> bytes:
@@ -90,27 +89,25 @@ def create_content_mix_chart(metrics: AnalysisMetrics) -> bytes:
     labels = ["Text", "Photo", "Video", "Document", "Other"]
     values = [mix.pct_text_only, mix.pct_photo, mix.pct_video, mix.pct_document, mix.pct_other]
 
-    # Filter out zero slices
     filtered = [(l, v) for l, v in zip(labels, values) if v > 0]
     if not filtered:
         return b""
 
-    fig = go.Figure(
-        go.Pie(
-            labels=[f[0] for f in filtered],
-            values=[f[1] for f in filtered],
-            hole=0.4,
-            marker_colors=["#229ED9", "#34A853", "#EA4335", "#FBBC04", "#9E9E9E"],
-        )
+    colors = ["#229ED9", "#34A853", "#EA4335", "#FBBC04", "#9E9E9E"]
+    color_map = dict(zip(labels, colors))
+
+    fig, ax = plt.subplots(figsize=(5, 4))
+    wedges, texts, autotexts = ax.pie(
+        [f[1] for f in filtered],
+        labels=[f[0] for f in filtered],
+        colors=[color_map[f[0]] for f in filtered],
+        autopct="%1.0f%%",
+        pctdistance=0.75,
+        wedgeprops={"width": 0.4},
     )
-    fig.update_layout(
-        title="Content Mix",
-        template="plotly_white",
-        width=500,
-        height=400,
-        margin=dict(l=30, r=30, t=60, b=30),
-    )
-    return fig.to_image(format="png", engine="kaleido")
+    ax.set_title("Content Mix", fontsize=14)
+    fig.tight_layout()
+    return _fig_to_bytes(fig)
 
 
 def generate_all_charts(metrics: AnalysisMetrics, analysis_id: int) -> dict[str, str]:

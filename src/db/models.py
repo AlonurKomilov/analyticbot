@@ -25,8 +25,8 @@ class AnalysisRequest(Base):
     source: Mapped[str] = mapped_column(String(20), default="bot")  # "bot" or "web"
     status: Mapped[str] = mapped_column(String(20), default="pending")  # pending/running/done/failed
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class ChannelSnapshot(Base):
@@ -42,7 +42,7 @@ class ChannelSnapshot(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     member_count: Mapped[int] = mapped_column(Integer, default=0)
     channel_type: Mapped[str] = mapped_column(String(20))  # "channel" or "supergroup"
-    fetched_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class PostRecord(Base):
@@ -54,7 +54,7 @@ class PostRecord(Base):
     analysis_id: Mapped[int] = mapped_column(Integer, index=True)
     channel_id: Mapped[int] = mapped_column(BigInteger, index=True)
     message_id: Mapped[int] = mapped_column(Integer)
-    date: Mapped[datetime] = mapped_column(DateTime)
+    date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     text: Mapped[str | None] = mapped_column(Text, nullable=True)
     views: Mapped[int] = mapped_column(Integer, default=0)
     forwards: Mapped[int] = mapped_column(Integer, default=0)
@@ -94,4 +94,4 @@ class AnalysisResult(Base):
     # Report file path
     report_pdf_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
-    computed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

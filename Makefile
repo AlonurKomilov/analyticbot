@@ -88,6 +88,9 @@ init-db: ## Create database tables
 	python -c "import asyncio; from src.db.session import init_db; asyncio.run(init_db())"
 	@echo "✅ Database tables created"
 
-clean: ## Remove PID files and logs
+clean: ## Remove PID files, logs, and Python cache files
 	rm -rf $(PID_DIR) logs/*.log
+	find . -type d -name "__pycache__" -prune -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type f -name "*.pyo" -delete 2>/dev/null || true
 	@echo "✅ Cleaned"

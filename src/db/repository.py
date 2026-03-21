@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,14 +43,14 @@ class AnalysisRepository:
         await self.session.execute(
             update(AnalysisRequest)
             .where(AnalysisRequest.id == request_id)
-            .values(status="done", completed_at=datetime.utcnow())
+            .values(status="done", completed_at=datetime.now(UTC))
         )
 
     async def set_request_failed(self, request_id: int, error: str) -> None:
         await self.session.execute(
             update(AnalysisRequest)
             .where(AnalysisRequest.id == request_id)
-            .values(status="failed", error_message=error, completed_at=datetime.utcnow())
+            .values(status="failed", error_message=error, completed_at=datetime.now(UTC))
         )
 
     async def get_request(self, request_id: int) -> AnalysisRequest | None:
@@ -93,3 +93,16 @@ class AnalysisRepository:
             select(AnalysisResult).where(AnalysisResult.analysis_id == analysis_id)
         )
         return result.scalar_one_or_none()
+
+    # ── User History ──────────────────────────────────────────────────────
+
+    async def get_user_analyses(
+        self, user_id: int, limit: int = 10
+    ) -> list[AnalysisRequest]:
+        result = await self.session.execute(
+            select(AnalysisRequest)
+            .where(AnalysisRequest.requested_by == user_id)
+            .order_by(AnalysisRequest.created_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())

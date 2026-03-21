@@ -8,8 +8,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.analyzer.fetcher import disconnect_telethon_client
 from src.api.routes.analyze import router as analyze_router
 from src.api.routes.reports import router as reports_router
+from src.cache import close_redis
+from src.config import settings
 from src.db.session import init_db
 
 logger = logging.getLogger(__name__)
@@ -20,7 +23,10 @@ async def lifespan(app: FastAPI):
     logger.info("Analyticbot API starting...")
     await init_db()
     yield
-    logger.info("Analyticbot API shutting down.")
+    logger.info("Analyticbot API shutting down...")
+    await disconnect_telethon_client()
+    await close_redis()
+    logger.info("Cleanup complete.")
 
 
 app = FastAPI(
@@ -32,9 +38,9 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict in production
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 

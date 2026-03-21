@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 
 from telethon import TelegramClient
 from telethon.tl.functions.channels import GetFullChannelRequest
@@ -26,6 +27,33 @@ _LINK_PATTERNS = [
     re.compile(r"(?:https?://)?t\.me/([a-zA-Z_][\w]{3,30})", re.IGNORECASE),
     re.compile(r"@([a-zA-Z_][\w]{3,30})"),
 ]
+
+# ── Singleton Telethon client ──────────────────────────────────────────────
+_client: TelegramClient | None = None
+_client_lock = asyncio.Lock()
+
+
+async def get_telethon_client() -> TelegramClient:
+    """Return a shared, connected Telethon client (created once, reused)."""
+    global _client
+    async with _client_lock:
+        if _client is None or not _client.is_connected():
+            _client = TelegramClient(
+                "analyticbot_session", settings.API_ID, settings.API_HASH
+            )
+            await _client.start(phone=settings.PHONE)
+            logger.info("Telethon client connected")
+        return _client
+
+
+async def disconnect_telethon_client() -> None:
+    """Gracefully disconnect the shared Telethon client (call on shutdown)."""
+    global _client
+    async with _client_lock:
+        if _client is not None and _client.is_connected():
+            await _client.disconnect()
+            logger.info("Telethon client disconnected")
+        _client = None
 
 
 @dataclass
@@ -55,7 +83,7 @@ class FetchedPost:
 class FetchResult:
     channel: ChannelInfo
     posts: list[FetchedPost] = field(default_factory=list)
-    fetch_time: datetime = field(default_factory=datetime.utcnow)
+    fetch_time: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 def parse_channel_identifier(raw: str) -> str:
@@ -103,8 +131,7 @@ async def fetch_channel(identifier: str, max_posts: int | None = None) -> FetchR
     max_posts = max_posts or settings.MAX_POSTS
     username = parse_channel_identifier(identifier)
 
-    client = TelegramClient("analyticbot_session", settings.API_ID, settings.API_HASH)
-    await client.start(phone=settings.PHONE)
+    client = await get_telethon_client()
 
     try:
         entity = await client.get_entity(username)
@@ -187,5 +214,6 @@ async def fetch_channel(identifier: str, max_posts: int | None = None) -> FetchR
         logger.info(f"Fetched {len(posts)} posts from @{username}")
         return FetchResult(channel=channel_info, posts=posts)
 
-    finally:
-        await client.disconnect()
+    except Exception:
+        raise
+    # Client is shared — do NOT disconnect here

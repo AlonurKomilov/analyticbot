@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import statistics
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 from src.analyzer.fetcher import FetchResult, FetchedPost
 
@@ -39,6 +40,25 @@ class ContentMix:
 
 
 @dataclass
+class EngagementBreakdown:
+    """Deeper engagement metrics beyond simple averages."""
+    median_views: float
+    virality_rate: float  # forwards / views (%)
+    interaction_rate: float  # (reactions + replies) / views (%)
+    avg_replies_per_post: float
+    pct_posts_with_links: float
+    views_per_member: float  # avg views / members — reach efficiency
+
+
+@dataclass
+class ViewsTrend:
+    """Daily aggregated views for time-series chart."""
+    dates: list[str] = field(default_factory=list)  # YYYY-MM-DD
+    daily_views: list[int] = field(default_factory=list)
+    daily_posts: list[int] = field(default_factory=list)
+
+
+@dataclass
 class AnalysisMetrics:
     """Complete analysis output."""
 
@@ -54,14 +74,21 @@ class AnalysisMetrics:
     total_views: int
     total_forwards: int
     total_reactions: int
+    total_replies: int
     avg_views: float
     avg_engagement_rate: float  # (views / member_count) averaged across posts
     avg_forwards_per_post: float
     avg_reactions_per_post: float
 
+    # New: deeper engagement
+    engagement: EngagementBreakdown
+
     # Patterns
     posting_pattern: PostingPattern
     content_mix: ContentMix
+
+    # New: views over time
+    views_trend: ViewsTrend
 
     # Top content
     top_posts_by_views: list[TopPost]
@@ -71,6 +98,14 @@ class AnalysisMetrics:
     date_from: datetime | None
     date_to: datetime | None
     analysis_period_days: int
+
+    # Activity & freshness intelligence
+    days_since_last_post: int  # 0 = posted today
+    activity_status: str  # "active", "low", "inactive", "dead"
+    posting_frequency: str  # "high", "moderate", "low", "very_low", "none"
+
+    # Data coverage info
+    data_note: str  # explains what the numbers represent
 
 
 def _text_preview(text: str | None, max_len: int = 80) -> str:
@@ -95,10 +130,62 @@ def _make_top_post(post: FetchedPost, member_count: int) -> TopPost:
     )
 
 
+def _compute_views_trend(posts: list[FetchedPost]) -> ViewsTrend:
+    """Aggregate views and post counts by day."""
+    daily_views: dict[str, int] = {}
+    daily_posts: dict[str, int] = {}
+
+    for p in posts:
+        day = p.date.strftime("%Y-%m-%d")
+        daily_views[day] = daily_views.get(day, 0) + p.views
+        daily_posts[day] = daily_posts.get(day, 0) + 1
+
+    sorted_days = sorted(daily_views.keys())
+    return ViewsTrend(
+        dates=sorted_days,
+        daily_views=[daily_views[d] for d in sorted_days],
+        daily_posts=[daily_posts[d] for d in sorted_days],
+    )
+
+
+def _classify_activity(days_since_last: int, avg_posts_per_day: float) -> tuple[str, str]:
+    """
+    Classify channel activity status and posting frequency.
+
+    Returns (activity_status, posting_frequency):
+        activity_status: "active" | "low" | "inactive" | "dead"
+        posting_frequency: "high" | "moderate" | "low" | "very_low" | "none"
+    """
+    # Posting frequency classification
+    if avg_posts_per_day >= 3:
+        freq = "high"
+    elif avg_posts_per_day >= 1:
+        freq = "moderate"
+    elif avg_posts_per_day >= 0.1:  # at least ~1 post per 10 days
+        freq = "low"
+    elif avg_posts_per_day > 0:
+        freq = "very_low"
+    else:
+        freq = "none"
+
+    # Activity status based on recency
+    if days_since_last <= 3:
+        status = "active"
+    elif days_since_last <= 14:
+        status = "low"
+    elif days_since_last <= 90:
+        status = "inactive"
+    else:
+        status = "dead"
+
+    return status, freq
+
+
 def compute_metrics(result: FetchResult, top_n: int = 10) -> AnalysisMetrics:
     """Compute all analytics from fetched channel data."""
     ch = result.channel
     posts = result.posts
+    empty_engagement = EngagementBreakdown(0, 0, 0, 0, 0, 0)
 
     if not posts:
         return AnalysisMetrics(
@@ -111,27 +198,54 @@ def compute_metrics(result: FetchResult, top_n: int = 10) -> AnalysisMetrics:
             total_views=0,
             total_forwards=0,
             total_reactions=0,
+            total_replies=0,
             avg_views=0.0,
             avg_engagement_rate=0.0,
             avg_forwards_per_post=0.0,
             avg_reactions_per_post=0.0,
+            engagement=empty_engagement,
             posting_pattern=PostingPattern(0, None, None),
             content_mix=ContentMix(0, 0, 0, 0, 0),
+            views_trend=ViewsTrend(),
             top_posts_by_views=[],
             top_posts_by_engagement=[],
             date_from=None,
             date_to=None,
             analysis_period_days=0,
+            days_since_last_post=999,
+            activity_status="dead",
+            posting_frequency="none",
+            data_note="No posts found.",
         )
 
     n = len(posts)
     total_views = sum(p.views for p in posts)
     total_forwards = sum(p.forwards for p in posts)
     total_reactions = sum(p.reactions_count for p in posts)
+    total_replies = sum(p.replies for p in posts)
 
     avg_views = total_views / n
     avg_engagement = (
         sum(p.views / ch.member_count for p in posts) / n * 100 if ch.member_count > 0 else 0.0
+    )
+
+    # ── Deeper engagement ──────────────────────────────────────────────
+    views_list = [p.views for p in posts]
+    median_views = statistics.median(views_list)
+    virality_rate = (total_forwards / total_views * 100) if total_views > 0 else 0.0
+    interaction_rate = (
+        (total_reactions + total_replies) / total_views * 100 if total_views > 0 else 0.0
+    )
+    pct_with_links = sum(1 for p in posts if p.has_link) / n * 100
+    views_per_member = avg_views / ch.member_count if ch.member_count > 0 else 0.0
+
+    engagement_breakdown = EngagementBreakdown(
+        median_views=round(median_views, 1),
+        virality_rate=round(virality_rate, 3),
+        interaction_rate=round(interaction_rate, 3),
+        avg_replies_per_post=round(total_replies / n, 1),
+        pct_posts_with_links=round(pct_with_links, 1),
+        views_per_member=round(views_per_member, 3),
     )
 
     # ── Posting patterns ───────────────────────────────────────────────
@@ -162,6 +276,9 @@ def compute_metrics(result: FetchResult, top_n: int = 10) -> AnalysisMetrics:
         pct_other=round(media_counts.get("other", 0) / n * 100, 1),
     )
 
+    # ── Views over time ───────────────────────────────────────────────
+    views_trend = _compute_views_trend(posts)
+
     # ── Top posts ──────────────────────────────────────────────────────
     by_views = sorted(posts, key=lambda p: p.views, reverse=True)[:top_n]
     by_engagement = sorted(
@@ -169,6 +286,27 @@ def compute_metrics(result: FetchResult, top_n: int = 10) -> AnalysisMetrics:
         key=lambda p: (p.views / ch.member_count if ch.member_count else 0),
         reverse=True,
     )[:top_n]
+
+    # ── Data coverage note ─────────────────────────────────────────────
+    data_note = (
+        f"Based on the most recent {n} posts "
+        f"({date_from.strftime('%b %d')} – {date_to.strftime('%b %d, %Y')}, "
+        f"{span_days} days). "
+    )
+    if n >= 500:
+        data_note += (
+            "This covers active posting history. For channels with high "
+            "volume (17+ posts/day), older posts beyond this window are not included."
+        )
+    else:
+        data_note += "This represents the channel's complete recent history."
+
+    # ── Activity classification ────────────────────────────────────────
+    now = datetime.now(UTC)
+    # date_to may be tz-naive from Telethon, normalize
+    last_post_dt = date_to.replace(tzinfo=UTC) if date_to.tzinfo is None else date_to
+    days_since_last_post = max((now - last_post_dt).days, 0)
+    activity_status, posting_frequency = _classify_activity(days_since_last_post, avg_posts_per_day)
 
     return AnalysisMetrics(
         channel_title=ch.title,
@@ -180,10 +318,12 @@ def compute_metrics(result: FetchResult, top_n: int = 10) -> AnalysisMetrics:
         total_views=total_views,
         total_forwards=total_forwards,
         total_reactions=total_reactions,
+        total_replies=total_replies,
         avg_views=round(avg_views, 1),
         avg_engagement_rate=round(avg_engagement, 2),
         avg_forwards_per_post=round(total_forwards / n, 1),
         avg_reactions_per_post=round(total_reactions / n, 1),
+        engagement=engagement_breakdown,
         posting_pattern=PostingPattern(
             avg_posts_per_day=round(avg_posts_per_day, 2),
             most_active_hour=most_active_hour,
@@ -192,9 +332,14 @@ def compute_metrics(result: FetchResult, top_n: int = 10) -> AnalysisMetrics:
             weekday_distribution=dict(weekday_counts),
         ),
         content_mix=content_mix,
+        views_trend=views_trend,
         top_posts_by_views=[_make_top_post(p, ch.member_count) for p in by_views],
         top_posts_by_engagement=[_make_top_post(p, ch.member_count) for p in by_engagement],
         date_from=date_from,
         date_to=date_to,
         analysis_period_days=span_days,
+        days_since_last_post=days_since_last_post,
+        activity_status=activity_status,
+        posting_frequency=posting_frequency,
+        data_note=data_note,
     )

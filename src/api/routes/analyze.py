@@ -5,11 +5,12 @@ from __future__ import annotations
 import logging
 from dataclasses import asdict
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from src.analyzer.fetcher import parse_channel_identifier
 from src.analyzer.pipeline import run_analysis
+from src.api.security import rate_limit_check, require_api_key
 from src.db.repository import AnalysisRepository
 from src.db.session import async_session
 
@@ -52,7 +53,12 @@ async def _run_in_background(channel: str, request_id: int, max_posts: int) -> N
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
-async def submit_analysis(body: AnalyzeRequest, background_tasks: BackgroundTasks):
+async def submit_analysis(
+    body: AnalyzeRequest,
+    background_tasks: BackgroundTasks,
+    _key: str = Depends(require_api_key),
+    _rate: None = Depends(rate_limit_check),
+):
     """
     Submit a channel for analysis.
 
